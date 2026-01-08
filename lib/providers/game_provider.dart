@@ -6,12 +6,14 @@ class Player {
   final String nickname;
   final dynamic role; // 'MAFIA', 'DOCTOR', 'POLICE', 'CITIZEN' or null
   final bool isAlive;
+  final bool isHost;
 
   Player({
     required this.id,
     required this.nickname,
     this.role,
     required this.isAlive,
+    this.isHost = false,
   });
 
   factory Player.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class Player {
       nickname: map['nickname'],
       role: map['role'],
       isAlive: map['isAlive'],
+      isHost: map['isHost'] ?? false,
     );
   }
 }

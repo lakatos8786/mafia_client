@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: '방 코드 (참여 시 입력)',
                     labelStyle: TextStyle(color: Colors.white70),
-                    hintText: '1234',
+                    hintText: '123456',
                     hintStyle: TextStyle(color: Colors.white54),
                     filled: true,
                     fillColor: Colors.white10,

@@ -43,9 +43,29 @@ class LobbyScreen extends StatelessWidget {
                   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                   child: ListTile(
                     leading: Icon(Icons.person, color: Colors.white),
-                    title: Text(
-                      player.nickname + (isMe ? ' (나)' : ''),
-                      style: TextStyle(color: Colors.white),
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          player.nickname + (isMe ? ' (나)' : ''),
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: player.isAlive ? Colors.white : Colors.grey,
+                            decoration: player.isAlive
+                                ? null
+                                : TextDecoration.lineThrough,
+                          ),
+                        ),
+                        if (player.isHost)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Icon(
+                              Icons.emoji_events,
+                              color: Colors.amber,
+                              size: 20,
+                            ),
+                          ),
+                      ],
                     ),
                     trailing: isMe
                         ? Icon(Icons.star, color: Colors.yellow)
@@ -61,13 +81,36 @@ class LobbyScreen extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Ideally only host starts, but for now anyone
-                  game.startGame();
+              child: Builder(
+                builder: (context) {
+                  if (game.roomId != null) {
+                    // Show Start Button only if I am the host
+                    if (game.players.any(
+                      (p) => p.id == game.myId && p.isHost,
+                    )) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          game.startGame();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 15,
+                          ),
+                        ),
+                        child: Text('게임 시작', style: TextStyle(fontSize: 18)),
+                      );
+                    } else {
+                      return Text(
+                        '방장이 게임을 시작하기를 기다리는 중...',
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      );
+                    }
+                  }
+                  return Container(); // Fallback if roomId is null, though unlikely in lobby
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: Text('게임 시작'),
               ),
             ),
           ),
