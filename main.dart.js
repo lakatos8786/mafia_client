@@ -76970,6 +76970,9 @@ $S:106}
 A.ZT.prototype={
 $1(a){var s=this.a
 s.e=a
+s.z=null
+s.Q=A.c([],t.zU)
+s.f.push(A.a2(["sender","\uc2dc\uc2a4\ud15c","message","\uc0c8\ub85c\uc6b4 \uac8c\uc784\uc774 \uc2dc\uc791\ub418\uc5c8\uc2b5\ub2c8\ub2e4!"],t.N,t.z))
 s.ap()},
 $S:6}
 A.ZU.prototype={

@@ -118,6 +118,9 @@ class GameProvider with ChangeNotifier {
 
     _socket.on('role_assigned', (role) {
       _myRole = role;
+      _winner = null;
+      _endGamePlayers = [];
+      _messages.add({'sender': '시스템', 'message': '새로운 게임이 시작되었습니다!'});
       notifyListeners();
     });
 
