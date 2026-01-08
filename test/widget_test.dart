@@ -20,6 +20,7 @@ void main() {
 
     // Verify that the Mafia title is present.
     expect(find.text('마피아 온라인'), findsOneWidget);
-    expect(find.text('게임 참가'), findsOneWidget);
+    expect(find.text('방 만들기'), findsOneWidget);
+    expect(find.text('참여하기'), findsOneWidget);
   });
 }

@@ -34,6 +34,7 @@ class GameProvider with ChangeNotifier {
   Map<String, int> _votes = {};
   String? _myId;
   String? _errorMessage;
+  String? _roomId;
 
   List<Player> get players => _players;
   String get gameState => _gameState;
@@ -43,6 +44,7 @@ class GameProvider with ChangeNotifier {
   Map<String, int> get votes => _votes;
   String? get myId => _myId;
   String? get errorMessage => _errorMessage;
+  String? get roomId => _roomId;
 
   IO.Socket get socket => _socket;
 
@@ -64,6 +66,16 @@ class GameProvider with ChangeNotifier {
     _socket.onConnect((_) {
       print('Connected');
       _myId = _socket.id;
+      notifyListeners();
+    });
+
+    _socket.on('room_created', (roomId) {
+      _roomId = roomId;
+      notifyListeners();
+    });
+
+    _socket.on('joined_room', (roomId) {
+      _roomId = roomId;
       notifyListeners();
     });
 
@@ -143,9 +155,14 @@ class GameProvider with ChangeNotifier {
     });
   }
 
-  void join(String nickname) {
-    print('Sending join request for $nickname');
-    _socket.emit('join', nickname);
+  void joinRoom(String nickname, String roomId) {
+    print('Joining room $roomId as $nickname');
+    _socket.emit('join_room', {'nickname': nickname, 'roomId': roomId});
+  }
+
+  void createRoom(String nickname) {
+    print('Creating room as $nickname');
+    _socket.emit('create_room', nickname);
   }
 
   void startGame() {

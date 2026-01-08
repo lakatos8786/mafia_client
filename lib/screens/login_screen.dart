@@ -9,6 +9,26 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _roomCodeController = TextEditingController();
+
+  void _createRoom() {
+    if (_nameController.text.isNotEmpty) {
+      Provider.of<GameProvider>(
+        context,
+        listen: false,
+      ).createRoom(_nameController.text);
+    }
+  }
+
+  void _joinRoom() {
+    if (_nameController.text.isNotEmpty &&
+        _roomCodeController.text.isNotEmpty) {
+      Provider.of<GameProvider>(
+        context,
+        listen: false,
+      ).joinRoom(_nameController.text, _roomCodeController.text.toUpperCase());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,12 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               SizedBox(height: 40),
+              // Nickname Input
               Container(
                 width: 300,
                 child: TextField(
                   controller: _nameController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    labelText: '닉네임',
+                    labelStyle: TextStyle(color: Colors.white70),
                     hintText: '닉네임을 입력하세요',
                     hintStyle: TextStyle(color: Colors.white54),
                     filled: true,
@@ -46,24 +69,62 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_nameController.text.isNotEmpty) {
-                    Provider.of<GameProvider>(
-                      context,
-                      listen: false,
-                    ).join(_nameController.text);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              SizedBox(height: 16),
+              // Room Code Input (for joining)
+              Container(
+                width: 300,
+                child: TextField(
+                  controller: _roomCodeController,
+                  style: TextStyle(color: Colors.white),
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: InputDecoration(
+                    labelText: '방 코드 (참여 시 입력)',
+                    labelStyle: TextStyle(color: Colors.white70),
+                    hintText: 'ABCD',
+                    hintStyle: TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: Colors.white10,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                child: Text('게임 참가', style: TextStyle(fontSize: 18)),
+              ),
+              SizedBox(height: 30),
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _createRoom,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('방 만들기', style: TextStyle(fontSize: 16)),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: _joinRoom,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text('참여하기', style: TextStyle(fontSize: 16)),
+                  ),
+                ],
               ),
             ],
           ),

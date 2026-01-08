@@ -10,10 +10,18 @@ class LobbyScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text('대기방'),
+        title: Text('대기방 (코드: ${game.roomId})'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.copy),
+            onPressed: () {
+              // Copy to clipboard logic if needed
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
