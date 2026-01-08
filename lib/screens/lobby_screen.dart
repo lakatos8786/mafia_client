@@ -59,11 +59,7 @@ class LobbyScreen extends StatelessWidget {
                         if (player.isHost)
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
-                            child: Icon(
-                              Icons.emoji_events,
-                              color: Colors.amber,
-                              size: 20,
-                            ),
+                            child: Text('👑', style: TextStyle(fontSize: 20)),
                           ),
                       ],
                     ),
