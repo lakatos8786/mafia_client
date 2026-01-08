@@ -76,11 +76,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextField(
                   controller: _roomCodeController,
                   style: TextStyle(color: Colors.white),
-                  textCapitalization: TextCapitalization.characters,
+                  keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: '방 코드 (참여 시 입력)',
                     labelStyle: TextStyle(color: Colors.white70),
-                    hintText: 'ABCD',
+                    hintText: '1234',
                     hintStyle: TextStyle(color: Colors.white54),
                     filled: true,
                     fillColor: Colors.white10,
