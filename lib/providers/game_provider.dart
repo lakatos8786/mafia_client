@@ -87,21 +87,33 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('player_update', (data) {
-      if (data is List) {
-        _players = data
-            .map((e) => Player.fromMap(e as Map<String, dynamic>))
-            .toList();
-        notifyListeners();
+      try {
+        if (data is List) {
+          _players = data
+              .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+              .toList();
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in player_update: $e');
       }
     });
 
     _socket.on('game_start', (data) {
-      _gameState = '낮';
-      _dayCount = 1;
-      _players = (data['players'] as List)
-          .map((e) => Player.fromMap(e))
-          .toList();
-      notifyListeners();
+      try {
+        if (data is Map) {
+          _gameState = '낮';
+          _dayCount = 1;
+          if (data['players'] is List) {
+            _players = (data['players'] as List)
+                .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+                .toList();
+          }
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in game_start: $e');
+      }
     });
 
     _socket.on('role_assigned', (role) {
@@ -110,10 +122,16 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('phase_change', (data) {
-      _gameState = data['phase'];
-      _dayCount = data['dayCount'];
-      _votes.clear(); // Clear votes on phase change
-      notifyListeners();
+      try {
+        if (data is Map) {
+          _gameState = data['phase']?.toString() ?? _gameState;
+          _dayCount = data['dayCount'] as int? ?? _dayCount;
+          _votes.clear(); // Clear votes on phase change
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in phase_change: $e');
+      }
     });
 
     _socket.on('vote_update', (data) {
@@ -160,16 +178,21 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('game_over', (data) {
-      if (data is Map) {
-        _gameState = '결과';
-        _winner = data['winner']?.toString();
-        if (data['players'] is List) {
-          _endGamePlayers = (data['players'] as List)
-              .map((e) => Player.fromMap(e as Map<String, dynamic>))
-              .toList();
+      try {
+        if (data is Map) {
+          final mappedData = Map<String, dynamic>.from(data);
+          _gameState = '결과';
+          _winner = mappedData['winner']?.toString();
+          if (mappedData['players'] is List) {
+            _endGamePlayers = (mappedData['players'] as List)
+                .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+                .toList();
+          }
+          _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
+          notifyListeners();
         }
-        _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
-        notifyListeners();
+      } catch (e) {
+        print('Error in game_over: $e');
       }
     });
 
