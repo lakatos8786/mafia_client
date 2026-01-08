@@ -41,9 +41,9 @@ class _GameScreenState extends State<GameScreen> {
       appBar: AppBar(
         title: Column(
           children: [
-            Text('${game.gameState} - DAY ${game.dayCount}'),
+            Text('${game.gameState} - ${game.dayCount}일차'),
             Text(
-              'Role: ${game.myRole ?? "Unknown"}',
+              '직업: ${game.myRole ?? "알 수 없음"}',
               style: TextStyle(fontSize: 14, color: Colors.yellowAccent),
             ),
           ],
@@ -79,18 +79,23 @@ class _GameScreenState extends State<GameScreen> {
                     onTap: () {
                       if (!player.isAlive) return;
                       // Handle Tap Actions
-                      if (game.gameState == 'DAY') {
+                      if (game.gameState == '낮') {
                         game.vote(player.id);
-                      } else if (game.gameState == 'NIGHT') {
+                      } else if (game.gameState == '밤') {
                         String? action;
-                        if (game.myRole == 'MAFIA') action = 'kill';
-                        if (game.myRole == 'DOCTOR') action = 'heal';
-                        if (game.myRole == 'POLICE') action = 'investigate';
+                        if (game.myRole == '마피아') action = 'kill';
+                        if (game.myRole == '의사') action = 'heal';
+                        if (game.myRole == '경찰') action = 'investigate';
 
                         if (action != null) {
+                          String actionName = action;
+                          if (action == 'kill') actionName = '처단';
+                          if (action == 'heal') actionName = '치료';
+                          if (action == 'investigate') actionName = '조사';
+
                           game.nightAction(action, player.id);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Action $action sent!')),
+                            SnackBar(content: Text('$actionName 완료!')),
                           );
                         }
                       }
@@ -105,15 +110,15 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                         SizedBox(height: 5),
                         Text(
-                          player.nickname + (isMe ? ' (You)' : ''),
+                          player.nickname + (isMe ? ' (나)' : ''),
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (game.gameState == 'DAY' && player.isAlive)
+                        if (game.gameState == '낮' && player.isAlive)
                           Text(
-                            'Votes: $voteCount',
+                            '득표수: $voteCount',
                             style: TextStyle(color: Colors.orange),
                           ),
                       ],
@@ -159,7 +164,7 @@ class _GameScreenState extends State<GameScreen> {
                     controller: _msgController,
                     style: TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Type a message...',
+                      hintText: '메시지를 입력하세요...',
                       hintStyle: TextStyle(color: Colors.white54),
                       filled: true,
                       fillColor: Colors.white10,

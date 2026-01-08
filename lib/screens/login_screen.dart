@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   controller: _nameController,
                   style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Enter Nickname',
+                    hintText: '닉네임을 입력하세요',
                     hintStyle: TextStyle(color: Colors.white54),
                     filled: true,
                     fillColor: Colors.white10,

@@ -10,7 +10,7 @@ class LobbyScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[900],
       appBar: AppBar(
-        title: Text('LOBBY'),
+        title: Text('대기방'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -20,7 +20,7 @@ class LobbyScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Text(
-              'WAITING FOR PLAYERS...',
+              '플레이어를 기다리는 중...',
               style: TextStyle(color: Colors.white70, fontSize: 20),
             ),
           ),
@@ -36,7 +36,7 @@ class LobbyScreen extends StatelessWidget {
                   child: ListTile(
                     leading: Icon(Icons.person, color: Colors.white),
                     title: Text(
-                      player.nickname + (isMe ? ' (You)' : ''),
+                      player.nickname + (isMe ? ' (나)' : ''),
                       style: TextStyle(color: Colors.white),
                     ),
                     trailing: isMe
@@ -59,7 +59,7 @@ class LobbyScreen extends StatelessWidget {
                   game.startGame();
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: Text('START GAME'),
+                child: Text('게임 시작'),
               ),
             ),
           ),

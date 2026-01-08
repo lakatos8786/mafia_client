@@ -72,8 +72,8 @@ class GameProvider with ChangeNotifier {
       notifyListeners();
     });
 
-    _socket.on('game_start', (data) => {
-      _gameState = '낮'; 
+    _socket.on('game_start', (data) {
+      _gameState = '낮';
       _dayCount = 1;
       _players = (data['players'] as List)
           .map((e) => Player.fromMap(e))
@@ -120,14 +120,15 @@ class GameProvider with ChangeNotifier {
         // Actually server code I wrote does NOT emit player_update on elimination in `processDayResults`.
         // I should fix server or handle it here.
         // Let's handle it here for now.
+        // Wait, I am just fixing the game_over part below.
       }
     });
 
     _socket.on('game_over', (data) {
-      _gameState = 'LOBBY';
+      _gameState = '대기중';
       _messages.add({
-        'sender': 'SYSTEM',
-        'message': 'Game Over! Winner: ${data['winner']}',
+        'sender': '시스템',
+        'message': '게임 종료! 승자: ${data['winner']}',
       });
       notifyListeners();
     });

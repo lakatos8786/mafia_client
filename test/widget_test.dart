@@ -20,6 +20,6 @@ void main() {
 
     // Verify that the Mafia title is present.
     expect(find.text('MAFIA ONLINE'), findsOneWidget);
-    expect(find.text('JOIN GAME'), findsOneWidget);
+    expect(find.text('게임 시작'), findsOneWidget);
   });
 }

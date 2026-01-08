@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
       child: MaterialApp(
-        title: 'Mafia Online',
+        title: '마피아 온라인',
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
           scaffoldBackgroundColor: Colors.grey[900],
@@ -44,7 +44,7 @@ class ScreenRouter extends StatelessWidget {
       return LoginScreen();
     }
 
-    if (game.gameState == 'LOBBY') {
+    if (game.gameState == '대기중') {
       return LobbyScreen();
     } else {
       return GameScreen();
