@@ -220,7 +220,100 @@ class _GameScreenState extends State<GameScreen> {
                           color: Colors.yellowAccent,
                         ),
                       ),
-                      SizedBox(height: 40),
+                      SizedBox(height: 20),
+                      // Results Table
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        constraints: BoxConstraints(maxHeight: 300),
+                        child: SingleChildScrollView(
+                          child: Table(
+                            border: TableBorder.all(color: Colors.white24),
+                            columnWidths: {
+                              0: FlexColumnWidth(2),
+                              1: FlexColumnWidth(1),
+                              2: FlexColumnWidth(1),
+                            },
+                            children: [
+                              TableRow(
+                                decoration: BoxDecoration(
+                                  color: Colors.white10,
+                                ),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      '닉네임',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      '직업',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      '결과',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              ...game.endGamePlayers.map((p) {
+                                bool isWinner = false;
+                                if (game.winner == '시민' && p.role != '마피아')
+                                  isWinner = true;
+                                if (game.winner == '마피아' && p.role == '마피아')
+                                  isWinner = true;
+
+                                return TableRow(
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        p.nickname,
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        p.role ?? '-',
+                                        style: TextStyle(color: Colors.white70),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(
+                                        isWinner ? '승리' : '패배',
+                                        style: TextStyle(
+                                          color: isWinner
+                                              ? Colors.greenAccent
+                                              : Colors.redAccent,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
                       Text(
                         '화면을 탭하여 로비로 돌아가기',
                         style: TextStyle(color: Colors.white54, fontSize: 16),

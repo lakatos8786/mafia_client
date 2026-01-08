@@ -39,6 +39,7 @@ class GameProvider with ChangeNotifier {
   String? _errorMessage;
   String? _roomId;
   String? _winner;
+  List<Player> _endGamePlayers = [];
 
   List<Player> get players => _players;
   String get gameState => _gameState;
@@ -50,6 +51,7 @@ class GameProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String? get roomId => _roomId;
   String? get winner => _winner;
+  List<Player> get endGamePlayers => _endGamePlayers;
 
   IO.Socket get socket => _socket;
 
@@ -144,6 +146,9 @@ class GameProvider with ChangeNotifier {
     _socket.on('game_over', (data) {
       _gameState = '결과';
       _winner = data['winner'];
+      _endGamePlayers = (data['players'] as List)
+          .map((e) => Player.fromMap(e))
+          .toList();
       _messages.add({
         'sender': '시스템',
         'message': '게임 종료! 승자: ${data['winner']}',
@@ -190,6 +195,11 @@ class GameProvider with ChangeNotifier {
   void returnToLobby() {
     _gameState = '대기중';
     _winner = null;
+    _endGamePlayers = [];
+    _dayCount = 1;
+    _votes.clear();
+    _messages.clear();
+    _myRole = null;
     notifyListeners();
   }
 }
