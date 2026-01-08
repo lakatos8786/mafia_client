@@ -87,8 +87,12 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('player_update', (data) {
-      _players = (data as List).map((e) => Player.fromMap(e)).toList();
-      notifyListeners();
+      if (data is List) {
+        _players = data
+            .map((e) => Player.fromMap(e as Map<String, dynamic>))
+            .toList();
+        notifyListeners();
+      }
     });
 
     _socket.on('game_start', (data) {
@@ -113,13 +117,25 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('vote_update', (data) {
-      _votes = Map<String, int>.from(data);
-      notifyListeners();
+      try {
+        if (data is Map) {
+          _votes = Map<String, int>.from(data);
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in vote_update: $e');
+      }
     });
 
     _socket.on('chat_message', (data) {
-      _messages.add(Map<String, dynamic>.from(data));
-      notifyListeners();
+      try {
+        if (data is Map) {
+          _messages.add(Map<String, dynamic>.from(data));
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in chat_message: $e');
+      }
     });
 
     _socket.on('player_eliminated', (data) {
@@ -144,16 +160,17 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('game_over', (data) {
-      _gameState = '결과';
-      _winner = data['winner'];
-      _endGamePlayers = (data['players'] as List)
-          .map((e) => Player.fromMap(e))
-          .toList();
-      _messages.add({
-        'sender': '시스템',
-        'message': '게임 종료! 승자: ${data['winner']}',
-      });
-      notifyListeners();
+      if (data is Map) {
+        _gameState = '결과';
+        _winner = data['winner']?.toString();
+        if (data['players'] is List) {
+          _endGamePlayers = (data['players'] as List)
+              .map((e) => Player.fromMap(e as Map<String, dynamic>))
+              .toList();
+        }
+        _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
+        notifyListeners();
+      }
     });
 
     _socket.on('error', (msg) {

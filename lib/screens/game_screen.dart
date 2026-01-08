@@ -53,9 +53,11 @@ class _GameScreenState extends State<GameScreen> {
         automaticallyImplyLeading: false,
       ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
-          Column(
-            children: [
+          Positioned.fill(
+            child: Column(
+              children: [
               // Game Area
               Expanded(
                 flex: 2,
