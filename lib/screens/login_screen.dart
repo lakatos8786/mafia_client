@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'MAFIA ONLINE',
+                '마피아 온라인',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text('JOIN GAME', style: TextStyle(fontSize: 18)),
+                child: Text('게임 참가', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
