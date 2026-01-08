@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 
 class GameScreen extends StatefulWidget {
+  const GameScreen({super.key});
+
   @override
   _GameScreenState createState() => _GameScreenState();
 }
@@ -194,7 +196,11 @@ class _GameScreenState extends State<GameScreen> {
           if (game.gameState == '결과')
             Positioned.fill(
               child: GestureDetector(
-                onTap: () => game.returnToLobby(),
+                onTap: () {
+                  if (game.canReturnToLobby) {
+                    game.returnToLobby();
+                  }
+                },
                 child: Container(
                   color: Colors.black.withOpacity(0.9),
                   alignment: Alignment.center,
@@ -276,10 +282,12 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                               ...game.endGamePlayers.map((p) {
                                 bool isWinner = false;
-                                if (game.winner == '시민' && p.role != '마피아')
+                                if (game.winner == '시민' && p.role != '마피아') {
                                   isWinner = true;
-                                if (game.winner == '마피아' && p.role == '마피아')
+                                }
+                                if (game.winner == '마피아' && p.role == '마피아') {
                                   isWinner = true;
+                                }
 
                                 return TableRow(
                                   children: [
@@ -311,7 +319,7 @@ class _GameScreenState extends State<GameScreen> {
                                     ),
                                   ],
                                 );
-                              }).toList(),
+                              }),
                             ],
                           ),
                         ),

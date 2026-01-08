@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -67,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 40),
               // Nickname Input
-              Container(
+              SizedBox(
                 width: 300,
                 child: TextField(
                   controller: _nameController,
@@ -87,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               SizedBox(height: 16),
               // Room Code Input (for joining)
-              Container(
+              SizedBox(
                 width: 300,
                 child: TextField(
                   controller: _roomCodeController,

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 
 class LobbyScreen extends StatelessWidget {
+  const LobbyScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
@@ -18,7 +21,15 @@ class LobbyScreen extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.copy),
             onPressed: () {
-              // Copy to clipboard logic if needed
+              if (game.roomId != null) {
+                Clipboard.setData(ClipboardData(text: game.roomId!));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('방 코드가 복사되었습니다: ${game.roomId}'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
             },
           ),
         ],

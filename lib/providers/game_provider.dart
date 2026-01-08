@@ -33,13 +33,14 @@ class GameProvider with ChangeNotifier {
   String _gameState = '대기중'; // 대기중, 낮, 밤
   int _dayCount = 1;
   String? _myRole;
-  List<Map<String, dynamic>> _messages = [];
+  final List<Map<String, dynamic>> _messages = [];
   Map<String, int> _votes = {};
   String? _myId;
   String? _errorMessage;
   String? _roomId;
   String? _winner;
   List<Player> _endGamePlayers = [];
+  DateTime? _gameOverTime;
 
   List<Player> get players => _players;
   String get gameState => _gameState;
@@ -52,6 +53,10 @@ class GameProvider with ChangeNotifier {
   String? get roomId => _roomId;
   String? get winner => _winner;
   List<Player> get endGamePlayers => _endGamePlayers;
+  bool get canReturnToLobby {
+    if (_gameOverTime == null) return true;
+    return DateTime.now().difference(_gameOverTime!).inSeconds >= 2;
+  }
 
   IO.Socket get socket => _socket;
 
@@ -191,6 +196,7 @@ class GameProvider with ChangeNotifier {
                 .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
                 .toList();
           }
+          _gameOverTime = DateTime.now();
           _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
           notifyListeners();
         }
@@ -239,6 +245,7 @@ class GameProvider with ChangeNotifier {
     _gameState = '대기중';
     _winner = null;
     _endGamePlayers = [];
+    _gameOverTime = null;
     _dayCount = 1;
     _votes.clear();
     _messages.clear();
