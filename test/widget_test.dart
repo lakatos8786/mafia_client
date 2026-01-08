@@ -19,7 +19,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify that the Mafia title is present.
-    expect(find.text('MAFIA ONLINE'), findsOneWidget);
-    expect(find.text('게임 시작'), findsOneWidget);
+    expect(find.text('마피아 온라인'), findsOneWidget);
+    expect(find.text('게임 참가'), findsOneWidget);
   });
 }

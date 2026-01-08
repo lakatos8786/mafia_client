@@ -76054,11 +76054,11 @@ $S:0}
 A.wP.prototype={
 ar(){return new A.O6(new A.zo(B.ke,$.am()))}}
 A.O6.prototype={
-M(a){var s,r=null,q=A.dJ("MAFIA ONLINE",r,r,r,A.dd(r,r,B.jv,r,r,r,r,r,r,r,r,48,r,r,B.cl,r,r,!0,r,4,r,r,r,r,r,r),r,r),p=A.e8(r,40,r),o=A.dd(r,r,B.k,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),n=A.dd(r,r,B.lE,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r)
+M(a){var s,r=null,q=A.dJ("\ub9c8\ud53c\uc544 \uc628\ub77c\uc778",r,r,r,A.dd(r,r,B.jv,r,r,r,r,r,r,r,r,48,r,r,B.cl,r,r,!0,r,4,r,r,r,r,r,r),r,r),p=A.e8(r,40,r),o=A.dd(r,r,B.k,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),n=A.dd(r,r,B.lE,r,r,r,r,r,r,r,r,r,r,r,r,r,r,!0,r,r,r,r,r,r,r,r)
 o=A.Fv(A.as7(this.d,A.ams(r,new A.fC(4,A.mM(12),B.hV),r,r,r,r,r,r,!0,r,r,r,r,r,r,B.i3,!0,r,r,r,r,r,r,r,r,r,r,r,r,r,n,"\ub2c9\ub124\uc784\uc744 \uc785\ub825\ud558\uc138\uc694",r,r,r,r,r,r,r,r,r,!0,!0,r,r,r,r,r,r,r,r,r,r,r,r,r,r),r,o),B.H,r,r,r,r,r,300)
 n=A.e8(r,20,r)
 s=A.apX(r,r,B.jv,r,r,r,r,r,r,r,r,r,new A.aF(50,15,50,15),r,new A.cE(A.mM(12),B.r),r,r,r,r,r)
-return A.a6E(r,B.dH,A.kI(new A.c9(B.D7,A.pY(A.c([q,p,o,n,A.apW(A.dJ("JOIN GAME",r,r,r,A.dd(r,r,r,r,r,r,r,r,r,r,r,18,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),r,r),new A.afJ(this,a),s)],t.F),B.aP,B.b6,B.fL),r),r,r))}}
+return A.a6E(r,B.dH,A.kI(new A.c9(B.D7,A.pY(A.c([q,p,o,n,A.apW(A.dJ("\uac8c\uc784 \ucc38\uac00",r,r,r,A.dd(r,r,r,r,r,r,r,r,r,r,r,18,r,r,r,r,r,!0,r,r,r,r,r,r,r,r),r,r),new A.afJ(this,a),s)],t.F),B.aP,B.b6,B.fL),r),r,r))}}
 A.afJ.prototype={
 $0(){var s,r=this.a.d
 if(r.a.a.length!==0){s=A.IB(this.b,!1,t.T6)
