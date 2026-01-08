@@ -199,6 +199,11 @@ class GameProvider with ChangeNotifier {
           _gameOverTime = DateTime.now();
           _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
           notifyListeners();
+
+          // Trigger rebuild after 2 seconds to show "Tap to return" text
+          Future.delayed(Duration(seconds: 2), () {
+            notifyListeners();
+          });
         }
       } catch (e) {
         print('Error in game_over: $e');

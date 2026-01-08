@@ -87,7 +87,7 @@ class LobbyScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20.0),
             child: SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 60,
               child: Builder(
                 builder: (context) {
                   if (game.roomId != null) {

@@ -325,10 +325,11 @@ class _GameScreenState extends State<GameScreen> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      Text(
-                        '화면을 탭하여 로비로 돌아가기',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
-                      ),
+                      if (game.canReturnToLobby)
+                        Text(
+                          '화면을 탭하여 로비로 돌아가기',
+                          style: TextStyle(color: Colors.white54, fontSize: 16),
+                        ),
                     ],
                   ),
                 ),
