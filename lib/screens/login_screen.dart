@@ -40,14 +40,30 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '마피아 온라인',
-                style: TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
-                  letterSpacing: 4.0,
-                ),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 16.0,
+                runSpacing: 8.0,
+                children: [
+                  Text(
+                    '마피아',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
+                      letterSpacing: 4.0,
+                    ),
+                  ),
+                  Text(
+                    '온라인',
+                    style: TextStyle(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.redAccent,
+                      letterSpacing: 4.0,
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 40),
               // Nickname Input
