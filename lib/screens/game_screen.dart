@@ -189,36 +189,44 @@ class _GameScreenState extends State<GameScreen> {
             ],
           ),
           if (game.gameState == '결과')
-            GestureDetector(
-              onTap: () => game.returnToLobby(),
-              child: Container(
-                color: Colors.black87,
-                alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '게임 종료',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      '승리: ${game.winner ?? "?"}',
-                      style: TextStyle(
-                        fontSize: 24,
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => game.returnToLobby(),
+                child: Container(
+                  color: Colors.black.withOpacity(0.9),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.emoji_events,
                         color: Colors.yellowAccent,
+                        size: 80,
                       ),
-                    ),
-                    SizedBox(height: 50),
-                    Text(
-                      '화면을 탭하여 로비로 돌아가기',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  ],
+                      SizedBox(height: 20),
+                      Text(
+                        '게임 종료',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        '승리: ${game.winner ?? "?"}',
+                        style: TextStyle(
+                          fontSize: 28,
+                          color: Colors.yellowAccent,
+                        ),
+                      ),
+                      SizedBox(height: 40),
+                      Text(
+                        '화면을 탭하여 로비로 돌아가기',
+                        style: TextStyle(color: Colors.white54, fontSize: 16),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
