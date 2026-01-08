@@ -38,6 +38,7 @@ class GameProvider with ChangeNotifier {
   String? _myId;
   String? _errorMessage;
   String? _roomId;
+  String? _winner;
 
   List<Player> get players => _players;
   String get gameState => _gameState;
@@ -48,6 +49,7 @@ class GameProvider with ChangeNotifier {
   String? get myId => _myId;
   String? get errorMessage => _errorMessage;
   String? get roomId => _roomId;
+  String? get winner => _winner;
 
   IO.Socket get socket => _socket;
 
@@ -140,7 +142,8 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('game_over', (data) {
-      _gameState = '대기중';
+      _gameState = '결과';
+      _winner = data['winner'];
       _messages.add({
         'sender': '시스템',
         'message': '게임 종료! 승자: ${data['winner']}',
@@ -182,5 +185,11 @@ class GameProvider with ChangeNotifier {
 
   void sendMessage(String msg) {
     _socket.emit('chat_message', msg);
+  }
+
+  void returnToLobby() {
+    _gameState = '대기중';
+    _winner = null;
+    notifyListeners();
   }
 }
