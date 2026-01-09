@@ -35,7 +35,8 @@ class GameProvider with ChangeNotifier {
   String? _myRole;
   final List<Map<String, dynamic>> _messages = [];
   Map<String, int> _votes = {};
-  Map<String, String> _nightSelections = {}; // { '마피아': 'id', '의사': 'id', ... }
+  final Map<String, String> _nightSelections =
+      {}; // { '마피아': 'id', '의사': 'id', ... }
   String? _myId;
   String? _errorMessage;
   String? _roomId;
