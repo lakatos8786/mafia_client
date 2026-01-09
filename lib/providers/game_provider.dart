@@ -66,9 +66,10 @@ class GameProvider with ChangeNotifier {
     _initSocket();
   }
 
+  // static const String serverUrl =
+  //     'http://localhost:3000'; // Local testing
   static const String serverUrl =
-      'http://localhost:3000'; // Local testing
-  // static const String serverUrl = 'https://mafia-server-py70.onrender.com'; // Remote
+      'https://mafia-server-py70.onrender.com'; // Remote
 
   void _initSocket() {
     _socket = IO.io(serverUrl, <String, dynamic>{
