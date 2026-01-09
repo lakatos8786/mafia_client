@@ -35,6 +35,7 @@ class GameProvider with ChangeNotifier {
   String? _myRole;
   final List<Map<String, dynamic>> _messages = [];
   Map<String, int> _votes = {};
+  Map<String, String> _nightSelections = {}; // { '마피아': 'id', '의사': 'id', ... }
   String? _myId;
   String? _errorMessage;
   String? _roomId;
@@ -48,6 +49,7 @@ class GameProvider with ChangeNotifier {
   String? get myRole => _myRole;
   List<Map<String, dynamic>> get messages => _messages;
   Map<String, int> get votes => _votes;
+  Map<String, String> get nightSelections => _nightSelections;
   String? get myId => _myId;
   String? get errorMessage => _errorMessage;
   String? get roomId => _roomId;
@@ -65,7 +67,8 @@ class GameProvider with ChangeNotifier {
   }
 
   static const String serverUrl =
-      'https://mafia-server-py70.onrender.com'; // Replace with Render URL later
+      'http://localhost:3000'; // Local testing
+  // static const String serverUrl = 'https://mafia-server-py70.onrender.com'; // Remote
 
   void _initSocket() {
     _socket = IO.io(serverUrl, <String, dynamic>{
@@ -135,10 +138,44 @@ class GameProvider with ChangeNotifier {
           _gameState = data['phase']?.toString() ?? _gameState;
           _dayCount = data['dayCount'] as int? ?? _dayCount;
           _votes.clear(); // Clear votes on phase change
+          _nightSelections.clear(); // Clear night selections on phase change
           notifyListeners();
         }
       } catch (e) {
         print('Error in phase_change: $e');
+      }
+    });
+
+    _socket.on('night_selection_update', (data) {
+      try {
+        if (data is Map) {
+          final role = data['role']?.toString();
+          final targetId = data['targetId']?.toString();
+          if (role != null && targetId != null) {
+            _nightSelections[role] = targetId;
+            notifyListeners();
+          }
+        }
+      } catch (e) {
+        print('Error in night_selection_update: $e');
+      }
+    });
+
+    _socket.on('investigation_result', (data) {
+      try {
+        if (data is Map) {
+          final targetNickname = data['targetNickname']?.toString() ?? '알 수 없음';
+          final isMafia = data['isMafia'] as bool? ?? false;
+          final resultText = isMafia ? '마피아입니다.' : '마피아가 아닙니다.';
+          _messages.add({
+            'sender': '시스템',
+            'message': '조사 결과: [$targetNickname]님은 $resultText',
+            'isSystem': true,
+          });
+          notifyListeners();
+        }
+      } catch (e) {
+        print('Error in investigation_result: $e');
       }
     });
 
