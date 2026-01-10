@@ -35,6 +35,7 @@ class GameProvider with ChangeNotifier {
   String? _myRole;
   final List<Map<String, dynamic>> _messages = [];
   Map<String, int> _votes = {};
+  Map<String, String> _voters = {}; // { voterId: targetId }
   final Map<String, String> _nightSelections =
       {}; // { '마피아': 'id', '의사': 'id', ... }
   String? _myId;
@@ -50,6 +51,7 @@ class GameProvider with ChangeNotifier {
   String? get myRole => _myRole;
   List<Map<String, dynamic>> get messages => _messages;
   Map<String, int> get votes => _votes;
+  Map<String, String> get voters => _voters;
   Map<String, String> get nightSelections => _nightSelections;
   String? get myId => _myId;
   String? get errorMessage => _errorMessage;
@@ -140,6 +142,7 @@ class GameProvider with ChangeNotifier {
           _gameState = data['phase']?.toString() ?? _gameState;
           _dayCount = data['dayCount'] as int? ?? _dayCount;
           _votes.clear(); // Clear votes on phase change
+          _voters.clear(); // Clear voters on phase change
           _nightSelections.clear(); // Clear night selections on phase change
           notifyListeners();
         }
@@ -184,7 +187,24 @@ class GameProvider with ChangeNotifier {
     _socket.on('vote_update', (data) {
       try {
         if (data is Map) {
-          _votes = Map<String, int>.from(data);
+          final mapData = Map<String, dynamic>.from(data);
+          if (mapData['votes'] != null) {
+            _votes = Map<String, int>.from(mapData['votes']);
+          } else {
+            // Fallback for old server version if needed, or assume new structure
+            // But based on my server change, it is now { votes: ..., voters: ... }
+            // If server sends raw map for votes (old way), 'votes' key won't exist.
+            // Let's safe guard:
+            if (!mapData.containsKey('votes') &&
+                !mapData.containsKey('voters')) {
+              _votes = Map<String, int>.from(mapData);
+            }
+          }
+
+          if (mapData['voters'] != null) {
+            _voters = Map<String, String>.from(mapData['voters']);
+          }
+
           notifyListeners();
         }
       } catch (e) {
@@ -292,6 +312,7 @@ class GameProvider with ChangeNotifier {
     _gameOverTime = null;
     _dayCount = 1;
     _votes.clear();
+    _voters.clear();
     _messages.clear();
     _myRole = null;
     notifyListeners();

@@ -82,7 +82,9 @@ class _GameScreenState extends State<GameScreen> {
                         final isMe = player.id == game.socket.id;
                         final voteCount = game.votes[player.id] ?? 0;
 
-                        final selectionTargetForRole = game.nightSelections.entries
+                        final selectionTargetForRole = game
+                            .nightSelections
+                            .entries
                             .where((entry) => entry.value == player.id)
                             .map((entry) => entry.key)
                             .toList();
@@ -105,15 +107,17 @@ class _GameScreenState extends State<GameScreen> {
 
                         return Card(
                           color: cardColor,
-                          shape: (game.gameState == '밤' &&
+                          shape:
+                              (game.gameState == '밤' &&
                                   selectionTargetForRole.isNotEmpty)
                               ? RoundedRectangleBorder(
                                   side: BorderSide(
-                                    color: selectionTargetForRole.contains('마피아')
+                                    color:
+                                        selectionTargetForRole.contains('마피아')
                                         ? Colors.redAccent
                                         : (selectionTargetForRole.contains('의사')
-                                            ? Colors.greenAccent
-                                            : Colors.blueAccent),
+                                              ? Colors.greenAccent
+                                              : Colors.blueAccent),
                                     width: 2,
                                   ),
                                   borderRadius: BorderRadius.circular(4),
@@ -135,7 +139,8 @@ class _GameScreenState extends State<GameScreen> {
                                   String actionName = action;
                                   if (action == 'kill') actionName = '처단';
                                   if (action == 'heal') actionName = '치료';
-                                  if (action == 'investigate') actionName = '조사';
+                                  if (action == 'investigate')
+                                    actionName = '조사';
 
                                   game.nightAction(action, player.id);
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -167,11 +172,63 @@ class _GameScreenState extends State<GameScreen> {
                                     '득표수: $voteCount',
                                     style: TextStyle(color: Colors.orange),
                                   ),
+                                if (game.gameState == '낮' && player.isAlive)
+                                  Builder(
+                                    builder: (context) {
+                                      // Find players who voted for this player
+                                      final votersForThis = game.voters.entries
+                                          .where(
+                                            (entry) => entry.value == player.id,
+                                          )
+                                          .map((entry) {
+                                            final voterId = entry.key;
+                                            final voter = game.players
+                                                .firstWhere(
+                                                  (p) => p.id == voterId,
+                                                  orElse: () => Player(
+                                                    id: 'unknown',
+                                                    nickname: '?',
+                                                    isAlive: true,
+                                                  ),
+                                                );
+                                            return voter.nickname;
+                                          })
+                                          .toList();
+
+                                      if (votersForThis.isNotEmpty) {
+                                        return Container(
+                                          margin: EdgeInsets.only(top: 4),
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black45,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '지목: ${votersForThis.join(", ")}',
+                                            style: TextStyle(
+                                              color: Colors.redAccent,
+                                              fontSize: 10,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        );
+                                      } else {
+                                        return SizedBox.shrink();
+                                      }
+                                    },
+                                  ),
                                 if (game.gameState == '밤' &&
                                     selectionTargetForRole.isNotEmpty)
                                   Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 2),
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.black54,
                                       borderRadius: BorderRadius.circular(4),
@@ -179,8 +236,9 @@ class _GameScreenState extends State<GameScreen> {
                                     child: Text(
                                       selectionTargetForRole.join(', '),
                                       style: TextStyle(
-                                          color: Colors.yellowAccent,
-                                          fontSize: 10),
+                                        color: Colors.yellowAccent,
+                                        fontSize: 10,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -350,14 +408,18 @@ class _GameScreenState extends State<GameScreen> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
                                           p.nickname,
-                                          style: TextStyle(color: Colors.white70),
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                          ),
                                         ),
                                       ),
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
                                           p.role?.toString() ?? '-',
-                                          style: TextStyle(color: Colors.white70),
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                          ),
                                         ),
                                       ),
                                       Padding(
@@ -383,7 +445,10 @@ class _GameScreenState extends State<GameScreen> {
                         if (game.canReturnToLobby)
                           Text(
                             '화면을 탭하여 로비로 돌아가기',
-                            style: TextStyle(color: Colors.white54, fontSize: 16),
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 16,
+                            ),
                           ),
                       ],
                     ),
