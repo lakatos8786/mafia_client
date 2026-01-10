@@ -45,6 +45,13 @@ class _GameScreenState extends State<GameScreen> {
         title: Column(
           children: [
             Text('${game.gameState} - ${game.dayCount}일차'),
+            if (game.roleCounts.isNotEmpty)
+              Text(
+                game.roleCounts.entries
+                    .map((e) => '${e.key}: ${e.value}')
+                    .join(' | '),
+                style: TextStyle(fontSize: 12, color: Colors.white70),
+              ),
             Text(
               '직업: ${game.myRole ?? "알 수 없음"}',
               style: TextStyle(fontSize: 14, color: Colors.yellowAccent),
@@ -143,8 +150,14 @@ class _GameScreenState extends State<GameScreen> {
                                     actionName = '조사';
 
                                   game.nightAction(action, player.id);
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).hideCurrentSnackBar();
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('$actionName 완료!')),
+                                    SnackBar(
+                                      content: Text('$actionName 대상을 선택했습니다.'),
+                                      duration: Duration(milliseconds: 1000),
+                                    ),
                                   );
                                 }
                               }
@@ -153,12 +166,35 @@ class _GameScreenState extends State<GameScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
-                                  player.isAlive ? Icons.person : Icons.cancel,
+                                  player.isAlive
+                                      ? Icons.person
+                                      : Icons
+                                            .sentiment_dissatisfied, // Changed icon for dead
                                   size: 40,
                                   color: player.isAlive
                                       ? Colors.white
-                                      : Colors.black54,
+                                      : Colors.grey, // Grey for dead icon
                                 ),
+                                if (!player.isAlive)
+                                  Container(
+                                    margin: EdgeInsets.only(top: 2),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red[900],
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      "사망",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 SizedBox(height: 5),
                                 Text(
                                   player.nickname + (isMe ? ' (나)' : ''),
@@ -261,14 +297,47 @@ class _GameScreenState extends State<GameScreen> {
                           final msg = game.messages[index];
                           final sender = msg['sender'];
                           final text = msg['message'];
+                          final type =
+                              msg['type']; // general, dead, mafia, system
+
+                          Color textColor = Colors.white70;
+                          String prefix = '';
+
+                          if (type == 'dead') {
+                            textColor = Colors.grey;
+                            prefix = '[사망] ';
+                          } else if (type == 'mafia') {
+                            textColor = Colors.redAccent;
+                            prefix = '[마피아] ';
+                          } else if (msg['isSystem'] == true) {
+                            textColor = Colors.yellowAccent;
+                            prefix = '[시스템] ';
+                          }
+
                           return Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 2,
                             ),
-                            child: Text(
-                              '$sender: $text',
-                              style: TextStyle(color: Colors.white70),
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(color: textColor),
+                                children: [
+                                  TextSpan(
+                                    text: prefix,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$sender: ',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(text: text),
+                                ],
+                              ),
                             ),
                           );
                         },

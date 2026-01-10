@@ -74,6 +74,10 @@ class GameProvider with ChangeNotifier {
   static const String serverUrl =
       'https://mafia-server-py70.onrender.com'; // Remote
 
+  Map<String, int> _roleCounts = {};
+
+  Map<String, int> get roleCounts => _roleCounts;
+
   void _initSocket() {
     _socket = IO.io(serverUrl, <String, dynamic>{
       'transports': ['websocket'],
@@ -96,6 +100,14 @@ class GameProvider with ChangeNotifier {
     _socket.on('joined_room', (roomId) {
       _roomId = roomId;
       notifyListeners();
+    });
+
+    _socket.on('role_counts', (data) {
+      print('Received role counts: $data');
+      if (data is Map) {
+        _roleCounts = Map<String, int>.from(data);
+        notifyListeners();
+      }
     });
 
     _socket.on('player_update', (data) {
@@ -185,27 +197,32 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('vote_update', (data) {
+      print('Received vote_update: $data'); // DEBUG LOG
       try {
         if (data is Map) {
           final mapData = Map<String, dynamic>.from(data);
+
           if (mapData['votes'] != null) {
             _votes = Map<String, int>.from(mapData['votes']);
           } else {
-            // Fallback for old server version if needed, or assume new structure
-            // But based on my server change, it is now { votes: ..., voters: ... }
-            // If server sends raw map for votes (old way), 'votes' key won't exist.
-            // Let's safe guard:
+            // Legacy support / check
             if (!mapData.containsKey('votes') &&
                 !mapData.containsKey('voters')) {
+              print('Handling as legacy vote map');
               _votes = Map<String, int>.from(mapData);
             }
           }
 
           if (mapData['voters'] != null) {
             _voters = Map<String, String>.from(mapData['voters']);
+            print('Updated voters map: $_voters');
+          } else {
+            print('No voters data found in payload');
           }
 
           notifyListeners();
+        } else {
+          print('vote_update data is not a Map: $data');
         }
       } catch (e) {
         print('Error in vote_update: $e');
