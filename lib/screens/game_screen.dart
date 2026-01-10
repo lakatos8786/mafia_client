@@ -40,25 +40,10 @@ class _GameScreenState extends State<GameScreen> {
     });
 
     return Scaffold(
-      extendBodyBehindAppBar: true, // Make AppBar transparent over background
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Column(
-          children: [
-            Text('${game.gameState} - ${game.dayCount}일차'),
-            if (game.roleCounts.isNotEmpty)
-              Text(
-                game.roleCounts.entries
-                    .map((e) => '${e.key}: ${e.value}')
-                    .join(' | '),
-                style: TextStyle(fontSize: 12, color: Colors.white70),
-              ),
-            Text(
-              '직업: ${game.myRole ?? "알 수 없음"}',
-              style: TextStyle(fontSize: 14, color: Colors.yellowAccent),
-            ),
-          ],
-        ),
-        centerTitle: true,
+        // Removed title to prevent truncation and layout issues.
+        // Info is now moved to the top of the body.
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
@@ -68,20 +53,59 @@ class _GameScreenState extends State<GameScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Safe area for content (below transparent appbar)
             SafeArea(
               child: Column(
                 children: [
+                  // --- Custom Header Area ---
+                  Container(
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    color: Colors
+                        .black26, // Semi-transparent background for readability
+                    width: double.infinity,
+                    child: Column(
+                      children: [
+                        Text(
+                          '${game.gameState} - ${game.dayCount}일차',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        if (game.roleCounts.isNotEmpty)
+                          Text(
+                            game.roleCounts.entries
+                                .map((e) => '${e.key}: ${e.value}')
+                                .join(' | '),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        SizedBox(height: 4),
+                        Text(
+                          '나의 직업: ${game.myRole ?? "알 수 없음"}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.yellowAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // Game Area
                   Expanded(
-                    flex: 2,
+                    flex: 3, // Giv more space to grid
                     child: GridView.builder(
                       padding: EdgeInsets.all(10),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 1.5,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
+                        crossAxisCount: 3, // Increased to 3 columns
+                        childAspectRatio: 1.0, // Square ratio for better fit
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
                       ),
                       itemCount: game.players.length,
                       itemBuilder: (context, index) {
