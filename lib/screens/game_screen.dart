@@ -96,6 +96,69 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   ),
 
+                  // Skip Vote Row
+                  if (game.gameState == '낮' &&
+                      game.players.any(
+                        (p) => p.id == game.socket.id && p.isAlive,
+                      ))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (game.votes['skip'] != null &&
+                              game.votes['skip']! > 0)
+                            Text(
+                              '건너뛰기: ${game.votes['skip']}표  ',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[800],
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              game.vote('skip');
+                            },
+                            child: Text('투표 건너뛰기'),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (game.gameState == '밤' &&
+                      game.myRole == '마피아' &&
+                      game.players.any(
+                        (p) => p.id == game.socket.id && p.isAlive,
+                      ))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red[900],
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () {
+                              game.nightAction('kill', 'skip');
+                            },
+                            child: Text('살인 건너뛰기'),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // Game Area
                   Expanded(
                     flex: 3,
@@ -163,7 +226,7 @@ class _GameScreenState extends State<GameScreen> {
 
                             Color? cardColor = player.isAlive
                                 ? Colors.black54
-                                : Colors.red[900]!.withOpacity(0.8);
+                                : Colors.grey[900]; // Dark grey for dead
 
                             // Highlight card if it's a night selection target
                             if (game.gameState == '밤' &&
@@ -205,7 +268,18 @@ class _GameScreenState extends State<GameScreen> {
                                   : null,
                               child: InkWell(
                                 onTap: () {
-                                  if (!player.isAlive) return;
+                                  if (!player.isAlive) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('이미 사망한 플레이어입니다.'),
+                                        duration: Duration(milliseconds: 1000),
+                                      ),
+                                    );
+                                    return;
+                                  }
                                   // Handle Tap Actions
                                   if (game.gameState == '낮') {
                                     game.vote(player.id);
@@ -242,124 +316,156 @@ class _GameScreenState extends State<GameScreen> {
                                     }
                                   }
                                 },
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                child: Stack(
                                   children: [
-                                    Icon(
-                                      player.isAlive
-                                          ? Icons.person
-                                          : Icons
-                                                .sentiment_dissatisfied, // Changed icon for dead
-                                      size: 40,
-                                      color: player.isAlive
-                                          ? Colors.white
-                                          : Colors.grey, // Grey for dead icon
-                                    ),
-                                    if (!player.isAlive)
-                                      Container(
-                                        margin: EdgeInsets.only(top: 2),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red[900],
-                                          borderRadius: BorderRadius.circular(
-                                            4,
+                                    // Main Content
+                                    Opacity(
+                                      opacity: player.isAlive ? 1.0 : 0.4,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            player.isAlive
+                                                ? Icons.person
+                                                : Icons
+                                                      .sentiment_dissatisfied, // Changed icon for dead
+                                            size: 40,
+                                            color: player.isAlive
+                                                ? Colors.white
+                                                : Colors
+                                                      .grey, // Grey for dead icon
                                           ),
-                                        ),
-                                        child: Text(
-                                          "사망",
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
+                                          SizedBox(height: 5),
+                                          Center(
+                                            child: Text(
+                                              player.nickname +
+                                                  (isMe ? ' (나)' : ''),
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize:
+                                                    12, // Reduced font size to fit
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    SizedBox(height: 5),
-                                    Text(
-                                      player.nickname + (isMe ? ' (나)' : ''),
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    if (game.gameState == '낮' && player.isAlive)
-                                      Text(
-                                        '득표수: $voteCount',
-                                        style: TextStyle(color: Colors.orange),
-                                      ),
-                                    if (game.gameState == '낮' && player.isAlive)
-                                      Builder(
-                                        builder: (context) {
-                                          // Find players who voted for this player
-                                          final votersForThis = game
-                                              .voters
-                                              .entries
-                                              .where(
-                                                (entry) =>
-                                                    entry.value == player.id,
-                                              )
-                                              .map((entry) {
-                                                final voterId = entry.key;
-                                                final voter = game.players
-                                                    .firstWhere(
-                                                      (p) => p.id == voterId,
-                                                      orElse: () => Player(
-                                                        id: 'unknown',
-                                                        nickname: '?',
-                                                        isAlive: true,
-                                                      ),
-                                                    );
-                                                return voter.nickname;
-                                              })
-                                              .toList();
+                                          if (game.gameState == '낮' &&
+                                              player.isAlive)
+                                            Text(
+                                              '득표수: $voteCount',
+                                              style: TextStyle(
+                                                color: Colors.orange,
+                                              ),
+                                            ),
+                                          if (game.gameState == '낮' &&
+                                              player.isAlive)
+                                            Builder(
+                                              builder: (context) {
+                                                // Find players who voted for this player
+                                                final votersForThis = game
+                                                    .voters
+                                                    .entries
+                                                    .where(
+                                                      (entry) =>
+                                                          entry.value ==
+                                                          player.id,
+                                                    )
+                                                    .map((entry) {
+                                                      final voterId = entry.key;
+                                                      final voter = game.players
+                                                          .firstWhere(
+                                                            (p) =>
+                                                                p.id == voterId,
+                                                            orElse: () =>
+                                                                Player(
+                                                                  id: 'unknown',
+                                                                  nickname: '?',
+                                                                  isAlive: true,
+                                                                ),
+                                                          );
+                                                      return voter.nickname;
+                                                    })
+                                                    .toList();
 
-                                          if (votersForThis.isNotEmpty) {
-                                            return Container(
-                                              margin: EdgeInsets.only(top: 4),
+                                                if (votersForThis.isNotEmpty) {
+                                                  return Container(
+                                                    margin: EdgeInsets.only(
+                                                      top: 4,
+                                                    ),
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 4,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.black45,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      '지목: ${votersForThis.join(", ")}',
+                                                      style: TextStyle(
+                                                        color: Colors.redAccent,
+                                                        fontSize: 10,
+                                                      ),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  );
+                                                } else {
+                                                  return SizedBox.shrink();
+                                                }
+                                              },
+                                            ),
+                                          if (game.gameState == '밤' &&
+                                              selectionTargetForRole.isNotEmpty)
+                                            Container(
                                               padding: EdgeInsets.symmetric(
                                                 horizontal: 4,
                                                 vertical: 2,
                                               ),
                                               decoration: BoxDecoration(
-                                                color: Colors.black45,
+                                                color: Colors.black54,
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                               ),
                                               child: Text(
-                                                '지목: ${votersForThis.join(", ")}',
+                                                selectionTargetForRole.join(
+                                                  ', ',
+                                                ),
                                                 style: TextStyle(
-                                                  color: Colors.redAccent,
+                                                  color: Colors.yellowAccent,
                                                   fontSize: 10,
                                                 ),
-                                                textAlign: TextAlign.center,
                                               ),
-                                            );
-                                          } else {
-                                            return SizedBox.shrink();
-                                          }
-                                        },
+                                            ),
+                                        ],
                                       ),
-                                    if (game.gameState == '밤' &&
-                                        selectionTargetForRole.isNotEmpty)
-                                      Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black54,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          selectionTargetForRole.join(', '),
-                                          style: TextStyle(
-                                            color: Colors.yellowAccent,
-                                            fontSize: 10,
+                                    ),
+                                    // Dead Overlay
+                                    if (!player.isAlive)
+                                      Center(
+                                        child: Transform.rotate(
+                                          angle: -0.5,
+                                          child: Text(
+                                            'DEAD',
+                                            style: TextStyle(
+                                              fontSize: 32,
+                                              color: Colors.red.withOpacity(
+                                                0.8,
+                                              ),
+                                              fontWeight: FontWeight.bold,
+                                              shadows: [
+                                                Shadow(
+                                                  blurRadius: 10.0,
+                                                  color: Colors.black,
+                                                  offset: Offset(2.0, 2.0),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
