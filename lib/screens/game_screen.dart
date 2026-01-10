@@ -98,212 +98,276 @@ class _GameScreenState extends State<GameScreen> {
 
                   // Game Area
                   Expanded(
-                    flex: 3, // Giv more space to grid
-                    child: GridView.builder(
-                      padding: EdgeInsets.all(10),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3, // Increased to 3 columns
-                        childAspectRatio: 1.0, // Square ratio for better fit
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                      ),
-                      itemCount: game.players.length,
-                      itemBuilder: (context, index) {
-                        final player = game.players[index];
-                        final isMe = player.id == game.socket.id;
-                        final voteCount = game.votes[player.id] ?? 0;
+                    flex: 3,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final playerCount = game.players.length;
+                        if (playerCount == 0) return SizedBox.shrink();
 
-                        final selectionTargetForRole = game
-                            .nightSelections
-                            .entries
-                            .where((entry) => entry.value == player.id)
-                            .map((entry) => entry.key)
-                            .toList();
+                        // Calculate optimal columns and rows to fit screen
+                        // Try to keep it somewhat square or landscape
+                        int cols = 4;
+                        if (playerCount <= 4)
+                          cols = 2;
+                        else if (playerCount <= 9)
+                          cols = 3;
+                        else
+                          cols = 4;
 
-                        Color? cardColor = player.isAlive
-                            ? Colors.black54
-                            : Colors.red[900]!.withOpacity(0.8);
+                        // If we have many players, we might need 5 cols
+                        if (playerCount > 12) cols = 5;
 
-                        // Highlight card if it's a night selection target
-                        if (game.gameState == '밤' &&
-                            selectionTargetForRole.isNotEmpty) {
-                          if (selectionTargetForRole.contains('마피아')) {
-                            cardColor = Colors.red.withOpacity(0.4);
-                          } else if (selectionTargetForRole.contains('의사')) {
-                            cardColor = Colors.green.withOpacity(0.4);
-                          } else if (selectionTargetForRole.contains('경찰')) {
-                            cardColor = Colors.blue.withOpacity(0.4);
-                          }
-                        }
+                        final rows = (playerCount / cols).ceil();
 
-                        return Card(
-                          color: cardColor,
-                          shape:
-                              (game.gameState == '밤' &&
-                                  selectionTargetForRole.isNotEmpty)
-                              ? RoundedRectangleBorder(
-                                  side: BorderSide(
-                                    color:
-                                        selectionTargetForRole.contains('마피아')
-                                        ? Colors.redAccent
-                                        : (selectionTargetForRole.contains('의사')
-                                              ? Colors.greenAccent
-                                              : Colors.blueAccent),
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(4),
-                                )
-                              : null,
-                          child: InkWell(
-                            onTap: () {
-                              if (!player.isAlive) return;
-                              // Handle Tap Actions
-                              if (game.gameState == '낮') {
-                                game.vote(player.id);
-                              } else if (game.gameState == '밤') {
-                                String? action;
-                                if (game.myRole == '마피아') action = 'kill';
-                                if (game.myRole == '의사') action = 'heal';
-                                if (game.myRole == '경찰') action = 'investigate';
+                        // Calculate Aspect Ratio to fit the height exactly (minus spacing)
+                        final spacing = 4.0;
+                        final totalHorizontalSpacing = (cols - 1) * spacing;
+                        final totalVerticalSpacing =
+                            (rows - 1) *
+                            spacing; // Rough estimate of vertical spacing usage
 
-                                if (action != null) {
-                                  String actionName = action;
-                                  if (action == 'kill') actionName = '처단';
-                                  if (action == 'heal') actionName = '치료';
-                                  if (action == 'investigate')
-                                    actionName = '조사';
+                        final availableWidth =
+                            constraints.maxWidth - 20; // 10 padding each side
+                        final availableHeight = constraints.maxHeight - 20;
 
-                                  game.nightAction(action, player.id);
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('$actionName 대상을 선택했습니다.'),
-                                      duration: Duration(milliseconds: 1000),
-                                    ),
-                                  );
-                                }
+                        final itemWidth =
+                            (availableWidth - totalHorizontalSpacing) / cols;
+                        final itemHeight =
+                            (availableHeight - totalVerticalSpacing) / rows;
+
+                        final ratio = itemWidth / itemHeight;
+
+                        return GridView.builder(
+                          padding: EdgeInsets.all(10),
+                          physics:
+                              NeverScrollableScrollPhysics(), // Disable scrolling
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: cols,
+                                childAspectRatio: ratio,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: spacing,
+                              ),
+                          itemCount: playerCount,
+                          itemBuilder: (context, index) {
+                            final player = game.players[index];
+                            final isMe = player.id == game.socket.id;
+                            final voteCount = game.votes[player.id] ?? 0;
+
+                            final selectionTargetForRole = game
+                                .nightSelections
+                                .entries
+                                .where((entry) => entry.value == player.id)
+                                .map((entry) => entry.key)
+                                .toList();
+
+                            Color? cardColor = player.isAlive
+                                ? Colors.black54
+                                : Colors.red[900]!.withOpacity(0.8);
+
+                            // Highlight card if it's a night selection target
+                            if (game.gameState == '밤' &&
+                                selectionTargetForRole.isNotEmpty) {
+                              if (selectionTargetForRole.contains('마피아')) {
+                                cardColor = Colors.red.withOpacity(0.4);
+                              } else if (selectionTargetForRole.contains(
+                                '의사',
+                              )) {
+                                cardColor = Colors.green.withOpacity(0.4);
+                              } else if (selectionTargetForRole.contains(
+                                '경찰',
+                              )) {
+                                cardColor = Colors.blue.withOpacity(0.4);
                               }
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  player.isAlive
-                                      ? Icons.person
-                                      : Icons
-                                            .sentiment_dissatisfied, // Changed icon for dead
-                                  size: 40,
-                                  color: player.isAlive
-                                      ? Colors.white
-                                      : Colors.grey, // Grey for dead icon
-                                ),
-                                if (!player.isAlive)
-                                  Container(
-                                    margin: EdgeInsets.only(top: 2),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red[900],
+                            }
+
+                            return Card(
+                              color: cardColor,
+                              shape:
+                                  (game.gameState == '밤' &&
+                                      selectionTargetForRole.isNotEmpty)
+                                  ? RoundedRectangleBorder(
+                                      side: BorderSide(
+                                        color:
+                                            selectionTargetForRole.contains(
+                                              '마피아',
+                                            )
+                                            ? Colors.redAccent
+                                            : (selectionTargetForRole.contains(
+                                                    '의사',
+                                                  )
+                                                  ? Colors.greenAccent
+                                                  : Colors.blueAccent),
+                                        width: 2,
+                                      ),
                                       borderRadius: BorderRadius.circular(4),
+                                    )
+                                  : null,
+                              child: InkWell(
+                                onTap: () {
+                                  if (!player.isAlive) return;
+                                  // Handle Tap Actions
+                                  if (game.gameState == '낮') {
+                                    game.vote(player.id);
+                                  } else if (game.gameState == '밤') {
+                                    String? action;
+                                    if (game.myRole == '마피아') action = 'kill';
+                                    if (game.myRole == '의사') action = 'heal';
+                                    if (game.myRole == '경찰')
+                                      action = 'investigate';
+
+                                    if (action != null) {
+                                      String actionName = action;
+                                      if (action == 'kill') actionName = '처단';
+                                      if (action == 'heal') actionName = '치료';
+                                      if (action == 'investigate')
+                                        actionName = '조사';
+
+                                      game.nightAction(action, player.id);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).hideCurrentSnackBar();
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            '$actionName 대상을 선택했습니다.',
+                                          ),
+                                          duration: Duration(
+                                            milliseconds: 1000,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      player.isAlive
+                                          ? Icons.person
+                                          : Icons
+                                                .sentiment_dissatisfied, // Changed icon for dead
+                                      size: 40,
+                                      color: player.isAlive
+                                          ? Colors.white
+                                          : Colors.grey, // Grey for dead icon
                                     ),
-                                    child: Text(
-                                      "사망",
+                                    if (!player.isAlive)
+                                      Container(
+                                        margin: EdgeInsets.only(top: 2),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red[900],
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "사망",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      player.nickname + (isMe ? ' (나)' : ''),
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 10,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
-                                SizedBox(height: 5),
-                                Text(
-                                  player.nickname + (isMe ? ' (나)' : ''),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (game.gameState == '낮' && player.isAlive)
-                                  Text(
-                                    '득표수: $voteCount',
-                                    style: TextStyle(color: Colors.orange),
-                                  ),
-                                if (game.gameState == '낮' && player.isAlive)
-                                  Builder(
-                                    builder: (context) {
-                                      // Find players who voted for this player
-                                      final votersForThis = game.voters.entries
-                                          .where(
-                                            (entry) => entry.value == player.id,
-                                          )
-                                          .map((entry) {
-                                            final voterId = entry.key;
-                                            final voter = game.players
-                                                .firstWhere(
-                                                  (p) => p.id == voterId,
-                                                  orElse: () => Player(
-                                                    id: 'unknown',
-                                                    nickname: '?',
-                                                    isAlive: true,
-                                                  ),
-                                                );
-                                            return voter.nickname;
-                                          })
-                                          .toList();
-
-                                      if (votersForThis.isNotEmpty) {
-                                        return Container(
-                                          margin: EdgeInsets.only(top: 4),
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black45,
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            '지목: ${votersForThis.join(", ")}',
-                                            style: TextStyle(
-                                              color: Colors.redAccent,
-                                              fontSize: 10,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        );
-                                      } else {
-                                        return SizedBox.shrink();
-                                      }
-                                    },
-                                  ),
-                                if (game.gameState == '밤' &&
-                                    selectionTargetForRole.isNotEmpty)
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black54,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      selectionTargetForRole.join(', '),
-                                      style: TextStyle(
-                                        color: Colors.yellowAccent,
-                                        fontSize: 10,
+                                    if (game.gameState == '낮' && player.isAlive)
+                                      Text(
+                                        '득표수: $voteCount',
+                                        style: TextStyle(color: Colors.orange),
                                       ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
+                                    if (game.gameState == '낮' && player.isAlive)
+                                      Builder(
+                                        builder: (context) {
+                                          // Find players who voted for this player
+                                          final votersForThis = game
+                                              .voters
+                                              .entries
+                                              .where(
+                                                (entry) =>
+                                                    entry.value == player.id,
+                                              )
+                                              .map((entry) {
+                                                final voterId = entry.key;
+                                                final voter = game.players
+                                                    .firstWhere(
+                                                      (p) => p.id == voterId,
+                                                      orElse: () => Player(
+                                                        id: 'unknown',
+                                                        nickname: '?',
+                                                        isAlive: true,
+                                                      ),
+                                                    );
+                                                return voter.nickname;
+                                              })
+                                              .toList();
+
+                                          if (votersForThis.isNotEmpty) {
+                                            return Container(
+                                              margin: EdgeInsets.only(top: 4),
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: 4,
+                                                vertical: 2,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.black45,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                '지목: ${votersForThis.join(", ")}',
+                                                style: TextStyle(
+                                                  color: Colors.redAccent,
+                                                  fontSize: 10,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            );
+                                          } else {
+                                            return SizedBox.shrink();
+                                          }
+                                        },
+                                      ),
+                                    if (game.gameState == '밤' &&
+                                        selectionTargetForRole.isNotEmpty)
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black54,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          selectionTargetForRole.join(', '),
+                                          style: TextStyle(
+                                            color: Colors.yellowAccent,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
