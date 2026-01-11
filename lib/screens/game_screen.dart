@@ -150,35 +150,70 @@ class _GameScreenState extends State<GameScreen> {
                       game.players.any(
                         (p) => p.id == game.socket.id && p.isAlive,
                       ))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (game.votes['skip'] != null &&
-                              game.votes['skip']! > 0)
-                            Text(
-                              '건너뛰기: ${game.votes['skip']}표  ',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[800],
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () {
-                              game.vote('skip');
-                            },
-                            child: Text('투표 건너뛰기'),
+                    Builder(
+                      builder: (context) {
+                        // Logic to find who voted 'skip'
+                        final skipVoters = game.voters.entries
+                            .where((entry) => entry.value == 'skip')
+                            .map((entry) {
+                              final voter = game.players.firstWhere(
+                                (p) => p.id == entry.key,
+                                orElse: () => Player(
+                                  id: 'unknown',
+                                  nickname: '?',
+                                  isAlive: true,
+                                ),
+                              );
+                              return voter.nickname;
+                            })
+                            .toList();
+
+                        final myId = game.socket.id;
+                        final iVotedSkip = game.voters[myId] == 'skip';
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              if (game.votes['skip'] != null &&
+                                  game.votes['skip']! > 0)
+                                Flexible(
+                                  child: Text(
+                                    '건너뛰기: ${game.votes['skip']}표 (${skipVoters.join(", ")})  ',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: iVotedSkip
+                                      ? Colors.blueAccent
+                                      : Colors.grey[800],
+                                  foregroundColor: Colors.white,
+                                  side: iVotedSkip
+                                      ? BorderSide(
+                                          color: Colors.white,
+                                          width: 2,
+                                        )
+                                      : null,
+                                ),
+                                onPressed: () {
+                                  game.vote('skip');
+                                },
+                                child: Text('투표 건너뛰기'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
 
                   if (game.gameState == '밤' &&
