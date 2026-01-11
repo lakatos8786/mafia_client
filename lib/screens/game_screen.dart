@@ -24,6 +24,35 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  String _getPhaseInstruction(GameProvider game) {
+    final myPlayer = game.players.firstWhere(
+      (p) => p.id == game.socket.id,
+      orElse: () => Player(id: '', nickname: '', isAlive: false),
+    );
+
+    if (!myPlayer.isAlive) {
+      return "당신은 사망했습니다. 게임을 관전하세요.";
+    }
+
+    if (game.gameState == '낮') {
+      return "의심되는 플레이어에게 투표하세요. (과반수 이상 득표 시 처형)";
+    } else if (game.gameState == '밤') {
+      if (game.myRole == '마피아') {
+        return "제거할 대상을 선택하세요.";
+      } else if (game.myRole == '의사') {
+        return "마피아로부터 보호할 대상을 선택하세요.";
+      } else if (game.myRole == '경찰') {
+        return "마피아인지 조사할 대상을 선택하세요.";
+      } else {
+        return "밤이 되었습니다. 아침이 밝을 때까지 기다리세요.";
+      }
+    } else if (game.gameState == '대기중') {
+      return "게임 시작을 기다리고 있습니다.";
+    } else {
+      return "진행 중...";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
@@ -90,6 +119,26 @@ class _GameScreenState extends State<GameScreen> {
                             fontSize: 16,
                             color: Colors.yellowAccent,
                             fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white10,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            _getPhaseInstruction(game),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.cyanAccent,
+                              fontStyle: FontStyle.italic,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
