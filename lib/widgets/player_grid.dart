@@ -26,9 +26,9 @@ class PlayerGrid extends StatelessWidget {
         const double minItemWidth = 80.0;
 
         int cols = 4;
-        if (playerCount <= 4)
+        if (playerCount <= 4) {
           cols = 2;
-        else if (playerCount <= 9)
+        } else if (playerCount <= 9)
           cols = 3;
         else
           cols = 4;
