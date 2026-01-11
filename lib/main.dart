@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'providers/game_provider.dart';
 import 'screens/login_screen.dart';
@@ -20,8 +21,18 @@ class MyApp extends StatelessWidget {
         title: '마피아 온라인',
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: Colors.grey[900],
-          primaryColor: Colors.redAccent,
+          scaffoldBackgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
+          primaryColor: const Color(0xFFE94560), // Neon Red
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFFE94560),
+            secondary: Color(0xFF0F3460), // Dark Blue
+            surface: Color(0xFF16213E), // Slightly Lighter Blue
+          ),
+          textTheme: GoogleFonts.notoSansKrTextTheme(ThemeData.dark().textTheme)
+              .copyWith(
+                displayLarge: GoogleFonts.blackHanSans(color: Colors.white),
+                headlineMedium: GoogleFonts.blackHanSans(color: Colors.white),
+              ),
         ),
         home: ScreenRouter(),
       ),

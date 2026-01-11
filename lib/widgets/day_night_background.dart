@@ -16,17 +16,11 @@ class DayNightBackground extends StatelessWidget {
     List<Color> gradientColors;
 
     if (phase == '낮') {
-      // Day colors: Light Blue to lighter Blue
-      gradientColors = [
-        Color(0xFF4FC3F7), // Light Blue 300
-        Color(0xFFE1F5FE), // Light Blue 50
-      ];
+      // Day colors: Stylish Blue
+      gradientColors = [const Color(0xFF4FC3F7), const Color(0xFFE1F5FE)];
     } else {
-      // Night or other (default) colors: Dark Blue to Black
-      gradientColors = [
-        Color(0xFF0D47A1), // Blue 900
-        Colors.black,
-      ];
+      // Night: Deep Cyberpunk Blue
+      gradientColors = [const Color(0xFF0F3460), const Color(0xFF1A1A2E)];
     }
 
     return AnimatedContainer(
@@ -38,7 +32,22 @@ class DayNightBackground extends StatelessWidget {
           colors: gradientColors,
         ),
       ),
-      child: child,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Vignette Overlay for cinematic feel
+          Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.0,
+                colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+              ),
+            ),
+          ),
+          child,
+        ],
+      ),
     );
   }
 }

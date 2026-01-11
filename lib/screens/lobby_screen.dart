@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:animate_do/animate_do.dart';
 import '../providers/game_provider.dart';
 
 class LobbyScreen extends StatelessWidget {
@@ -11,22 +13,30 @@ class LobbyScreen extends StatelessWidget {
     final game = Provider.of<GameProvider>(context);
 
     return Scaffold(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: const Color(0xFF1A1A2E),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text('대기방 (코드: ${game.roomId})'),
+        title: Text(
+          'ROOM: ${game.roomId}',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2.0,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.copy),
+            icon: const Icon(Icons.copy, color: Color(0xFFE94560)),
             onPressed: () {
               if (game.roomId != null) {
                 Clipboard.setData(ClipboardData(text: game.roomId!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('방 코드가 복사되었습니다: ${game.roomId}'),
-                    duration: Duration(seconds: 2),
+                    content: Text('Copied: ${game.roomId}'),
+                    backgroundColor: const Color(0xFF0F3460),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               }
@@ -34,92 +44,197 @@ class LobbyScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
+        fit: StackFit.expand,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Text(
-              '플레이어를 기다리는 중...',
-              style: TextStyle(color: Colors.white70, fontSize: 20),
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: game.players.length,
-              itemBuilder: (context, index) {
-                final player = game.players[index];
-                final isMe = player.id == game.socket.id;
-                return Card(
-                  color: Colors.white10,
-                  margin: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                  child: ListTile(
-                    leading: Icon(Icons.person, color: Colors.white),
-                    title: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          player.nickname + (isMe ? ' (나)' : ''),
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: player.isAlive ? Colors.white : Colors.grey,
-                            decoration: player.isAlive
-                                ? null
-                                : TextDecoration.lineThrough,
-                          ),
-                        ),
-                        if (player.isHost)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8.0),
-                            child: Text('👑', style: TextStyle(fontSize: 20)),
-                          ),
-                      ],
-                    ),
-                    trailing: isMe
-                        ? Icon(Icons.star, color: Colors.yellow)
-                        : null,
+          // Background
+          Positioned(
+            bottom: -100,
+            left: -50,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0F3460).withOpacity(0.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F3460).withOpacity(0.4),
+                    blurRadius: 150,
+                    spreadRadius: 20,
                   ),
-                );
-              },
-            ),
-          ),
-          SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: Builder(
-                builder: (context) {
-                  if (game.roomId != null) {
-                    // Show Start Button only if I am the host
-                    if (game.players.any(
-                      (p) => p.id == game.myId && p.isHost,
-                    )) {
-                      return ElevatedButton(
-                        onPressed: () {
-                          game.startGame();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 15,
-                          ),
-                        ),
-                        child: Text('게임 시작', style: TextStyle(fontSize: 18)),
-                      );
-                    } else {
-                      return Text(
-                        '방장이 게임을 시작하기를 기다리는 중...',
-                        style: TextStyle(color: Colors.white54, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      );
-                    }
-                  }
-                  return Container(); // Fallback if roomId is null, though unlikely in lobby
-                },
+                ],
               ),
             ),
+          ),
+
+          Column(
+            children: [
+              const SizedBox(height: 100),
+              FadeInDown(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Text(
+                    'WAITING FOR PLAYERS...',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 14,
+                      letterSpacing: 3.0,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: game.players.length,
+                  itemBuilder: (context, index) {
+                    final player = game.players[index];
+                    final isMe = player.id == game.socket.id;
+
+                    return FadeInLeft(
+                      delay: Duration(milliseconds: 100 * index),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 15,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isMe
+                                    ? const Color(0xFFE94560).withOpacity(0.2)
+                                    : Colors.white.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(15),
+                                border: Border.all(
+                                  color: isMe
+                                      ? const Color(0xFFE94560).withOpacity(0.5)
+                                      : Colors.white.withOpacity(0.1),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: isMe
+                                        ? const Color(0xFFE94560)
+                                        : Colors.white24,
+                                    child: const Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Expanded(
+                                    child: Text(
+                                      player.nickname,
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: player.isAlive
+                                            ? Colors.white
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                  if (player.isHost)
+                                    const Tooltip(
+                                      message: 'Host',
+                                      child: Text(
+                                        '👑',
+                                        style: TextStyle(fontSize: 24),
+                                      ),
+                                    ),
+                                  if (isMe)
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 10),
+                                      child: Icon(
+                                        Icons.star,
+                                        color: Colors.yellow,
+                                        size: 20,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              FadeInUp(
+                child: Padding(
+                  padding: const EdgeInsets.all(30.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 60,
+                    child: Builder(
+                      builder: (context) {
+                        if (game.roomId != null) {
+                          if (game.players.any(
+                            (p) => p.id == game.myId && p.isHost,
+                          )) {
+                            return ElevatedButton(
+                              onPressed: () {
+                                game.startGame();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE94560),
+                                foregroundColor: Colors.white,
+                                elevation: 8,
+                                shadowColor: const Color(
+                                  0xFFE94560,
+                                ).withOpacity(0.6),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                              ),
+                              child: const Text(
+                                'GAME START',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 2.0,
+                                ),
+                              ),
+                            );
+                          } else {
+                            return Container(
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.white24),
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: const Text(
+                                'WAITING FOR HOST...',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 16,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                        return Container();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
