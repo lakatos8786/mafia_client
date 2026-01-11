@@ -173,7 +173,6 @@ class GameProvider with ChangeNotifier {
         print('Error in player_eliminated: $e');
       }
     });
-    });
 
     _socket.on('phase_change', (data) {
       try {
