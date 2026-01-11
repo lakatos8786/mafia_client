@@ -85,11 +85,11 @@ class GameHeader extends StatelessWidget {
                 text: TextSpan(
                   children: [
                     const TextSpan(
-                      text: 'MY ROLE: ',
+                      text: '나의 직업: ',
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     TextSpan(
-                      text: game.myRole ?? "Unknown",
+                      text: game.myRole ?? "알 수 없음",
                       style: GoogleFonts.blackHanSans(
                         color: const Color(0xFFE94560),
                         fontSize: 18,

@@ -17,7 +17,7 @@ class LobbyScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          'ROOM: ${game.roomId}',
+          '방 번호: ${game.roomId}',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 2.0,
@@ -34,7 +34,7 @@ class LobbyScreen extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: game.roomId!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Copied: ${game.roomId}'),
+                    content: Text('복사됨: ${game.roomId}'),
                     backgroundColor: const Color(0xFF0F3460),
                     duration: const Duration(seconds: 2),
                   ),
@@ -75,7 +75,7 @@ class LobbyScreen extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Text(
-                    'WAITING FOR PLAYERS...',
+                    '플레이어 대기 중...',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
                       fontSize: 14,
@@ -145,7 +145,7 @@ class LobbyScreen extends StatelessWidget {
                                   ),
                                   if (player.isHost)
                                     const Tooltip(
-                                      message: 'Host',
+                                      message: '방장',
                                       child: Text(
                                         '👑',
                                         style: TextStyle(fontSize: 24),
@@ -201,7 +201,7 @@ class LobbyScreen extends StatelessWidget {
                                 ),
                               ),
                               child: const Text(
-                                'GAME START',
+                                '게임 시작',
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -218,7 +218,7 @@ class LobbyScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               child: const Text(
-                                'WAITING FOR HOST...',
+                                '방장 대기 중...',
                                 style: TextStyle(
                                   color: Colors.white54,
                                   fontSize: 16,

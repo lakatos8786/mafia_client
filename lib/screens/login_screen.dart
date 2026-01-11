@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           Text(
-                            'MAFIA',
+                            '마피아',
                             style: GoogleFonts.blackHanSans(
                               fontSize: 60,
                               fontWeight: FontWeight.bold,
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           Text(
-                            'ONLINE',
+                            '온라인',
                             style: GoogleFonts.blackHanSans(
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
@@ -148,25 +148,25 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 _buildTextField(
                                   controller: _nameController,
-                                  label: 'NICKNAME',
+                                  label: '닉네임',
                                   icon: Icons.person_outline,
                                 ),
                                 const SizedBox(height: 20),
                                 _buildTextField(
                                   controller: _roomCodeController,
-                                  label: 'ROOM CODE (JOIN)',
+                                  label: '방 코드 (참여 전용)',
                                   icon: Icons.vpn_key_outlined,
                                   isNumber: true,
                                 ),
                                 const SizedBox(height: 30),
                                 _buildButton(
-                                  text: 'CREATE ROOM',
+                                  text: '방 만들기',
                                   onPressed: _createRoom,
                                   color: const Color(0xFFE94560),
                                 ),
                                 const SizedBox(height: 15),
                                 _buildButton(
-                                  text: 'JOIN ROOM',
+                                  text: '방 참여하기',
                                   onPressed: _joinRoom,
                                   color: const Color(0xFF0F3460),
                                   isOutlined: true,

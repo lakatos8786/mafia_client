@@ -68,15 +68,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                 if (type == 'dead') {
                   textColor = Colors.grey;
                   nameColor = Colors.grey;
-                  prefix = '[DEAD] ';
+                  prefix = '[사망자] ';
                 } else if (type == 'mafia') {
                   textColor = const Color(0xFFE94560);
                   nameColor = const Color(0xFFE94560);
-                  prefix = '[MAFIA] ';
+                  prefix = '[마피아] ';
                 } else if (msg['isSystem'] == true) {
                   textColor = Colors.yellowAccent;
                   nameColor = Colors.yellowAccent;
-                  prefix = '[SYSTEM] ';
+                  prefix = '[시스템] ';
                 }
 
                 return Padding(
@@ -117,7 +117,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                   controller: _msgController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: 'Send a message...',
+                    hintText: '메시지를 입력하세요...',
                     hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
                     filled: true,
                     fillColor: Colors.black45,
@@ -140,24 +140,31 @@ class _ChatWidgetState extends State<ChatWidget> {
                 ),
               ),
               const SizedBox(width: 10),
-              Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE94560),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFE94560).withOpacity(0.4),
-                      blurRadius: 8,
+              InkWell(
+                onTap: _sendMessage,
+                borderRadius: BorderRadius.circular(25),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE94560), Color(0xFFC0394D)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.send_rounded,
-                    color: Colors.white,
-                    size: 20,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE94560).withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  onPressed: _sendMessage,
+                  child: const Icon(
+                    Icons.arrow_upward,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
             ],

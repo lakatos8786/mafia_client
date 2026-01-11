@@ -206,6 +206,81 @@ class PlayerGrid extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+
+                                // Voters List (New: "Who voted for me")
+                                if (game.gameState == '낮' &&
+                                    player.isAlive &&
+                                    voteCount > 0)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 2.0),
+                                    child: Builder(
+                                      builder: (context) {
+                                        final votersForThisPlayer = game
+                                            .voters
+                                            .entries
+                                            .where((e) => e.value == player.id)
+                                            .map((e) {
+                                              return game.players
+                                                  .firstWhere(
+                                                    (p) => p.id == e.key,
+                                                    orElse: () => Player(
+                                                      id: '',
+                                                      nickname: '?',
+                                                      isAlive: true,
+                                                    ),
+                                                  )
+                                                  .nickname;
+                                            })
+                                            .toList();
+
+                                        final displayStr = votersForThisPlayer
+                                            .join(', ');
+
+                                        return Tooltip(
+                                          message:
+                                              displayStr, // Show ALL voters on long press
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withOpacity(
+                                              0.9,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFFE94560),
+                                            ),
+                                          ),
+                                          textStyle: GoogleFonts.notoSansKr(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 4,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(
+                                                0.6,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              displayStr,
+                                              style: const TextStyle(
+                                                color: Colors.yellowAccent,
+                                                fontSize: 9, // Slightly larger
+                                              ),
+                                              maxLines: 2, // Allow 2 lines
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -215,7 +290,7 @@ class PlayerGrid extends StatelessWidget {
                               child: Transform.rotate(
                                 angle: -0.5,
                                 child: Text(
-                                  'DEAD',
+                                  '사망',
                                   style: GoogleFonts.blackHanSans(
                                     fontSize: 24,
                                     color: const Color(

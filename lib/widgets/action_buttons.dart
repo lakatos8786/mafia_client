@@ -47,7 +47,7 @@ class ActionButtons extends StatelessWidget {
                     if (game.votes['skip'] != null && game.votes['skip']! > 0)
                       Flexible(
                         child: Text(
-                          'SKIP VOTES: ${game.votes['skip']} (${skipVoters.join(", ")})  ',
+                          '건너뛰기 투표: ${game.votes['skip']} (${skipVoters.join(", ")})  ',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.6),
                             fontWeight: FontWeight.bold,
@@ -78,7 +78,7 @@ class ActionButtons extends StatelessWidget {
                         game.vote('skip');
                       },
                       child: const Text(
-                        'SKIP VOTE',
+                        '투표 건너뛰기',
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
@@ -98,9 +98,7 @@ class ActionButtons extends StatelessWidget {
                   builder: (context) {
                     final isMafiaSkip = game.nightSelections['마피아'] == 'skip';
                     final actor = game.nightActionActors['마피아'] ?? '';
-                    final btnText = isMafiaSkip
-                        ? 'SKIP KILL ($actor)'
-                        : 'SKIP KILL';
+                    final btnText = isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
 
                     return ElevatedButton(
                       style: ElevatedButton.styleFrom(
