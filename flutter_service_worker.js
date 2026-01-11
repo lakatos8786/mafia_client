@@ -100,7 +100,7 @@ const RESOURCES = {".git/COMMIT_EDITMSG": "ab7661a7294b00f64b2b971524334733",
 "canvaskit/skwasm_heavy.wasm": "8034ad26ba2485dab2fd49bdd786837b",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
 "flutter.js": "888483df48293866f9f41d3d9274a779",
-"flutter_bootstrap.js": "dbcaaa970e8b62aabdf1e42bd031fd21",
+"flutter_bootstrap.js": "bd76461d832f568d55983bdbab84977b",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
@@ -109,7 +109,7 @@ const RESOURCES = {".git/COMMIT_EDITMSG": "ab7661a7294b00f64b2b971524334733",
 "/": "6f7cd7ece3ba02ab791dd5865de0d408",
 "main.dart.js": "206695caa087398cb52a3b40528e9563",
 "manifest.json": "d4337e896c6c583d1783d9228ae4e0f5",
-"version.json": "554291514f06db5dec7cdb11e2e932db"};
+"version.json": "c35883b092446b976394e190cf16fa0c"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",
