@@ -38,6 +38,7 @@ class GameProvider with ChangeNotifier {
   Map<String, String> _voters = {}; // { voterId: targetId }
   final Map<String, String> _nightSelections =
       {}; // { '마피아': 'id', '의사': 'id', ... }
+  final Map<String, String> _nightActionActors = {}; // { '마피아': 'nickname' }
   String? _myId;
   String? _errorMessage;
   String? _roomId;
@@ -53,6 +54,7 @@ class GameProvider with ChangeNotifier {
   Map<String, int> get votes => _votes;
   Map<String, String> get voters => _voters;
   Map<String, String> get nightSelections => _nightSelections;
+  Map<String, String> get nightActionActors => _nightActionActors;
   String? get myId => _myId;
   String? get errorMessage => _errorMessage;
   String? get roomId => _roomId;
@@ -148,6 +150,31 @@ class GameProvider with ChangeNotifier {
       notifyListeners();
     });
 
+    _socket.on('player_eliminated', (data) {
+      // Handle player elimination event to update specific player status
+      // This ensures the client knows who died immediately
+      try {
+        if (data is Map) {
+          final deadId = data['id'];
+          final index = _players.indexWhere((p) => p.id == deadId);
+          if (index != -1) {
+            final old = _players[index];
+            _players[index] = Player(
+              id: old.id,
+              nickname: old.nickname,
+              role: old.role,
+              isAlive: false, // Mark as dead
+              isHost: old.isHost,
+            );
+            notifyListeners();
+          }
+        }
+      } catch (e) {
+        print('Error in player_eliminated: $e');
+      }
+    });
+    });
+
     _socket.on('phase_change', (data) {
       try {
         if (data is Map) {
@@ -156,6 +183,7 @@ class GameProvider with ChangeNotifier {
           _votes.clear(); // Clear votes on phase change
           _voters.clear(); // Clear voters on phase change
           _nightSelections.clear(); // Clear night selections on phase change
+          _nightActionActors.clear();
           notifyListeners();
         }
       } catch (e) {
@@ -168,8 +196,12 @@ class GameProvider with ChangeNotifier {
         if (data is Map) {
           final role = data['role']?.toString();
           final targetId = data['targetId']?.toString();
+          final actorNickname = data['actorNickname']?.toString();
           if (role != null && targetId != null) {
             _nightSelections[role] = targetId;
+            if (actorNickname != null) {
+              _nightActionActors[role] = actorNickname;
+            }
             notifyListeners();
           }
         }

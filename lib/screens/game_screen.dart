@@ -229,15 +229,34 @@ class _GameScreenState extends State<GameScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[900],
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () {
-                              game.nightAction('kill', 'skip');
+                          Builder(
+                            builder: (context) {
+                              final isMafiaSkip =
+                                  game.nightSelections['마피아'] == 'skip';
+                              final actor = game.nightActionActors['마피아'] ?? '';
+                              final btnText = isMafiaSkip
+                                  ? '살인 건너뛰기 ($actor)'
+                                  : '살인 건너뛰기';
+
+                              return ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isMafiaSkip
+                                      ? Colors.redAccent
+                                      : Colors.red[900],
+                                  foregroundColor: Colors.white,
+                                  side: isMafiaSkip
+                                      ? BorderSide(
+                                          color: Colors.white,
+                                          width: 2,
+                                        )
+                                      : null,
+                                ),
+                                onPressed: () {
+                                  game.nightAction('kill', 'skip');
+                                },
+                                child: Text(btnText),
+                              );
                             },
-                            child: Text('살인 건너뛰기'),
                           ),
                         ],
                       ),
@@ -345,28 +364,34 @@ class _GameScreenState extends State<GameScreen> {
                               }
                             }
 
+                            // Border implementation
+                            ShapeBorder? cardShape;
+                            if (game.gameState == '밤' &&
+                                selectionTargetForRole.isNotEmpty) {
+                              cardShape = RoundedRectangleBorder(
+                                side: BorderSide(
+                                  color: selectionTargetForRole.contains('마피아')
+                                      ? Colors.redAccent
+                                      : (selectionTargetForRole.contains('의사')
+                                            ? Colors.greenAccent
+                                            : Colors.blueAccent),
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              );
+                            } else if (!player.isAlive) {
+                              cardShape = RoundedRectangleBorder(
+                                side: BorderSide(
+                                  color: Colors.grey[600]!,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              );
+                            }
+
                             return Card(
                               color: cardColor,
-                              shape:
-                                  (game.gameState == '밤' &&
-                                      selectionTargetForRole.isNotEmpty)
-                                  ? RoundedRectangleBorder(
-                                      side: BorderSide(
-                                        color:
-                                            selectionTargetForRole.contains(
-                                              '마피아',
-                                            )
-                                            ? Colors.redAccent
-                                            : (selectionTargetForRole.contains(
-                                                    '의사',
-                                                  )
-                                                  ? Colors.greenAccent
-                                                  : Colors.blueAccent),
-                                        width: 2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(4),
-                                    )
-                                  : null,
+                              shape: cardShape,
                               child: InkWell(
                                 onTap: () {
                                   if (!player.isAlive) {
@@ -429,13 +454,11 @@ class _GameScreenState extends State<GameScreen> {
                                           Icon(
                                             player.isAlive
                                                 ? Icons.person
-                                                : Icons
-                                                      .sentiment_dissatisfied, // Changed icon for dead
+                                                : Icons.cancel, // Red X
                                             size: 40,
                                             color: player.isAlive
                                                 ? Colors.white
-                                                : Colors
-                                                      .grey, // Grey for dead icon
+                                                : Colors.redAccent,
                                           ),
                                           SizedBox(height: 5),
                                           Center(
@@ -446,8 +469,13 @@ class _GameScreenState extends State<GameScreen> {
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.bold,
-                                                fontSize:
-                                                    12, // Reduced font size to fit
+                                                fontSize: 12,
+                                                decoration: player.isAlive
+                                                    ? null
+                                                    : TextDecoration
+                                                          .lineThrough,
+                                                decorationColor: Colors.red,
+                                                decorationThickness: 2,
                                               ),
                                             ),
                                           ),
@@ -533,14 +561,33 @@ class _GameScreenState extends State<GameScreen> {
                                                 borderRadius:
                                                     BorderRadius.circular(4),
                                               ),
-                                              child: Text(
-                                                selectionTargetForRole.join(
-                                                  ', ',
-                                                ),
-                                                style: TextStyle(
-                                                  color: Colors.yellowAccent,
-                                                  fontSize: 10,
-                                                ),
+                                              child: Builder(
+                                                builder: (context) {
+                                                  final roles =
+                                                      selectionTargetForRole;
+                                                  final displayTexts = roles.map((
+                                                    role,
+                                                  ) {
+                                                    // If mafia, try to append actor name
+                                                    if (role == '마피아' &&
+                                                        game.nightActionActors
+                                                            .containsKey(
+                                                              role,
+                                                            )) {
+                                                      return '$role(${game.nightActionActors[role]})';
+                                                    }
+                                                    return role;
+                                                  }).toList();
+
+                                                  return Text(
+                                                    displayTexts.join(', '),
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.yellowAccent,
+                                                      fontSize: 10,
+                                                    ),
+                                                  );
+                                                },
                                               ),
                                             ),
                                         ],
