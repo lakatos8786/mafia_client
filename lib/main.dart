@@ -28,10 +28,16 @@ class MyApp extends StatelessWidget {
             secondary: Color(0xFF0F3460), // Dark Blue
             surface: Color(0xFF16213E), // Slightly Lighter Blue
           ),
-          textTheme: GoogleFonts.notoSansKrTextTheme(ThemeData.dark().textTheme)
+          textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
               .copyWith(
-                displayLarge: GoogleFonts.blackHanSans(color: Colors.white),
-                headlineMedium: GoogleFonts.blackHanSans(color: Colors.white),
+                displayLarge: GoogleFonts.gowunDodum(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                headlineMedium: GoogleFonts.gowunDodum(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
         ),
         home: ScreenRouter(),

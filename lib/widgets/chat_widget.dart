@@ -89,14 +89,14 @@ class _ChatWidgetState extends State<ChatWidget> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: nameColor,
-                          fontSize: 13,
+                          fontSize: 15,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           text,
-                          style: TextStyle(color: textColor, fontSize: 13),
+                          style: TextStyle(color: textColor, fontSize: 15),
                         ),
                       ),
                     ],

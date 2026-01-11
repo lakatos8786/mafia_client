@@ -71,24 +71,29 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
               SafeArea(
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
-
-                    // 1. Winner Announcement (Fast ZoomIn)
+                    const SizedBox(height: 20), // Reduced top spacing
+                    // 1. Winner Announcement (Compact)
                     ZoomIn(
                       duration: const Duration(milliseconds: 600),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Row(
+                        // Changed to Row for compactness
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.emoji_events, color: mainColor, size: 80),
-                          const SizedBox(height: 10),
+                          Icon(
+                            Icons.emoji_events,
+                            color: mainColor,
+                            size: 50,
+                          ), // Smaller icon
+                          const SizedBox(width: 10),
                           Text(
                             isMafiaWin ? '마피아 승리' : '시민 승리',
-                            style: GoogleFonts.blackHanSans(
-                              fontSize: 40,
+                            style: GoogleFonts.gowunDodum(
+                              fontSize: 32, // Smaller font
+                              fontWeight: FontWeight.bold,
                               color: Colors.white,
-                              letterSpacing: 2.0,
+                              letterSpacing: 1.5,
                               shadows: [
-                                Shadow(blurRadius: 20, color: mainColor),
+                                Shadow(blurRadius: 15, color: mainColor),
                               ],
                             ),
                           ),
@@ -96,37 +101,40 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                       ),
                     ),
 
-                    const SizedBox(height: 30),
-
-                    // 2. Results Grid (Staggered Reveal)
+                    const SizedBox(height: 15), // Reduced gap
+                    // 2. Results Grid (Dense)
                     Expanded(
                       child: _showCards
                           ? LayoutBuilder(
                               builder: (context, constraints) {
                                 final players = widget.game.endGamePlayers;
-                                // 2 columns for better visibility of details
+                                final playerCount = players.length;
+
+                                // More aggressive columns
+                                int cols = 2;
+                                if (playerCount > 4) cols = 3;
+                                if (playerCount > 9) cols = 4;
+
                                 return GridView.builder(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
+                                    horizontal: 16, // Reduced padding
                                   ),
                                   gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 2.5, // Wide cards
-                                        crossAxisSpacing: 10,
-                                        mainAxisSpacing: 10,
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: cols,
+                                        childAspectRatio: 2.4, // Flatter cards
+                                        crossAxisSpacing: 6,
+                                        mainAxisSpacing: 6,
                                       ),
                                   itemCount: players.length,
                                   itemBuilder: (context, index) {
+                                    // ... cell content logic ... (keep it simple for brevity in replacement if possible, but forced here due to tool nature)
                                     final p = players[index];
-
-                                    // Determine role style
                                     Color roleColor = Colors.grey;
                                     IconData roleIcon = Icons.person;
                                     if (p.role == '마피아') {
                                       roleColor = const Color(0xFFE94560);
-                                      roleIcon =
-                                          Icons.security; // Or distinct icon
+                                      roleIcon = Icons.security;
                                     } else if (p.role == '의사') {
                                       roleColor = Colors.greenAccent;
                                       roleIcon = Icons.medical_services;
@@ -138,128 +146,118 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                     }
 
                                     return FadeInLeft(
-                                      // Fast stagger: 100ms * index
-                                      delay: Duration(
-                                        milliseconds: 100 * index,
-                                      ),
+                                      delay: Duration(milliseconds: 50 * index),
                                       duration: const Duration(
                                         milliseconds: 400,
                                       ),
                                       child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.05),
+                                          color: Colors.white.withOpacity(0.08),
                                           borderRadius: BorderRadius.circular(
-                                            10,
+                                            8,
                                           ),
                                           border: Border.all(
                                             color: p.isAlive
-                                                ? roleColor.withOpacity(0.5)
-                                                : Colors.grey.withOpacity(0.2),
-                                            width: 1,
+                                                ? roleColor.withOpacity(0.6)
+                                                : Colors.grey.withOpacity(0.3),
+                                            width: 1.5,
                                           ),
                                         ),
-                                        child: Stack(
+                                        child: Row(
                                           children: [
-                                            // Creating a nice list tile style
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 5,
-                                                  ),
-                                              child: Row(
+                                            // Avatar
+                                            Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: roleColor.withOpacity(
+                                                  0.2,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                roleIcon,
+                                                color: roleColor,
+                                                size: 18,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 10),
+                                            // Texts
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
-                                                  // Avatar / Rank
-                                                  Container(
-                                                    width: 40,
-                                                    height: 40,
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      color: roleColor
-                                                          .withOpacity(0.2),
-                                                    ),
-                                                    child: Icon(
-                                                      roleIcon,
-                                                      color: roleColor,
-                                                      size: 20,
-                                                    ),
+                                                  Text(
+                                                    p.nickname,
+                                                    style:
+                                                        GoogleFonts.gowunDodum(
+                                                          color: p.isAlive
+                                                              ? Colors.white
+                                                              : Colors.grey,
+                                                          fontSize:
+                                                              14, // Larger
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          decoration: p.isAlive
+                                                              ? null
+                                                              : TextDecoration
+                                                                    .lineThrough,
+                                                        ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
-                                                  const SizedBox(width: 10),
-                                                  // Texts
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Text(
-                                                          p.nickname,
-                                                          style: TextStyle(
-                                                            color: p.isAlive
-                                                                ? Colors.white
-                                                                : Colors.grey,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            decoration:
-                                                                p.isAlive
-                                                                ? null
-                                                                : TextDecoration
-                                                                      .lineThrough,
-                                                          ),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
+                                                  Text(
+                                                    p.role ?? '시민',
+                                                    style:
+                                                        GoogleFonts.gowunDodum(
+                                                          color: roleColor,
+                                                          fontSize:
+                                                              12, // Larger
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                         ),
-                                                        Text(
-                                                          p.role ?? '시민',
-                                                          style: TextStyle(
-                                                            color: roleColor,
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
                                                   ),
                                                 ],
                                               ),
                                             ),
-
-                                            // Dead Stamp
                                             if (!p.isAlive)
-                                              Positioned(
-                                                right: 10,
-                                                bottom: 5,
-                                                child: Transform.rotate(
-                                                  angle: -0.2,
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 4,
-                                                          vertical: 2,
+                                              Transform.rotate(
+                                                angle: -0.2,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.redAccent
+                                                          .withOpacity(0.8),
+                                                      width: 2,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
                                                         ),
-                                                    decoration: BoxDecoration(
-                                                      border: Border.all(
-                                                        color: Colors.grey,
-                                                      ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            4,
-                                                          ),
-                                                    ),
-                                                    child: const Text(
-                                                      '사망',
-                                                      style: TextStyle(
-                                                        color: Colors.grey,
-                                                        fontSize: 10,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    '사망',
+                                                    style:
+                                                        GoogleFonts.gowunDodum(
+                                                          color:
+                                                              Colors.redAccent,
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                   ),
                                                 ),
                                               ),
@@ -274,9 +272,9 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                           : const SizedBox(),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 15),
 
-                    // 3. Return Button (Pulsing)
+                    // 3. Compact Return Button
                     if (!widget.game.canReturnToLobby)
                       Pulse(
                         infinite: true,
@@ -284,41 +282,44 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                           "로비로 돌아가는 중...",
                           style: TextStyle(
                             color: Colors.grey,
-                            letterSpacing: 1.5,
+                            fontSize: 12,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       )
                     else
                       FadeInUp(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (widget.game.canReturnToLobby) {
-                              widget.game.returnToLobby();
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 15,
+                        child: SizedBox(
+                          height: 40, // Height for compact button
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (widget.game.canReturnToLobby) {
+                                widget.game.returnToLobby();
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: mainColor,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 30,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 5,
+                              shadowColor: mainColor.withOpacity(0.5),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 10,
-                            shadowColor: mainColor.withOpacity(0.5),
-                          ),
-                          child: const Text(
-                            "로비로 돌아가기",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            child: const Text(
+                              "로비로 돌아가기",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),

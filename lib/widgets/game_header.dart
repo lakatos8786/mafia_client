@@ -37,8 +37,9 @@ class GameHeader extends StatelessWidget {
                 const SizedBox(width: 10),
                 Text(
                   '${game.gameState} - ${game.dayCount}일차',
-                  style: GoogleFonts.blackHanSans(
+                  style: GoogleFonts.gowunDodum(
                     fontSize: 24,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                     letterSpacing: 1.5,
                   ),
@@ -57,7 +58,7 @@ class GameHeader extends StatelessWidget {
                     '${e.key} ${e.value}',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.6),
-                      fontSize: 12,
+                      fontSize: 14,
                     ),
                   );
                 }).toList(),
@@ -86,13 +87,14 @@ class GameHeader extends StatelessWidget {
                   children: [
                     const TextSpan(
                       text: '나의 직업: ',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                      style: TextStyle(color: Colors.grey, fontSize: 13),
                     ),
                     TextSpan(
                       text: game.myRole ?? "알 수 없음",
-                      style: GoogleFonts.blackHanSans(
+                      style: GoogleFonts.gowunDodum(
                         color: const Color(0xFFE94560),
                         fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
                       ),
                     ),

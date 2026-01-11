@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             '마피아',
-                            style: GoogleFonts.blackHanSans(
+                            style: GoogleFonts.gowunDodum(
                               fontSize: 60,
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFFE94560),
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           Text(
                             '온라인',
-                            style: GoogleFonts.blackHanSans(
+                            style: GoogleFonts.gowunDodum(
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -201,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         labelStyle: TextStyle(
           color: Colors.white.withOpacity(0.5),
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
         prefixIcon: Icon(icon, color: Colors.white54),

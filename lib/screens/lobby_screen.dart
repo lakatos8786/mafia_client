@@ -78,7 +78,7 @@ class LobbyScreen extends StatelessWidget {
                     '플레이어 대기 중...',
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
-                      fontSize: 14,
+                      fontSize: 16,
                       letterSpacing: 3.0,
                       fontWeight: FontWeight.w300,
                     ),

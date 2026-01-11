@@ -51,7 +51,7 @@ class ActionButtons extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.6),
                             fontWeight: FontWeight.bold,
-                            fontSize: 10,
+                            fontSize: 12,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -79,7 +79,7 @@ class ActionButtons extends StatelessWidget {
                       },
                       child: const Text(
                         '투표 건너뛰기',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(fontSize: 14),
                       ),
                     ),
                   ],
@@ -118,7 +118,7 @@ class ActionButtons extends StatelessWidget {
                       },
                       child: Text(
                         btnText,
-                        style: const TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     );
                   },

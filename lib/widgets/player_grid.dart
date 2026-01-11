@@ -180,7 +180,7 @@ class PlayerGrid extends StatelessWidget {
                                     decoration: player.isAlive
                                         ? null
                                         : TextDecoration.lineThrough,
-                                    fontSize: 12,
+                                    fontSize: 14,
                                   ),
                                 ),
                                 // Vote Count Bubble
@@ -202,7 +202,7 @@ class PlayerGrid extends StatelessWidget {
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 10,
+                                        fontSize: 12,
                                       ),
                                     ),
                                   ),
@@ -250,7 +250,7 @@ class PlayerGrid extends StatelessWidget {
                                               color: const Color(0xFFE94560),
                                             ),
                                           ),
-                                          textStyle: GoogleFonts.notoSansKr(
+                                          textStyle: GoogleFonts.gowunDodum(
                                             color: Colors.white,
                                             fontSize: 14,
                                           ),
@@ -270,7 +270,7 @@ class PlayerGrid extends StatelessWidget {
                                               displayStr,
                                               style: const TextStyle(
                                                 color: Colors.yellowAccent,
-                                                fontSize: 9, // Slightly larger
+                                                fontSize: 11, // Slightly larger
                                               ),
                                               maxLines: 2, // Allow 2 lines
                                               overflow: TextOverflow.ellipsis,
@@ -291,8 +291,9 @@ class PlayerGrid extends StatelessWidget {
                                 angle: -0.5,
                                 child: Text(
                                   '사망',
-                                  style: GoogleFonts.blackHanSans(
+                                  style: GoogleFonts.gowunDodum(
                                     fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                     color: const Color(
                                       0xFFE94560,
                                     ).withOpacity(0.8),
