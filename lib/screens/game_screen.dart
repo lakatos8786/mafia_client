@@ -167,8 +167,17 @@ class _GameScreenState extends State<GameScreen> {
                         final playerCount = game.players.length;
                         if (playerCount == 0) return SizedBox.shrink();
 
-                        // Calculate optimal columns and rows to fit screen
-                        // Try to keep it somewhat square or landscape
+                        // --- Responsive Grid Logic ---
+                        final availableWidth =
+                            constraints.maxWidth - 20; // 10 padding each side
+                        final availableHeight = constraints.maxHeight - 20;
+                        final spacing = 4.0;
+
+                        // Define minimum comfortable touch target size
+                        const double minItemHeight = 110.0;
+                        const double minItemWidth = 80.0;
+
+                        // 1. Attempt "Fit to Screen" (Original Logic)
                         int cols = 4;
                         if (playerCount <= 4)
                           cols = 2;
@@ -176,34 +185,42 @@ class _GameScreenState extends State<GameScreen> {
                           cols = 3;
                         else
                           cols = 4;
-
-                        // If we have many players, we might need 5 cols
                         if (playerCount > 12) cols = 5;
 
-                        final rows = (playerCount / cols).ceil();
+                        final fitRows = (playerCount / cols).ceil();
+                        final totalVerticalSpacing = (fitRows - 1) * spacing;
+                        final fitItemHeight =
+                            (availableHeight - totalVerticalSpacing) / fitRows;
 
-                        // Calculate Aspect Ratio to fit the height exactly (minus spacing)
-                        final spacing = 4.0;
-                        final totalHorizontalSpacing = (cols - 1) * spacing;
-                        final totalVerticalSpacing =
-                            (rows - 1) *
-                            spacing; // Rough estimate of vertical spacing usage
+                        // 2. Decide: Fit vs Scroll
+                        // If fitting makes cards too small, switch to Scroll Mode
+                        bool useScroll = fitItemHeight < minItemHeight;
 
-                        final availableWidth =
-                            constraints.maxWidth - 20; // 10 padding each side
-                        final availableHeight = constraints.maxHeight - 20;
+                        ScrollPhysics scrollPhysics;
+                        double ratio;
 
-                        final itemWidth =
-                            (availableWidth - totalHorizontalSpacing) / cols;
-                        final itemHeight =
-                            (availableHeight - totalVerticalSpacing) / rows;
-
-                        final ratio = itemWidth / itemHeight;
+                        if (useScroll) {
+                          // Scroll Mode
+                          scrollPhysics = AlwaysScrollableScrollPhysics();
+                          // Recalculate columns to ensure minimum width
+                          cols = (availableWidth / minItemWidth).floor().clamp(
+                            3,
+                            8,
+                          );
+                          // Fix aspect ratio for consistent card shape
+                          ratio = 0.75; // e.g. 80w / 106h
+                        } else {
+                          // Fit Mode
+                          scrollPhysics = NeverScrollableScrollPhysics();
+                          final totalHorizontalSpacing = (cols - 1) * spacing;
+                          final itemWidth =
+                              (availableWidth - totalHorizontalSpacing) / cols;
+                          ratio = itemWidth / fitItemHeight;
+                        }
 
                         return GridView.builder(
                           padding: EdgeInsets.all(10),
-                          physics:
-                              NeverScrollableScrollPhysics(), // Disable scrolling
+                          physics: scrollPhysics,
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: cols,
