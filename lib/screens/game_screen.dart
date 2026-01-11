@@ -394,6 +394,29 @@ class _GameScreenState extends State<GameScreen> {
                               shape: cardShape,
                               child: InkWell(
                                 onTap: () {
+                                  // Check if *I* am alive first
+                                  final me = game.players.firstWhere(
+                                    (p) => p.id == game.socket.id,
+                                    orElse: () => Player(
+                                      id: 'unknown',
+                                      nickname: '?',
+                                      isAlive: false,
+                                    ),
+                                  );
+                                  if (!me.isAlive) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).hideCurrentSnackBar();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('사망한 상태에서는 행동할 수 없습니다.'),
+                                        duration: Duration(milliseconds: 1000),
+                                        backgroundColor: Colors.redAccent,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   if (!player.isAlive) {
                                     ScaffoldMessenger.of(
                                       context,
