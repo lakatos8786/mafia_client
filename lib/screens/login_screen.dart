@@ -191,14 +191,18 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
-    bool isNumber = false,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
       style: const TextStyle(color: Colors.white),
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      maxLength: maxLength,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
+        counterText: '', // Hide the counter
         labelStyle: TextStyle(
           color: Colors.white.withOpacity(0.5),
           fontSize: 14,
