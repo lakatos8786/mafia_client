@@ -26,8 +26,7 @@ class MyApp extends StatelessWidget {
           colorScheme: const ColorScheme.dark(
             primary: Color(0xFFF43F5E), // Neon Crimson
             secondary: Color(0xFF0EA5E9), // Cyber Blue
-            surface: Color(0xFF1E293B), // Slate 800
-            background: Color(0xFF0F172A), // Deep Slate
+            surface: Color(0xFF1E293B), // Deep Slate
             error: Color(0xFFFF1744),
           ),
           textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)

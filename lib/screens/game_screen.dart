@@ -24,6 +24,7 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+      resizeToAvoidBottomInset: false, // Prevent background squashing
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -59,17 +60,22 @@ class _GameScreenState extends State<GameScreen> {
 
                   // Expandable Chat Layer
                   AnimatedPositioned(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.fastOutSlowIn,
+                    duration: const Duration(
+                      milliseconds: 150,
+                    ), // Faseter for keyboard
+                    curve: Curves.easeOut,
                     left: 0,
                     right: 0,
-                    bottom: 0,
+                    // Float above keyboard
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
                     // Expanded: 70% of screen, Collapsed: 160px (approx)
                     height: _isChatExpanded
                         ? MediaQuery.of(context).size.height * 0.7
-                        : 180,
+                        : 160,
                     child: Container(
-                      padding: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.only(
+                        bottom: 10,
+                      ), // Reduced bot padding
                       child: ChatWidget(
                         isExpanded: _isChatExpanded,
                         onToggleExpand: () {
