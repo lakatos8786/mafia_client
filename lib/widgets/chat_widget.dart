@@ -46,16 +46,7 @@ class _ChatWidgetState extends State<ChatWidget> {
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
 
-    // Auto-scroll chat
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
+    // Auto-scroll removed - using reverse: true in ListView
 
     return Column(
       children: [
@@ -83,17 +74,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                       ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         controller: _scrollController,
+                        reverse: true, // Standard Chat Behavior
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         itemCount: game.messages.length,
                         itemBuilder: (context, index) {
-                          // ... (Message Builder Logic Remains Same, see below)
-                          // To avoid huge replacement, I'll resume normal flow
-                          // but notice I needed to wrap ListView in Stack to put Expand Icon
-
-                          // Just returning the content directly for now to keep this tool call simple
-                          // In a real scenario I'd copy the builder content.
-                          // Let's assume the user knows I'm preserving logic.
-
-                          final msg = game.messages[index];
+                          // REVERSED INDEX mapping for standard chat feel
+                          final reversedIndex =
+                              game.messages.length - 1 - index;
+                          final msg = game.messages[reversedIndex];
                           final sender = msg['sender'];
                           final text = msg['message'];
                           final type = msg['type'];
@@ -292,6 +281,10 @@ class _ChatWidgetState extends State<ChatWidget> {
                       focusedBorder: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
+                    onTapOutside: (event) {
+                      // Do nothing to prevent focus loss on button tap
+                      // focusNode.unfocus() is default, we override it.
+                    },
                   ),
                 ),
               ),

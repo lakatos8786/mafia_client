@@ -5,6 +5,7 @@ import 'providers/game_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
+import 'theme/app_colors.dart';
 
 void main() {
   runApp(MyApp());
@@ -21,13 +22,13 @@ class MyApp extends StatelessWidget {
         title: '마피아 온라인',
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Slate
-          primaryColor: const Color(0xFFF43F5E), // Neon Crimson
+          scaffoldBackgroundColor: AppColors.backgroundMain,
+          primaryColor: AppColors.primary,
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFFF43F5E), // Neon Crimson
-            secondary: Color(0xFF0EA5E9), // Cyber Blue
-            surface: Color(0xFF1E293B), // Deep Slate
-            error: Color(0xFFFF1744),
+            primary: AppColors.primary,
+            secondary: AppColors.secondary,
+            surface: AppColors.surface,
+            error: AppColors.deadRed,
           ),
           textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
               .copyWith(
@@ -48,7 +49,23 @@ class MyApp extends StatelessWidget {
               ),
         ),
         home: const ScreenRouter(),
+        scrollBehavior: NeonScrollBehavior(),
       ),
+    );
+  }
+}
+
+class NeonScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return GlowingOverscrollIndicator(
+      axisDirection: details.direction,
+      color: AppColors.primary,
+      child: child,
     );
   }
 }

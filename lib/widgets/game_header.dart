@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import '../providers/game_provider.dart';
+import '../theme/app_colors.dart';
 
 class GameHeader extends StatelessWidget {
   const GameHeader({super.key});
@@ -98,12 +99,12 @@ class GameHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF0F3460), Color(0xFF16213E)],
+                  colors: [AppColors.backgroundLighter, AppColors.surface],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0xFF0F3460),
+                    color: AppColors.backgroundLighter,
                     blurRadius: 10,
                     offset: Offset(0, 2),
                   ),
@@ -119,7 +120,7 @@ class GameHeader extends StatelessWidget {
                     TextSpan(
                       text: game.myRole ?? "알 수 없음",
                       style: GoogleFonts.gowunDodum(
-                        color: const Color(0xFFE94560),
+                        color: AppColors.primary,
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,

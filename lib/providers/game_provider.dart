@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+import '../models/game_enums.dart';
+
 class Player {
   final String id;
   final String nickname;
-  final dynamic role; // 'MAFIA', 'DOCTOR', 'POLICE', 'CITIZEN' or null
+  final GameRole? role; // Updated to strict Enum
   final bool isAlive;
   final bool isHost;
 
@@ -20,7 +22,7 @@ class Player {
     return Player(
       id: map['id'],
       nickname: map['nickname'],
-      role: map['role'],
+      role: GameRole.fromString(map['role']),
       isAlive: map['isAlive'],
       isHost: map['isHost'] ?? false,
     );
@@ -30,15 +32,14 @@ class Player {
 class GameProvider with ChangeNotifier {
   late IO.Socket _socket;
   List<Player> _players = [];
-  String _gameState = '대기중'; // 대기중, 낮, 밤
+  GamePhase _gameState = GamePhase.waiting;
   int _dayCount = 1;
-  String? _myRole;
+  GameRole? _myRole;
   final List<Map<String, dynamic>> _messages = [];
   Map<String, int> _votes = {};
   Map<String, String> _voters = {}; // { voterId: targetId }
-  final Map<String, String> _nightSelections =
-      {}; // { '마피아': 'id', '의사': 'id', ... }
-  final Map<String, String> _nightActionActors = {}; // { '마피아': 'nickname' }
+  final Map<String, String> _nightSelections = {};
+  final Map<String, String> _nightActionActors = {};
   String? _myId;
   String? _errorMessage;
   String? _roomId;
@@ -47,9 +48,11 @@ class GameProvider with ChangeNotifier {
   DateTime? _gameOverTime;
 
   List<Player> get players => _players;
-  String get gameState => _gameState;
+  // UI expects String, so return label
+  String get gameState => _gameState.label;
   int get dayCount => _dayCount;
-  String? get myRole => _myRole;
+  // UI expects String?, so return label
+  String? get myRole => _myRole?.label;
   List<Map<String, dynamic>> get messages => _messages;
   Map<String, int> get votes => _votes;
   Map<String, String> get voters => _voters;
@@ -65,16 +68,32 @@ class GameProvider with ChangeNotifier {
     return DateTime.now().difference(_gameOverTime!).inSeconds >= 2;
   }
 
+  // --- UI Helpers ---
+  List<String> get skipVoterNicknames {
+    return voters.entries.where((entry) => entry.value == 'skip').map((entry) {
+      final voter = players.firstWhere(
+        (p) => p.id == entry.key,
+        orElse: () => Player(id: 'unknown', nickname: '?', isAlive: true),
+      );
+      return voter.nickname;
+    }).toList();
+  }
+
+  bool get iVotedSkip => voters[socket.id] == 'skip';
+
+  bool get isMafiaSkip => nightSelections['마피아'] == 'skip';
+  String get mafiaSkipButtonText {
+    final actor = nightActionActors['마피아'] ?? '';
+    return isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
+  }
+
   IO.Socket get socket => _socket;
 
   GameProvider() {
     _initSocket();
   }
 
-  // static const String serverUrl =
-  //     'http://localhost:3000'; // Local testing
-  static const String serverUrl =
-      'https://mafia-server-py70.onrender.com'; // Remote
+  static const String serverUrl = 'https://mafia-server-py70.onrender.com';
 
   Map<String, int> _roleCounts = {};
 
@@ -128,7 +147,7 @@ class GameProvider with ChangeNotifier {
     _socket.on('game_start', (data) {
       try {
         if (data is Map) {
-          _gameState = '낮';
+          _gameState = GamePhase.day; // Enum
           _dayCount = 1;
           if (data['players'] is List) {
             _players = (data['players'] as List)
@@ -143,7 +162,7 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('role_assigned', (role) {
-      _myRole = role;
+      _myRole = GameRole.fromString(role);
       _winner = null;
       _endGamePlayers = [];
       _messages.add({'sender': '시스템', 'message': '새로운 게임이 시작되었습니다!'});
@@ -151,8 +170,6 @@ class GameProvider with ChangeNotifier {
     });
 
     _socket.on('player_eliminated', (data) {
-      // Handle player elimination event to update specific player status
-      // This ensures the client knows who died immediately
       try {
         if (data is Map) {
           final deadId = data['id'];
@@ -163,7 +180,7 @@ class GameProvider with ChangeNotifier {
               id: old.id,
               nickname: old.nickname,
               role: old.role,
-              isAlive: false, // Mark as dead
+              isAlive: false,
               isHost: old.isHost,
             );
             notifyListeners();
@@ -177,11 +194,13 @@ class GameProvider with ChangeNotifier {
     _socket.on('phase_change', (data) {
       try {
         if (data is Map) {
-          _gameState = data['phase']?.toString() ?? _gameState;
+          if (data['phase'] != null) {
+            _gameState = GamePhase.fromString(data['phase']);
+          }
           _dayCount = data['dayCount'] as int? ?? _dayCount;
-          _votes.clear(); // Clear votes on phase change
-          _voters.clear(); // Clear voters on phase change
-          _nightSelections.clear(); // Clear night selections on phase change
+          _votes.clear();
+          _voters.clear();
+          _nightSelections.clear();
           _nightActionActors.clear();
           notifyListeners();
         }
@@ -271,32 +290,13 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on('player_eliminated', (data) {
-      // Find player and mark dead locally or wait for player_update?
-      // Server usually sends player_update if roster changes, but here we just update status
-      // We might need to refetch or update local list manually if not sent.
-      // But let's assume server sends updates or we process this.
-      final id = data['id'];
-      final index = _players.indexWhere((p) => p.id == id);
-      if (index != -1) {
-        // Create new player object to refresh UI
-        // Assuming we just receive notification, but we rely on next update or local mod
-        // Ideally server sends player_update often.
-        // For now let's hope server uses player_update or we trigger it.
-        // Wait, server code sends phase_change and such, but maybe not player list every time.
-        // Let's manually update availability.
-        // Actually server code I wrote does NOT emit player_update on elimination in `processDayResults`.
-        // I should fix server or handle it here.
-        // Let's handle it here for now.
-        // Wait, I am just fixing the game_over part below.
-      }
-    });
+    // Duplicate player_eliminated listener removed.
 
     _socket.on('game_over', (data) {
       try {
         if (data is Map) {
           final mappedData = Map<String, dynamic>.from(data);
-          _gameState = '결과';
+          _gameState = GamePhase.result;
           _winner = mappedData['winner']?.toString();
           if (mappedData['players'] is List) {
             _endGamePlayers = (mappedData['players'] as List)
@@ -354,7 +354,7 @@ class GameProvider with ChangeNotifier {
   }
 
   void returnToLobby() {
-    _gameState = '대기중';
+    _gameState = GamePhase.waiting;
     _winner = null;
     _endGamePlayers = [];
     _gameOverTime = null;

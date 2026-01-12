@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import '../providers/game_provider.dart';
+import '../theme/app_colors.dart';
 
 class LobbyScreen extends StatelessWidget {
   const LobbyScreen({super.key});
@@ -12,8 +13,9 @@ class LobbyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
 
+    // Using standard theme colors through AppColors
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppColors.backgroundDark,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
@@ -28,14 +30,14 @@ class LobbyScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.copy, color: Color(0xFFE94560)),
+            icon: const Icon(Icons.copy, color: AppColors.mafiaRed),
             onPressed: () {
               if (game.roomId != null) {
                 Clipboard.setData(ClipboardData(text: game.roomId!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('복사됨: ${game.roomId}'),
-                    backgroundColor: const Color(0xFF0F3460),
+                    backgroundColor: AppColors.surface,
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -56,10 +58,10 @@ class LobbyScreen extends StatelessWidget {
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0F3460).withOpacity(0.2),
+                color: AppColors.surface.withOpacity(0.2),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F3460).withOpacity(0.4),
+                    color: AppColors.surface.withOpacity(0.4),
                     blurRadius: 150,
                     spreadRadius: 20,
                   ),
@@ -110,12 +112,12 @@ class LobbyScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isMe
-                                    ? const Color(0xFFE94560).withOpacity(0.2)
+                                    ? AppColors.primary.withOpacity(0.2)
                                     : Colors.white.withOpacity(0.05),
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
                                   color: isMe
-                                      ? const Color(0xFFE94560).withOpacity(0.5)
+                                      ? AppColors.primary.withOpacity(0.5)
                                       : Colors.white.withOpacity(0.1),
                                 ),
                               ),
@@ -123,7 +125,7 @@ class LobbyScreen extends StatelessWidget {
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: isMe
-                                        ? const Color(0xFFE94560)
+                                        ? AppColors.primary
                                         : Colors.white24,
                                     child: const Icon(
                                       Icons.person,
@@ -156,7 +158,7 @@ class LobbyScreen extends StatelessWidget {
                                       padding: EdgeInsets.only(left: 10),
                                       child: Icon(
                                         Icons.star,
-                                        color: Colors.yellow,
+                                        color: AppColors.accentYellow,
                                         size: 20,
                                       ),
                                     ),
@@ -190,12 +192,10 @@ class LobbyScreen extends StatelessWidget {
                                 game.startGame();
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE94560),
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 8,
-                                shadowColor: const Color(
-                                  0xFFE94560,
-                                ).withOpacity(0.6),
+                                shadowColor: AppColors.primary.withOpacity(0.6),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),

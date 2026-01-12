@@ -1,6 +1,9 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../theme/app_text.dart';
+import '../theme/app_colors.dart';
+
 class ParticleBackground extends StatefulWidget {
   final Map<String, dynamic> mode; // { 'type': 'day' || 'night' }
 
@@ -15,12 +18,12 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   late AnimationController _controller;
   final List<Particle> _particles = [];
   final Random _random = Random();
-  String _currentType = 'day';
+  String _currentType = AppText.stateDay;
 
   @override
   void initState() {
     super.initState();
-    _currentType = widget.mode['type'] ?? 'day';
+    _currentType = widget.mode['type'] ?? AppText.stateDay;
     _initParticles();
     _controller = AnimationController(
       vsync: this,
@@ -41,7 +44,9 @@ class _ParticleBackgroundState extends State<ParticleBackground>
 
   void _initParticles() {
     _particles.clear();
-    int count = _currentType == '낮' ? 20 : 50; // More stars at night
+    int count = _currentType == AppText.stateDay
+        ? 20
+        : 50; // More stars at night
     for (int i = 0; i < count; i++) {
       _particles.add(Particle(_random, _currentType));
     }
@@ -61,9 +66,12 @@ class _ParticleBackgroundState extends State<ParticleBackground>
         for (var particle in _particles) {
           particle.update();
         }
-        return CustomPaint(
-          painter: ParticlePainter(_particles, _currentType),
-          size: Size.infinite,
+        // RepaintBoundary improves performance by isolating the painting
+        return RepaintBoundary(
+          child: CustomPaint(
+            painter: ParticlePainter(_particles, _currentType),
+            size: Size.infinite,
+          ),
         );
       },
     );
@@ -87,7 +95,7 @@ class Particle {
     y = firstSpawn
         ? random.nextDouble()
         : 1.1; // Start from bottom if respawning
-    if (type == '밤') {
+    if (type == AppText.stateNight) {
       // Stars: Static or very slow twinkling
       speed = random.nextDouble() * 0.0005;
       y = random.nextDouble(); // Random Y for stars
@@ -122,15 +130,17 @@ class ParticlePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (var particle in particles) {
       final paint = Paint()
-        ..color = type == '낮'
+        ..color = type == AppText.stateDay
             ? Colors.white.withOpacity(particle.opacity)
-            : Colors.yellowAccent.withOpacity(particle.opacity); // Star color
+            : AppColors.accentYellow.withOpacity(
+                particle.opacity,
+              ); // Star color
 
       double cx = particle.x * size.width;
       double cy = particle.y * size.height;
 
       // Draw Twinkle for night
-      if (type == '밤') {
+      if (type == AppText.stateNight) {
         // Simple twinkle effect
         double twinkle = sin(
           DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,

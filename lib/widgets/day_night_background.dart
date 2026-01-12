@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'particle_background.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text.dart';
 
 class DayNightBackground extends StatelessWidget {
   final String phase; // '낮' or '밤'
@@ -16,16 +18,16 @@ class DayNightBackground extends StatelessWidget {
     // Determine colors based on phase
     Decoration mainDecoration;
 
-    if (phase == '낮') {
+    if (phase == AppText.stateDay) {
       // Day: Cyber Blue Sky with bright center
       mainDecoration = const BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(-0.3, -0.5),
           radius: 1.5,
           colors: [
-            Color(0xFF38BDF8), // Light Blue
+            AppColors.policeBlue, // Light Blue
             Color(0xFF0284C7), // Darker Blue
-            Color(0xFF0F172A), // Dark Fade
+            AppColors.backgroundMain, // Dark Fade
           ],
           stops: [0.0, 0.6, 1.0],
         ),
@@ -39,7 +41,7 @@ class DayNightBackground extends StatelessWidget {
           colors: [
             Color(0xFF312E81), // Indigo
             Color(0xFF1E1B4B), // Deep Indigo
-            Color(0xFF000000), // Pure Black
+            Colors.black, // Pure Black
           ],
           stops: [0.0, 0.5, 1.0],
         ),
