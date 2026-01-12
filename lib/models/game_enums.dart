@@ -69,30 +69,33 @@ enum GameRole {
   police,
   citizen;
 
-  // Converts from server string/Korean string to Enum
   static GameRole? fromString(String? val) {
-    if (val == null) return null;
+    if (val == null || val.isEmpty) return null;
 
     // 1. Normalize input (lowercase, trim)
     final normalized = val.trim().toLowerCase();
 
-    // 2. Try matching standard English Enum names first (e.g. 'mafia', 'doctor')
-    try {
-      return GameRole.values.byName(normalized);
-    } catch (_) {
-      // 3. Fallback for Korean keys
-      switch (normalized) {
-        case '마피아':
-          return GameRole.mafia;
-        case '의사':
-          return GameRole.doctor;
-        case '경찰':
-          return GameRole.police;
-        case '시민':
-          return GameRole.citizen;
-        default:
-          return null;
-      }
+    // 2. Try matching standard English Enum names (e.g. 'mafia', 'doctor')
+    for (final role in GameRole.values) {
+      if (role.name.toLowerCase() == normalized) return role;
+    }
+
+    // 3. Fallback for Korean keys or variations
+    switch (normalized) {
+      case '마피아':
+      case 'mafia':
+        return GameRole.mafia;
+      case '의사':
+      case 'doctor':
+        return GameRole.doctor;
+      case '경찰':
+      case 'police':
+        return GameRole.police;
+      case '시민':
+      case 'citizen':
+        return GameRole.citizen;
+      default:
+        return null;
     }
   }
 

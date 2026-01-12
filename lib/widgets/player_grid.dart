@@ -35,8 +35,11 @@ class PlayerGrid extends StatelessWidget {
                 .map((entry) => entry.key)
                 .toList();
 
+            final isMyVoteTarget = game.voters[game.socket.id] == player.id;
+
             // Standard Card Size (similar to previous GridView settings)
             return SizedBox(
+              key: ValueKey(player.id),
               width: 140,
               height: 190, // Aspect Ratio ~0.74
               child: FadeInUp(
@@ -84,11 +87,18 @@ class PlayerGrid extends StatelessWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: player.isAlive
-                                ? (selectionTargetForRole.isNotEmpty
+                                ? ((selectionTargetForRole.isNotEmpty ||
+                                          isMyVoteTarget)
                                       ? [
-                                          selectionTargetForRole.contains(
-                                                GameRole.mafia.name,
-                                              )
+                                          isMyVoteTarget
+                                              ? const Color(
+                                                  0xFFF59E0B,
+                                                ).withOpacity(
+                                                  0.6,
+                                                ) // Orange for Vote
+                                              : selectionTargetForRole.contains(
+                                                  GameRole.mafia.name,
+                                                )
                                               ? const Color(
                                                   0xFF9F1239,
                                                 ).withOpacity(0.6)
@@ -121,10 +131,14 @@ class PlayerGrid extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: player.isAlive
-                                ? (selectionTargetForRole.isNotEmpty
-                                      ? (selectionTargetForRole.contains(
-                                                  GameRole.mafia.name,
-                                                )
+                                ? ((selectionTargetForRole.isNotEmpty ||
+                                          isMyVoteTarget)
+                                      ? (isMyVoteTarget
+                                                ? const Color(0xFFF59E0B)
+                                                : selectionTargetForRole
+                                                      .contains(
+                                                        GameRole.mafia.name,
+                                                      )
                                                 ? const Color(0xFFF43F5E)
                                                 : selectionTargetForRole
                                                       .contains(
@@ -135,18 +149,23 @@ class PlayerGrid extends StatelessWidget {
                                             .withOpacity(0.8)
                                       : Colors.white.withOpacity(0.12))
                                 : Colors.red.withOpacity(0.3),
-                            width: selectionTargetForRole.isNotEmpty
+                            width:
+                                (selectionTargetForRole.isNotEmpty ||
+                                    isMyVoteTarget)
                                 ? 2.5
                                 : 1.2,
                           ),
                           boxShadow: [
                             if (player.isAlive &&
-                                selectionTargetForRole.isNotEmpty)
+                                (selectionTargetForRole.isNotEmpty ||
+                                    isMyVoteTarget))
                               BoxShadow(
                                 color:
-                                    (selectionTargetForRole.contains(
-                                              GameRole.mafia.name,
-                                            )
+                                    (isMyVoteTarget
+                                            ? const Color(0xFFF59E0B)
+                                            : selectionTargetForRole.contains(
+                                                GameRole.mafia.name,
+                                              )
                                             ? const Color(0xFFF43F5E)
                                             : selectionTargetForRole.contains(
                                                 GameRole.doctor.name,
@@ -160,18 +179,23 @@ class PlayerGrid extends StatelessWidget {
                           ],
                         ),
                         child: Stack(
+                          alignment: Alignment.center,
                           children: [
                             // Selection Glow Effect
                             if (player.isAlive &&
-                                selectionTargetForRole.isNotEmpty)
+                                (selectionTargetForRole.isNotEmpty ||
+                                    isMyVoteTarget))
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: RadialGradient(
                                       colors: [
-                                        (selectionTargetForRole.contains(
-                                                  GameRole.mafia.name,
-                                                )
+                                        (isMyVoteTarget
+                                                ? const Color(0xFFF59E0B)
+                                                : selectionTargetForRole
+                                                      .contains(
+                                                        GameRole.mafia.name,
+                                                      )
                                                 ? const Color(0xFFF43F5E)
                                                 : selectionTargetForRole
                                                       .contains(
@@ -188,6 +212,7 @@ class PlayerGrid extends StatelessWidget {
                               ),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 // Avatar with Halo
                                 Container(

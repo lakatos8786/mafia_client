@@ -39,9 +39,16 @@ class LobbyScreen extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: game.roomId!));
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('복사됨: ${game.roomId}'),
-                    backgroundColor: AppColors.surface,
+                    content: Text(
+                      '복사됨: ${game.roomId}',
+                      style: GoogleFonts.gowunDodum(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    backgroundColor: Colors.grey[800],
                     duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating, // Floating is better
                   ),
                 );
               }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
@@ -16,6 +17,8 @@ class GameResultOverlay extends StatefulWidget {
 class _GameResultOverlayState extends State<GameResultOverlay> {
   bool _showCards = false;
 
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +30,24 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
         });
       }
     });
+
+    // Refresh only for the first 2 seconds to check 'canReturnToLobby'
+    // Then stop to prevent unnecessary rebuilds
+    _refreshTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (mounted) {
+        setState(() {}); // Trigger rebuild to check game.canReturnToLobby
+        // Cancel after ~2 seconds (4 ticks of 500ms)
+        if (timer.tick >= 4) {
+          timer.cancel();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   @override

@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Provider.of<GameProvider>(
         context,
         listen: false,
-      ).joinRoom(_nameController.text, _roomCodeController.text.toUpperCase());
+      ).joinRoom(_roomCodeController.text.toUpperCase(), _nameController.text);
     }
   }
 

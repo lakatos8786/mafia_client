@@ -88,7 +88,30 @@ class ScreenRouter extends StatelessWidget {
 
     // Initial connection might take a moment, show spinner?
     if (game.socket.id == null) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: AppColors.primary),
+              SizedBox(height: 20),
+              Text(
+                "서버에 접속 중입니다...",
+                style: GoogleFonts.gowunDodum(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 10),
+              Text(
+                "서버가 절전 모드에서 깨어나는 데\n최대 1분 정도 소요될 수 있습니다.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.gowunDodum(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     // Check if joined

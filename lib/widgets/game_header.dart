@@ -85,15 +85,13 @@ class GameHeader extends StatelessWidget {
             const SizedBox(height: 8),
 
             // Role Counts
-            if (game.roleCounts.isNotEmpty)
+            if (game.roleCountDisplayStrings.isNotEmpty)
               Wrap(
                 spacing: 15,
-                children: game.roleCounts.entries.map((e) {
-                  final roleLabel = GameRole.fromString(e.key)?.label ?? e.key;
+                children: game.roleCountDisplayStrings.map((displayString) {
                   return Text(
-                    '$roleLabel ${e.value}',
+                    displayString,
                     style: GoogleFonts.gowunDodum(
-                      // Applied font globally as per previous rule, checking here specifically
                       color: Colors.white.withOpacity(0.6),
                       fontSize: 14,
                     ),

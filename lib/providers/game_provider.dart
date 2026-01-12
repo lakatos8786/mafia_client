@@ -21,6 +21,7 @@ class GameProvider with ChangeNotifier {
   final Map<String, String> _nightSelections = {};
   final Map<String, String> _nightActionActors = {};
 
+  bool _isAdmin = false;
   String? _myId;
   String? _errorMessage;
   String? _roomId;
@@ -45,6 +46,7 @@ class GameProvider with ChangeNotifier {
   String? get roomId => _roomId;
   String? get winner => _winner;
   List<Player> get endGamePlayers => _endGamePlayers;
+  bool get isAdmin => _isAdmin;
 
   bool get canReturnToLobby {
     if (_gameOverTime == null) return true;
@@ -78,6 +80,15 @@ class GameProvider with ChangeNotifier {
   Map<String, int> _roleCounts = {};
   Map<String, int> get roleCounts => _roleCounts;
 
+  /// Returns role counts as "RoleName: Count" in Korean
+  List<String> get roleCountDisplayStrings {
+    return _roleCounts.entries.map((e) {
+      final role = GameRole.fromString(e.key);
+      final label = role?.label ?? e.key;
+      return '$label ${e.value}';
+    }).toList();
+  }
+
   GameProvider() {
     _initSocket();
   }
@@ -98,82 +109,98 @@ class GameProvider with ChangeNotifier {
       'autoConnect': false,
     });
 
+    _setupListeners();
     _socket.connect();
+  }
 
-    // --- Socket Listeners ---
-    _socket.on(SocketEvent.CONNECTION, (_) {
+  void _setupListeners() {
+    _handleConnectionEvents();
+    _handleRoomEvents();
+    _handleGameFlowEvents();
+    _handleActionEvents();
+    _handleMessageEvents();
+  }
+
+  void _handleConnectionEvents() {
+    _socket.on('connect', (_) {
       print('DEBUG: Connected to server: ${_socket.id}');
       _myId = _socket.id;
       _errorMessage = null;
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.ROOM_CREATED, (roomId) {
-      print('Event: room_created -> $roomId');
+    _socket.onDisconnect((_) {
+      _errorMessage = '서버와 연결이 끊어졌습니다.';
+      notifyListeners();
+    });
+
+    _socket.onConnectError((data) {
+      _errorMessage = '서버 연결 실패: $data';
+      notifyListeners();
+    });
+
+    _socket.onError((data) {
+      _errorMessage = '오류 발생: $data';
+      notifyListeners();
+    });
+  }
+
+  void _handleRoomEvents() {
+    _socket.on(SocketEvent.roomCreated, (roomId) {
       _roomId = roomId;
       _isAdmin = true;
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.JOINED_ROOM, (roomId) {
-      print('Event: joined_room -> $roomId');
+    _socket.on(SocketEvent.joinedRoom, (roomId) {
       _roomId = roomId;
       _isAdmin = false;
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.PLAYER_UPDATE, (data) {
-      print('Event: player_update -> $data');
+    _socket.on(SocketEvent.playerUpdate, (data) {
       try {
         if (data is List) {
           _players = data
               .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
               .toList();
-          _myRole = _deriveMyRole(); // Update my role
+          _myRole = _deriveMyRole();
           notifyListeners();
         }
       } catch (e) {
-        print('Error in player_update: $e');
+        debugPrint('Error in player_update: $e');
       }
     });
 
-    _socket.on(SocketEvent.ROLE_COUNTS, (data) {
-      print('Event: role_counts -> $data');
+    _socket.on(SocketEvent.roleCounts, (data) {
       if (data is Map) {
-        _roleCounts = Map<String, int>.from(data);
+        try {
+          _roleCounts = data.map(
+            (k, v) => MapEntry(k.toString(), (v as num).toInt()),
+          );
+        } catch (e) {
+          debugPrint('Error parsing role_counts: $e');
+        }
         notifyListeners();
       }
     });
 
-    _socket.on(SocketEvent.ROLE_ASSIGNED, (data) {
-      print('Event: role_assigned -> $data');
+    _socket.on(SocketEvent.roleAssigned, (data) {
       _myRole = GameRole.fromString(data.toString());
       notifyListeners();
     });
+  }
 
-    _socket.on(SocketEvent.START_GAME, (_) {
-      print('Event: start_game');
+  void _handleGameFlowEvents() {
+    _socket.on(SocketEvent.startGame, (_) {
       _gameState = GamePhase.day;
       _dayCount = 1;
-      _votes.clear();
-      _voters.clear();
-      _nightSelections.clear();
-      _nightActionActors.clear();
-      _messages.clear();
-
-      // System Message
-      _messages.add({
-        'sender': SystemConstant.sender,
-        'message': '게임이 시작되었습니다! 역할을 확인하세요.',
-        'type': ChatMessageType.system.name,
-        'isSystem': true,
-      });
-
+      _resetGameData();
+      _addSystemMessage('게임이 시작되었습니다! 역할을 확인하세요.');
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.PHASE_CHANGE, (data) {
-      print('Event: phase_change -> $data');
+    _socket.on(SocketEvent.phaseChange, (data) {
       try {
         if (data is Map) {
           final event = PhaseChangeEvent.fromJson(
@@ -181,67 +208,18 @@ class GameProvider with ChangeNotifier {
           );
           _gameState = event.phase;
           _dayCount = event.dayCount;
-
-          // System Message
-          _messages.add({
-            'sender': SystemConstant.sender,
-            'message': '${_gameState.label}이 되었습니다.',
-            'type': ChatMessageType.system.name,
-            'isSystem': true,
-          });
-
-          _votes.clear();
-          _voters.clear();
-          _nightSelections.clear();
-          _nightActionActors.clear();
+          _addSystemMessage('${_gameState.label}이 되었습니다.');
+          _resetTurnData();
           notifyListeners();
         }
       } catch (e) {
-        print('Error in phase_change: $e');
+        debugPrint('Error in phase_change: $e');
       }
     });
 
-    // Add logic for investigation result display
-    _socket.on(SocketEvent.INVESTIGATION_RESULT, (data) {
+    _socket.on(SocketEvent.gameOver, (data) {
       if (data is Map) {
-        final targetNickname = _players
-            .firstWhere(
-              (p) => p.id == data[ProtocolKey.targetId],
-              orElse: () => Player(id: '', nickname: '알 수 없음', isAlive: false),
-            )
-            .nickname;
-        final role = GameRole.fromString(
-          data[ProtocolKey.role],
-        ); // "mafia" or "citizen" etc
-        final isMafia = role == GameRole.mafia;
-
-        _messages.add({
-          'sender': SystemConstant.sender,
-          'message':
-              '조사 결과, $targetNickname님은 ${isMafia ? "마피아입니다!" : "마피아가 아닙니다."}',
-          'type': ChatMessageType.system.name,
-          'isSystem': true,
-        });
-        notifyListeners();
-      }
-    });
-
-    _socket.on(SocketEvent.NIGHT_RESULT, (data) {
-      if (data is Map && data[ProtocolKey.message] != null) {
-        _messages.add({
-          'sender': SystemConstant.sender,
-          'message': data[ProtocolKey.message],
-          'type': ChatMessageType.system.name,
-          'isSystem': true,
-        });
-        notifyListeners();
-      }
-    });
-
-    _socket.on(SocketEvent.GAME_OVER, (data) {
-      print('Event: game_over -> $data');
-      try {
-        if (data is Map) {
+        try {
           final mappedData = Map<String, dynamic>.from(data);
           final winnerRole = GameRole.fromString(
             mappedData[ProtocolKey.winner],
@@ -255,26 +233,76 @@ class GameProvider with ChangeNotifier {
                 .toList();
           }
           _gameOverTime = DateTime.now();
-          _messages.add({
-            'sender': SystemConstant.sender,
-            'message': '게임 종료! 승자: $_winner',
-            'type': ChatMessageType.system.name,
-            'isSystem': true,
-          });
-
+          _addSystemMessage('게임 종료! 승자: $_winner');
           notifyListeners();
-
-          Future.delayed(Duration(seconds: 2), () {
-            notifyListeners();
-          });
+        } catch (e) {
+          debugPrint('Error in game_over: $e');
         }
-      } catch (e) {
-        print('Error in game_over: $e');
+      }
+    });
+  }
+
+  void _handleActionEvents() {
+    _socket.on(SocketEvent.voteUpdate, (data) {
+      if (data is Map) {
+        _votes = Map<String, int>.from(data[ProtocolKey.votes] ?? {});
+        _voters = Map<String, String>.from(data[ProtocolKey.voters] ?? {});
+        notifyListeners();
       }
     });
 
-    _socket.on(SocketEvent.CHAT_MESSAGE, (data) {
-      print('Event: chat_message -> $data');
+    _socket.on(SocketEvent.nightSelectionUpdate, (data) {
+      try {
+        if (data is Map) {
+          final event = NightSelectionEvent.fromJson(
+            Map<String, dynamic>.from(data),
+          );
+          if (event.role != null) {
+            // Handle cancel (null targetId)
+            if (event.targetId == null) {
+              _nightSelections.remove(event.role!.name);
+              _nightActionActors.remove(event.role!.name);
+            } else {
+              _nightSelections[event.role!.name] = event.targetId!;
+              if (event.actorNickname != null)
+                _nightActionActors[event.role!.name] = event.actorNickname!;
+            }
+            notifyListeners();
+          }
+        }
+      } catch (e) {
+        debugPrint('Error in night_selection_update: $e');
+      }
+    });
+
+    _socket.on(SocketEvent.investigationResult, (data) {
+      if (data is Map) {
+        final targetId = data[ProtocolKey.targetId];
+        final role = GameRole.fromString(data[ProtocolKey.role]);
+        final targetNick = _players
+            .firstWhere(
+              (p) => p.id == targetId,
+              orElse: () => Player(id: '', nickname: '?', isAlive: true),
+            )
+            .nickname;
+
+        final resultMsg =
+            '조사 결과, $targetNick님은 ${role == GameRole.mafia ? "마피아입니다!" : "마피아가 아닙니다."}';
+        _addSystemMessage(resultMsg);
+        notifyListeners();
+      }
+    });
+
+    _socket.on(SocketEvent.nightResult, (data) {
+      if (data is Map && data[ProtocolKey.message] != null) {
+        _addSystemMessage(data[ProtocolKey.message]);
+        notifyListeners();
+      }
+    });
+  }
+
+  void _handleMessageEvents() {
+    _socket.on(SocketEvent.chatMessage, (data) {
       try {
         if (data is Map) {
           final event = ChatMessageEvent.fromJson(
@@ -284,68 +312,40 @@ class GameProvider with ChangeNotifier {
             'sender': event.sender,
             'message': event.message,
             'type': event.type.name,
+            'isSystem': event.sender == SystemConstant.sender,
           });
           notifyListeners();
         }
       } catch (e) {
-        print('Error in chat_message: $e');
+        debugPrint('Error in chat_message: $e');
       }
     });
+  }
 
-    _socket.on(SocketEvent.VOTE_UPDATE, (data) {
-      print('Event: vote_update -> $data');
-      try {
-        if (data is Map) {
-          _votes = Map<String, int>.from(data[ProtocolKey.votes] ?? {});
-          _voters = Map<String, String>.from(data[ProtocolKey.voters] ?? {});
-          notifyListeners();
-        }
-      } catch (e) {
-        print('Error in vote_update: $e');
-      }
+  // --- Internal Utilities ---
+  void _resetGameData() {
+    _votes.clear();
+    _voters.clear();
+    _nightSelections.clear();
+    _nightActionActors.clear();
+    _messages.clear();
+  }
+
+  void _resetTurnData() {
+    _votes.clear();
+    _voters.clear();
+    _nightSelections.clear();
+    _nightActionActors.clear();
+  }
+
+  void _addSystemMessage(String msg) {
+    _messages.add({
+      'sender': SystemConstant.sender,
+      'message': msg,
+      'type': ChatMessageType.system.name,
+      'isSystem': true,
     });
-
-    _socket.on(SocketEvent.NIGHT_SELECTION_UPDATE, (data) {
-      // print('Event: night_selection_update -> $data');
-      try {
-        if (data is Map) {
-          final event = NightSelectionEvent.fromJson(
-            Map<String, dynamic>.from(data),
-          );
-
-          if (event.role != null) {
-            if (event.targetId != null) {
-              _nightSelections[event.role!.name] = event.targetId!;
-            }
-            if (event.actorNickname != null) {
-              _nightActionActors[event.role!.name] = event.actorNickname!;
-            }
-            notifyListeners();
-          }
-        }
-      } catch (e) {
-        print('Error in night_selection_update: $e');
-      }
-    });
-
-    _socket.onDisconnect((_) {
-      print('Event: Disconnected');
-      _errorMessage = '서버와 연결이 끊어졌습니다.';
-      notifyListeners();
-    });
-
-    _socket.onConnectError((data) {
-      print('Event: Connect Error -> $data');
-      _errorMessage = '서버 연결 실패: $data';
-      notifyListeners();
-    });
-
-    _socket.onError((data) {
-      print('Socket Error: $data');
-      _errorMessage = '오류 발생: $data';
-      notifyListeners();
-    });
-  } // End of _initSocket
+  }
 
   // Actions
   void createRoom(String nickname) {
@@ -380,13 +380,60 @@ class GameProvider with ChangeNotifier {
   void vote(String targetId) {
     if (_gameState == GamePhase.day && _socket.id != null) {
       print('Voting for: $targetId');
+
+      // Optimistic UI Update - Mirror server logic locally
+      final myId = _socket.id!;
+      final previousVote = _voters[myId];
+
+      // 1. Toggle (Same Target) -> Unvote
+      if (previousVote == targetId) {
+        _voters.remove(myId);
+        final voteKey = previousVote; // Already non-null due to if condition
+        if (voteKey != null && _votes[voteKey] != null) {
+          _votes[voteKey] = _votes[voteKey]! - 1;
+          if (_votes[voteKey]! <= 0) _votes.remove(voteKey);
+        }
+      } else {
+        // 2. Change Vote (Different Target)
+        if (previousVote != null && _votes[previousVote] != null) {
+          _votes[previousVote] = _votes[previousVote]! - 1;
+          if (_votes[previousVote]! <= 0) _votes.remove(previousVote);
+        }
+        _voters[myId] = targetId;
+        _votes[targetId] = (_votes[targetId] ?? 0) + 1;
+      }
+
+      notifyListeners(); // Update UI immediately
+
       _socket.emit(SocketEvent.vote, targetId);
     }
   }
 
   void nightAction(String action, String targetId) {
-    if (_gameState == GamePhase.night) {
+    if (_gameState == GamePhase.night && _myRole != null) {
       print('Night Action: $action -> $targetId');
+
+      // Optimistic UI Update - Toggle logic
+      final roleKey = _myRole!.name;
+      final currentSelection = _nightSelections[roleKey];
+
+      if (currentSelection == targetId) {
+        // Toggle off - same target clicked again
+        _nightSelections.remove(roleKey);
+        _nightActionActors.remove(roleKey);
+      } else {
+        // New selection
+        _nightSelections[roleKey] = targetId;
+        // Find my nickname for actor display
+        final me = _players.firstWhere(
+          (p) => p.id == _socket.id,
+          orElse: () => Player(id: '', nickname: '', isAlive: false),
+        );
+        _nightActionActors[roleKey] = me.nickname;
+      }
+
+      notifyListeners(); // Update UI immediately
+
       _socket.emit(SocketEvent.nightAction, {
         ProtocolKey.action: action,
         ProtocolKey.targetId: targetId,
@@ -411,5 +458,14 @@ class GameProvider with ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  GameRole? _deriveMyRole() {
+    try {
+      final me = _players.firstWhere((p) => p.id == _socket.id);
+      return me.role;
+    } catch (_) {
+      return _myRole; // Keep old role if not found in update
+    }
   }
 }

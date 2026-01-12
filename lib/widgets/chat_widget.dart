@@ -86,14 +86,15 @@ class _ChatWidgetState extends State<ChatWidget> {
                           final sender = msg['sender'];
                           final text = msg['message'];
                           final type = msg['type'];
+
+                          // Cache my nickname for comparison (avoids repeated players.any)
+                          final myNickname = game.players
+                              .where((p) => p.id == game.socket.id)
+                              .map((p) => p.nickname)
+                              .firstOrNull;
                           final isMe =
                               sender == game.socket.id ||
-                              (game.players.any(
-                                    (p) =>
-                                        p.id == game.socket.id &&
-                                        p.nickname == sender,
-                                  ) &&
-                                  type != 'system');
+                              (myNickname == sender && type != 'system');
 
                           if (msg['isSystem'] == true) {
                             return Padding(
