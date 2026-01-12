@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -157,6 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   label: '방 코드 (참여 전용)',
                                   icon: Icons.vpn_key_outlined,
                                   isNumber: true,
+                                  maxLength: 6,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
                                 ),
                                 const SizedBox(height: 30),
                                 _buildButton(
@@ -191,6 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    bool isNumber = false,
     int? maxLength,
     List<TextInputFormatter>? inputFormatters,
   }) {

@@ -89,9 +89,11 @@ class GameHeader extends StatelessWidget {
               Wrap(
                 spacing: 15,
                 children: game.roleCounts.entries.map((e) {
+                  final roleLabel = GameRole.fromString(e.key)?.label ?? e.key;
                   return Text(
-                    '${e.key} ${e.value}',
-                    style: TextStyle(
+                    '$roleLabel ${e.value}',
+                    style: GoogleFonts.gowunDodum(
+                      // Applied font globally as per previous rule, checking here specifically
                       color: Colors.white.withOpacity(0.6),
                       fontSize: 14,
                     ),

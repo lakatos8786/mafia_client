@@ -58,7 +58,7 @@ class GameProvider with ChangeNotifier {
     ) {
       final voter = players.firstWhere(
         (p) => p.id == entry.key,
-        orElse: () => Player(id: 'unknown', nickname: '?', isAlive: true),
+        orElse: () => Player(id: 'unknown', nickname: '알 수 없음', isAlive: true),
       );
       return voter.nickname;
     }).toList();
