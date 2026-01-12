@@ -196,7 +196,7 @@ class GameProvider with ChangeNotifier {
       _gameState = GamePhase.day;
       _dayCount = 1;
       _resetGameData();
-      _addSystemMessage('게임이 시작되었습니다! 역할을 확인하세요.');
+      _addSystemMessage('당신의 역할이 부여되었습니다. 정체를 숨기세요.');
       notifyListeners();
     });
 
@@ -208,7 +208,10 @@ class GameProvider with ChangeNotifier {
           );
           _gameState = event.phase;
           _dayCount = event.dayCount;
-          _addSystemMessage('${_gameState.label}이 되었습니다.');
+          final phaseMsg = _gameState == GamePhase.day
+              ? '동이 텄습니다. 마피아를 찾아내세요!'
+              : '밤이 찾아왔습니다. 어둠 속에서 누군가 움직입니다...';
+          _addSystemMessage(phaseMsg);
           _resetTurnData();
           notifyListeners();
         }
@@ -233,7 +236,10 @@ class GameProvider with ChangeNotifier {
                 .toList();
           }
           _gameOverTime = DateTime.now();
-          _addSystemMessage('게임 종료! 승자: $_winner');
+          final winMsg = _winner == '마피아'
+              ? '마피아가 도시를 장악했습니다!'
+              : '시민들이 마피아를 모두 처단했습니다!';
+          _addSystemMessage(winMsg);
           notifyListeners();
         } catch (e) {
           debugPrint('Error in game_over: $e');

@@ -10,13 +10,19 @@ import 'theme/app_colors.dart';
 
 import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ),
   );
+
+  // Preload Google Fonts to prevent text rendering issues
+  await GoogleFonts.pendingFonts([GoogleFonts.gowunDodum()]);
+
   runApp(MyApp());
 }
 
