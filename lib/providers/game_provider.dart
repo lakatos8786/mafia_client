@@ -4,6 +4,8 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../models/game_enums.dart';
 import '../models/player.dart';
 import '../models/event_models.dart';
+import '../theme/app_strings.dart';
+import '../config/app_config.dart';
 
 // Player class moved to models/player.dart
 
@@ -29,6 +31,20 @@ class GameProvider with ChangeNotifier {
   List<Player> _endGamePlayers = [];
   DateTime? _gameOverTime;
 
+  // Timer state
+  int _timerRemaining = 0;
+  int _timerTotal = 0;
+
+  // Loading states
+  bool _isLoading = false;
+
+  // Connection state
+  String _connectionState =
+      'connecting'; // connecting, connected, reconnecting, disconnected, error
+
+  // Game log
+  final List<Map<String, dynamic>> _gameLog = [];
+
   // Getters
   List<Player> get players => _players;
   String get gameState => _gameState.label;
@@ -47,6 +63,15 @@ class GameProvider with ChangeNotifier {
   String? get winner => _winner;
   List<Player> get endGamePlayers => _endGamePlayers;
   bool get isAdmin => _isAdmin;
+  int get timerRemaining => _timerRemaining;
+  int get timerTotal => _timerTotal;
+  bool get isLoading => _isLoading;
+  String get connectionState => _connectionState;
+  List<Map<String, dynamic>> get gameLog => _gameLog;
+
+  // Timer progress (0.0 to 1.0)
+  double get timerProgress =>
+      _timerTotal > 0 ? _timerRemaining / _timerTotal : 0.0;
 
   bool get canReturnToLobby {
     if (_gameOverTime == null) return true;
@@ -93,20 +118,15 @@ class GameProvider with ChangeNotifier {
     _initSocket();
   }
 
-  // DEBUG LOGGING
-  @override
-  void notifyListeners() {
-    // print('GameProvider: notifyListeners() called. State: ${_gameState.label}, Role: ${_myRole?.label}');
-    super.notifyListeners();
-  }
-
-  static const String serverUrl = 'https://mafia-server-py70.onrender.com';
-
   void _initSocket() {
-    print('Initializing socket connection to $serverUrl');
-    _socket = IO.io(serverUrl, <String, dynamic>{
+    print('Initializing socket connection to ${AppConfig.serverUrl}');
+    _socket = IO.io(AppConfig.serverUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
+      'reconnection': true,
+      'reconnectionAttempts': 5,
+      'reconnectionDelay': 1000,
+      'reconnectionDelayMax': 5000,
     });
 
     _setupListeners();
@@ -119,6 +139,7 @@ class GameProvider with ChangeNotifier {
     _handleGameFlowEvents();
     _handleActionEvents();
     _handleMessageEvents();
+    _handleTimerEvents();
   }
 
   void _handleConnectionEvents() {
@@ -126,15 +147,36 @@ class GameProvider with ChangeNotifier {
       print('DEBUG: Connected to server: ${_socket.id}');
       _myId = _socket.id;
       _errorMessage = null;
+      _connectionState = 'connected';
       notifyListeners();
     });
 
     _socket.onDisconnect((_) {
+      _connectionState = 'disconnected';
       _errorMessage = '서버와 연결이 끊어졌습니다.';
       notifyListeners();
     });
 
+    _socket.on('reconnect_attempt', (attemptNumber) {
+      _connectionState = 'reconnecting';
+      _errorMessage = '재연결 시도 중... ($attemptNumber/5)';
+      notifyListeners();
+    });
+
+    _socket.on('reconnect', (_) {
+      _connectionState = 'connected';
+      _errorMessage = null;
+      notifyListeners();
+    });
+
+    _socket.on('reconnect_failed', (_) {
+      _connectionState = 'error';
+      _errorMessage = '재연결 실패. 앱을 다시 시작해 주세요.';
+      notifyListeners();
+    });
+
     _socket.onConnectError((data) {
+      _connectionState = 'error';
       _errorMessage = '서버 연결 실패: $data';
       notifyListeners();
     });
@@ -196,7 +238,7 @@ class GameProvider with ChangeNotifier {
       _gameState = GamePhase.day;
       _dayCount = 1;
       _resetGameData();
-      _addSystemMessage('당신의 역할이 부여되었습니다. 정체를 숨기세요.');
+      _addSystemMessage(AppStrings.gameStarted);
       notifyListeners();
     });
 
@@ -209,8 +251,8 @@ class GameProvider with ChangeNotifier {
           _gameState = event.phase;
           _dayCount = event.dayCount;
           final phaseMsg = _gameState == GamePhase.day
-              ? '동이 텄습니다. 마피아를 찾아내세요!'
-              : '밤이 찾아왔습니다. 어둠 속에서 누군가 움직입니다...';
+              ? AppStrings.dayStarted
+              : AppStrings.nightStarted;
           _addSystemMessage(phaseMsg);
           _resetTurnData();
           notifyListeners();
@@ -237,8 +279,8 @@ class GameProvider with ChangeNotifier {
           }
           _gameOverTime = DateTime.now();
           final winMsg = _winner == '마피아'
-              ? '마피아가 도시를 장악했습니다!'
-              : '시민들이 마피아를 모두 처단했습니다!';
+              ? AppStrings.mafiaWin
+              : AppStrings.citizenWin;
           _addSystemMessage(winMsg);
           notifyListeners();
         } catch (e) {
@@ -293,8 +335,8 @@ class GameProvider with ChangeNotifier {
             .nickname;
 
         final resultMsg = role == GameRole.mafia
-            ? '[$targetNick]의 정체는... 마피아입니다!'
-            : '[$targetNick]은(는) 마피아가 아닙니다.';
+            ? AppStrings.investigationMafia(targetNick)
+            : AppStrings.investigationClear(targetNick);
         _addSystemMessage(resultMsg);
         notifyListeners();
       }
@@ -321,11 +363,37 @@ class GameProvider with ChangeNotifier {
             'type': event.type.name,
             'isSystem': event.sender == SystemConstant.sender,
           });
+
+          // Log to game log for replay
+          _addGameLogEntry('chat', {
+            'sender': event.sender,
+            'message': event.message,
+            'type': event.type.name,
+          });
+
           notifyListeners();
         }
       } catch (e) {
         debugPrint('Error in chat_message: $e');
       }
+    });
+  }
+
+  void _handleTimerEvents() {
+    _socket.on(SocketEvent.timerTick, (data) {
+      if (data is Map) {
+        _timerRemaining = (data['remaining'] as num?)?.toInt() ?? 0;
+        _timerTotal = (data['total'] as num?)?.toInt() ?? 0;
+        notifyListeners();
+      }
+    });
+  }
+
+  void _addGameLogEntry(String type, Map<String, dynamic> data) {
+    _gameLog.add({
+      'type': type,
+      'timestamp': DateTime.now().toIso8601String(),
+      'data': data,
     });
   }
 
@@ -336,6 +404,9 @@ class GameProvider with ChangeNotifier {
     _nightSelections.clear();
     _nightActionActors.clear();
     _messages.clear();
+    _timerRemaining = 0;
+    _timerTotal = 0;
+    _gameLog.clear();
   }
 
   void _resetTurnData() {
@@ -352,6 +423,12 @@ class GameProvider with ChangeNotifier {
       'type': ChatMessageType.system.name,
       'isSystem': true,
     });
+    _addGameLogEntry('system', {'message': msg});
+  }
+
+  void setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
   }
 
   // Actions
@@ -474,5 +551,12 @@ class GameProvider with ChangeNotifier {
     } catch (_) {
       return _myRole; // Keep old role if not found in update
     }
+  }
+
+  @override
+  void dispose() {
+    _socket.disconnect();
+    _socket.dispose();
+    super.dispose();
   }
 }

@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../models/player.dart';
 import '../providers/game_provider.dart';
+import '../theme/app_colors.dart';
 
 class PlayerGrid extends StatelessWidget {
   const PlayerGrid({super.key});
@@ -134,7 +135,7 @@ class PlayerGrid extends StatelessWidget {
                                 ? ((selectionTargetForRole.isNotEmpty ||
                                           isMyVoteTarget)
                                       ? (isMyVoteTarget
-                                                ? const Color(0xFFF59E0B)
+                                                ? AppColors.voteGold
                                                 : selectionTargetForRole
                                                       .contains(
                                                         GameRole.mafia.name,
@@ -162,7 +163,7 @@ class PlayerGrid extends StatelessWidget {
                               BoxShadow(
                                 color:
                                     (isMyVoteTarget
-                                            ? const Color(0xFFF59E0B)
+                                            ? AppColors.voteGold
                                             : selectionTargetForRole.contains(
                                                 GameRole.mafia.name,
                                               )
@@ -372,39 +373,65 @@ class PlayerGrid extends StatelessWidget {
                                   ),
                               ],
                             ),
-                            // Dead Overlay Text
+                            // Dead Overlay with Skull
                             if (!player.isAlive)
                               IgnorePointer(
                                 child: Container(
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
-                                  child: Transform.rotate(
-                                    angle: -0.2,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 4,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        '💀',
+                                        style: TextStyle(fontSize: 40),
                                       ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.red.withOpacity(0.5),
-                                          width: 2,
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 4,
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '사망',
-                                        style: GoogleFonts.gowunDodum(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
+                                        decoration: BoxDecoration(
                                           color: Colors.red.withOpacity(0.8),
-                                          letterSpacing: 2.0,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '사망',
+                                          style: GoogleFonts.gowunDodum(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            // Mafia indicator for fellow mafia
+                            if (player.isAlive &&
+                                game.myRoleEnum == GameRole.mafia &&
+                                player.role == GameRole.mafia &&
+                                player.id != game.socket.id)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.mafiaRed.withOpacity(0.8),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.people,
+                                    color: Colors.white,
+                                    size: 14,
                                   ),
                                 ),
                               ),

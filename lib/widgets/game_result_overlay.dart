@@ -4,6 +4,9 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
+import '../theme/app_strings.dart';
+import '../theme/app_colors.dart';
+import 'game_log_view.dart';
 
 class GameResultOverlay extends StatefulWidget {
   final GameProvider game;
@@ -16,6 +19,7 @@ class GameResultOverlay extends StatefulWidget {
 
 class _GameResultOverlayState extends State<GameResultOverlay> {
   bool _showCards = false;
+  bool _showGameLog = false;
 
   Timer? _refreshTimer;
 
@@ -169,7 +173,7 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                     IconData roleIcon = Icons.person;
                                     if (p.role == GameRole.mafia) {
                                       roleColor = const Color(0xFFE94560);
-                                      roleIcon = Icons.security;
+                                      roleIcon = Icons.water_drop; // Skull bug
                                     } else if (p.role == GameRole.doctor) {
                                       roleColor = Colors.greenAccent;
                                       roleIcon = Icons.medical_services;
@@ -376,55 +380,88 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
 
                     const SizedBox(height: 15),
 
-                    // 3. Compact Return Button
-                    if (!widget.game.canReturnToLobby)
-                      Pulse(
-                        infinite: true,
-                        child: const Text(
-                          "로비로 돌아가는 중...",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      )
-                    else
-                      FadeInUp(
-                        child: SizedBox(
-                          height: 40, // Height for compact button
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (widget.game.canReturnToLobby) {
-                                widget.game.returnToLobby();
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: mainColor,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 30,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              elevation: 5,
-                              shadowColor: mainColor.withOpacity(0.5),
-                            ),
+                    // 3. Action Buttons - Centered
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        if (!widget.game.canReturnToLobby)
+                          Pulse(
+                            infinite: true,
                             child: const Text(
-                              "로비로 돌아가기",
+                              "로비로 돌아가는 중...",
                               style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          )
+                        else
+                          FadeInUp(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (widget.game.canReturnToLobby) {
+                                  widget.game.returnToLobby();
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: mainColor,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                elevation: 5,
+                                shadowColor: mainColor.withOpacity(0.5),
+                              ),
+                              child: Text(
+                                AppStrings.returnToLobby,
+                                style: GoogleFonts.gowunDodum(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        // Game Log Button
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 200),
+                          child: TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _showGameLog = true;
+                              });
+                            },
+                            child: Text(
+                              '📜 게임 로그 보기',
+                              style: GoogleFonts.gowunDodum(
+                                color: Colors.white70,
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
                               ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
                     const SizedBox(height: 20),
                   ],
                 ),
               ),
+              // Game Log Overlay
+              if (_showGameLog)
+                GameLogView(
+                  gameLog: widget.game.gameLog,
+                  onClose: () {
+                    setState(() {
+                      _showGameLog = false;
+                    });
+                  },
+                ),
             ],
           ),
         ),

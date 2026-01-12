@@ -24,4 +24,14 @@ class AppColors {
   static const Color deadRed = Color(0xFFFF1744);
   static const Color textWhite = Colors.white;
   static const Color textDim = Colors.white70;
+
+  // Selection Highlights
+  static const Color voteGold = Color(0xFFF59E0B); // Gold for vote selection
+  static const Color mafiaRedDark = Color(0xFF9F1239); // Darker mafia red
+  static const Color doctorGreenDark = Color(0xFF065F46); // Darker doctor green
+  static const Color policeBlueDark = Color(0xFF1E3A8A); // Darker police blue
+
+  // Vote Pill
+  static const Color votePillStart = Color(0xFFF43F5E);
+  static const Color votePillEnd = Color(0xFFE11D48);
 }

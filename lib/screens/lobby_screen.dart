@@ -8,6 +8,7 @@ import '../models/game_enums.dart'; // For GamePhase
 import '../widgets/particle_background.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_strings.dart';
 
 class LobbyScreen extends StatelessWidget {
   const LobbyScreen({super.key});
@@ -213,6 +214,49 @@ class LobbyScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
+              // Player count display
+              FadeIn(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.people, color: Colors.white54, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${game.players.length}명 참가 중',
+                        style: GoogleFonts.gowunDodum(
+                          color: Colors.white54,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (game.players.length < 2) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentYellow.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '최소 2명 필요',
+                            style: GoogleFonts.gowunDodum(
+                              color: AppColors.accentYellow,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
               FadeInUp(
                 child: Padding(
                   padding: const EdgeInsets.all(30.0),
@@ -225,21 +269,26 @@ class LobbyScreen extends StatelessWidget {
                           if (game.players.any(
                             (p) => p.id == game.myId && p.isHost,
                           )) {
+                            final canStart = game.players.length >= 2;
                             return ElevatedButton(
-                              onPressed: () {
-                                game.startGame();
-                              },
+                              onPressed: canStart
+                                  ? () => game.startGame()
+                                  : null,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
+                                backgroundColor: canStart
+                                    ? AppColors.primary
+                                    : Colors.grey[700],
                                 foregroundColor: Colors.white,
-                                elevation: 8,
+                                elevation: canStart ? 8 : 0,
                                 shadowColor: AppColors.primary.withOpacity(0.6),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Text(
-                                '게임 시작',
+                                canStart
+                                    ? AppStrings.startGame
+                                    : '${2 - game.players.length}명 더 필요',
                                 style: GoogleFonts.gowunDodum(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -256,7 +305,7 @@ class LobbyScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               child: Text(
-                                '방장 대기 중...',
+                                AppStrings.waitingForHost,
                                 style: GoogleFonts.gowunDodum(
                                   color: Colors.white54,
                                   fontSize: 16,

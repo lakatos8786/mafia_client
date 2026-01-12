@@ -7,6 +7,7 @@ import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
 import 'models/game_enums.dart';
 import 'theme/app_colors.dart';
+import 'theme/app_strings.dart';
 
 import 'package:flutter/services.dart';
 
@@ -102,7 +103,7 @@ class ScreenRouter extends StatelessWidget {
               CircularProgressIndicator(color: AppColors.primary),
               SizedBox(height: 20),
               Text(
-                "서버에 접속 중입니다...",
+                AppStrings.connecting,
                 style: GoogleFonts.gowunDodum(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -110,7 +111,7 @@ class ScreenRouter extends StatelessWidget {
               ),
               SizedBox(height: 10),
               Text(
-                "서버가 절전 모드에서 깨어나는 데\n최대 1분 정도 소요될 수 있습니다.",
+                AppStrings.connectionColdStart,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.gowunDodum(fontSize: 14, color: Colors.grey),
               ),

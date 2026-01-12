@@ -31,6 +31,7 @@ class SocketEvent {
   static const String investigationResult = 'investigation_result';
   static const String chatMessage = 'chat_message';
   static const String gameOver = 'game_over';
+  static const String timerTick = 'timer_tick';
 }
 
 class SystemConstant {

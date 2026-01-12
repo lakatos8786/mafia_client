@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
+import '../theme/app_strings.dart';
+import '../theme/app_colors.dart';
 
 class ChatWidget extends StatefulWidget {
   final bool isExpanded;
@@ -21,6 +24,8 @@ class _ChatWidgetState extends State<ChatWidget> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+  int _unreadCount = 0;
+  int _lastMessageCount = 0;
 
   @override
   void dispose() {
@@ -46,7 +51,13 @@ class _ChatWidgetState extends State<ChatWidget> {
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
 
-    // Auto-scroll removed - using reverse: true in ListView
+    // Track unread messages when collapsed
+    if (!widget.isExpanded && game.messages.length > _lastMessageCount) {
+      _unreadCount += game.messages.length - _lastMessageCount;
+    } else if (widget.isExpanded) {
+      _unreadCount = 0;
+    }
+    _lastMessageCount = game.messages.length;
 
     return Column(
       children: [
@@ -99,29 +110,55 @@ class _ChatWidgetState extends State<ChatWidget> {
                           if (msg['isSystem'] == true) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.yellowAccent.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.yellowAccent.withOpacity(
-                                        0.3,
+                              child: Semantics(
+                                label: '시스템 메시지: $text',
+                                child: Center(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.policeBlue.withOpacity(
+                                            0.15,
+                                          ),
+                                          AppColors.accentYellow.withOpacity(
+                                            0.1,
+                                          ),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppColors.accentYellow
+                                            .withOpacity(0.4),
                                       ),
                                     ),
-                                  ),
-                                  child: Text(
-                                    '[시스템] $text',
-                                    style: const TextStyle(
-                                      color: Colors.yellowAccent,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          _getSystemMessageIcon(text),
+                                          color: AppColors.accentYellow,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            text,
+                                            style: GoogleFonts.gowunDodum(
+                                              color: Colors.white.withOpacity(
+                                                0.95,
+                                              ),
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ),
@@ -165,38 +202,44 @@ class _ChatWidgetState extends State<ChatWidget> {
                                       ),
                                     ),
                                   ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width * 0.7,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: bubbleColor.withOpacity(
-                                      isMe ? 0.9 : 0.8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
                                     ),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: const Radius.circular(16),
-                                      topRight: const Radius.circular(16),
-                                      bottomLeft: isMe
-                                          ? const Radius.circular(16)
-                                          : const Radius.circular(2),
-                                      bottomRight: isMe
-                                          ? const Radius.circular(2)
-                                          : const Radius.circular(16),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                                    decoration: BoxDecoration(
+                                      color: bubbleColor.withOpacity(
+                                        isMe ? 0.9 : 0.8,
                                       ),
-                                    ],
-                                  ),
-                                  child: Text(
-                                    text,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 15,
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: const Radius.circular(16),
+                                        topRight: const Radius.circular(16),
+                                        bottomLeft: isMe
+                                            ? const Radius.circular(16)
+                                            : const Radius.circular(2),
+                                        bottomRight: isMe
+                                            ? const Radius.circular(2)
+                                            : const Radius.circular(16),
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.1),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      text,
+                                      style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -233,28 +276,63 @@ class _ChatWidgetState extends State<ChatWidget> {
           padding: const EdgeInsets.all(10.0),
           child: Row(
             children: [
-              // Expand Toggle Button
-              Container(
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: InkWell(
-                  onTap: widget.onToggleExpand,
-                  customBorder: const CircleBorder(),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    width: 48,
-                    height: 48,
-                    child: CustomPaint(
-                      painter: ArrowPainter(
-                        isUp: !widget.isExpanded,
-                        color: Colors.white,
+              // Expand Toggle Button with unread badge
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: InkWell(
+                      onTap: widget.onToggleExpand,
+                      customBorder: const CircleBorder(),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        width: 48,
+                        height: 48,
+                        child: CustomPaint(
+                          painter: ArrowPainter(
+                            isUp: !widget.isExpanded,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  // Unread badge
+                  if (_unreadCount > 0 && !widget.isExpanded)
+                    Positioned(
+                      top: -4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.mafiaRed,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.mafiaRed.withOpacity(0.5),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          _unreadCount > 99 ? '99+' : '$_unreadCount',
+                          style: GoogleFonts.gowunDodum(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               Expanded(
                 child: Container(
@@ -268,7 +346,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                     focusNode: _focusNode,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: '대화에 참여하세요...',
+                      hintText: AppStrings.chatHint,
                       hintStyle: TextStyle(
                         color: Colors.white.withOpacity(0.4),
                       ),
@@ -320,6 +398,33 @@ class _ChatWidgetState extends State<ChatWidget> {
         ),
       ],
     );
+  }
+
+  IconData _getSystemMessageIcon(String text) {
+    if (text.contains('마피아') && text.contains('승리') || text.contains('장악')) {
+      return Icons.dangerous;
+    } else if (text.contains('시민') && text.contains('승리') ||
+        text.contains('처단')) {
+      return Icons.celebration;
+    } else if (text.contains('시체') || text.contains('사망')) {
+      return Icons.warning;
+    } else if (text.contains('밤') || text.contains('어둠')) {
+      return Icons.nightlight_round;
+    } else if (text.contains('낮') ||
+        text.contains('아침') ||
+        text.contains('동이')) {
+      return Icons.wb_sunny;
+    } else if (text.contains('투표') || text.contains('처형')) {
+      return Icons.how_to_vote;
+    } else if (text.contains('치료') || text.contains('생명')) {
+      return Icons.medical_services;
+    } else if (text.contains('조사') || text.contains('정체')) {
+      return Icons.search;
+    } else if (text.contains('역할') || text.contains('부여')) {
+      return Icons.person;
+    } else {
+      return Icons.info_outline;
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_strings.dart';
 
 class ActionButtons extends StatelessWidget {
   const ActionButtons({super.key});
@@ -78,8 +79,8 @@ class ActionButtons extends StatelessWidget {
                     onPressed: () {
                       game.vote(GameAction.skip);
                     },
-                    child: const Text(
-                      '투표 건너뛰기',
+                    child: Text(
+                      AppStrings.skipVote,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

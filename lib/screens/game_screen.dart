@@ -8,6 +8,7 @@ import '../widgets/player_grid.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
+import '../widgets/role_reveal_modal.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -18,15 +19,26 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   bool _isChatExpanded = false;
+  bool _roleRevealed = false;
+  int? _lastDayCount;
+  GameRole? _shownRole;
 
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
 
+    // Show role modal when game starts or role changes
+    final shouldShowRoleModal =
+        game.myRoleEnum != null &&
+        game.gamePhase != GamePhase.waiting &&
+        game.gamePhase != GamePhase.result &&
+        (!_roleRevealed ||
+            _shownRole != game.myRoleEnum ||
+            _lastDayCount != game.dayCount && game.dayCount == 1);
+
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset:
-          true, // Revert to true to standard handle keyboard
+      resizeToAvoidBottomInset: true,
       body: DayNightBackground(
         phase: game.gamePhase,
         child: Stack(
@@ -45,9 +57,7 @@ class _GameScreenState extends State<GameScreen> {
                     // Game Area
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: 160,
-                        ), // Fixed padding for collapsed chat
+                        padding: const EdgeInsets.only(bottom: 160),
                         child: PlayerGrid(),
                       ),
                     ),
@@ -60,8 +70,7 @@ class _GameScreenState extends State<GameScreen> {
                   curve: Curves.fastOutSlowIn,
                   left: 0,
                   right: 0,
-                  bottom: 0, // Dock to bottom of RESIZED scaffold
-                  // Expanded: 70% of RESPONSIVE height
+                  bottom: 0,
                   height: _isChatExpanded
                       ? MediaQuery.of(context).size.height * 0.7
                       : 160,
@@ -81,6 +90,18 @@ class _GameScreenState extends State<GameScreen> {
             ),
             if (game.gamePhase == GamePhase.result)
               GameResultOverlay(game: game),
+            // Role Reveal Modal
+            if (shouldShowRoleModal && !_roleRevealed)
+              RoleRevealModal(
+                role: game.myRoleEnum!,
+                onDismiss: () {
+                  setState(() {
+                    _roleRevealed = true;
+                    _shownRole = game.myRoleEnum;
+                    _lastDayCount = game.dayCount;
+                  });
+                },
+              ),
           ],
         ),
       ),
