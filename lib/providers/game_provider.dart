@@ -292,8 +292,9 @@ class GameProvider with ChangeNotifier {
             )
             .nickname;
 
-        final resultMsg =
-            '조사 결과, $targetNick님은 ${role == GameRole.mafia ? "마피아입니다!" : "마피아가 아닙니다."}';
+        final resultMsg = role == GameRole.mafia
+            ? '[$targetNick]의 정체는... 마피아입니다!'
+            : '[$targetNick]은(는) 마피아가 아닙니다.';
         _addSystemMessage(resultMsg);
         notifyListeners();
       }
