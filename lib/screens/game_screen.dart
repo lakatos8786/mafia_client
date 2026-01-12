@@ -24,7 +24,8 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: false, // Prevent background squashing
+      resizeToAvoidBottomInset:
+          true, // Revert to true to standard handle keyboard
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -46,12 +47,12 @@ class _GameScreenState extends State<GameScreen> {
                       // Skip Vote & Role Actions
                       const ActionButtons(),
 
-                      // Game Area - Occupy remaining space, but leave padding for collapsed chat
+                      // Game Area
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(
-                            bottom: 120,
-                          ), // Height of collapsed chat
+                            bottom: 160,
+                          ), // Fixed padding for collapsed chat
                           child: PlayerGrid(),
                         ),
                       ),
@@ -60,22 +61,17 @@ class _GameScreenState extends State<GameScreen> {
 
                   // Expandable Chat Layer
                   AnimatedPositioned(
-                    duration: const Duration(
-                      milliseconds: 150,
-                    ), // Faseter for keyboard
-                    curve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.fastOutSlowIn,
                     left: 0,
                     right: 0,
-                    // Float above keyboard
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                    // Expanded: 70% of screen, Collapsed: 160px (approx)
+                    bottom: 0, // Dock to bottom of RESIZED scaffold
+                    // Expanded: 70% of RESPONSIVE height
                     height: _isChatExpanded
                         ? MediaQuery.of(context).size.height * 0.7
                         : 160,
                     child: Container(
-                      padding: const EdgeInsets.only(
-                        bottom: 10,
-                      ), // Reduced bot padding
+                      padding: const EdgeInsets.only(bottom: 0),
                       child: ChatWidget(
                         isExpanded: _isChatExpanded,
                         onToggleExpand: () {
