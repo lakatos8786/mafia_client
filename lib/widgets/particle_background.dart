@@ -1,13 +1,13 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-import '../theme/app_text.dart';
+import '../models/game_enums.dart'; // Import Enums
 import '../theme/app_colors.dart';
 
 class ParticleBackground extends StatefulWidget {
-  final Map<String, dynamic> mode; // { 'type': 'day' || 'night' }
+  final GamePhase phase;
 
-  const ParticleBackground({super.key, required this.mode});
+  const ParticleBackground({super.key, required this.phase});
 
   @override
   State<ParticleBackground> createState() => _ParticleBackgroundState();
@@ -18,12 +18,12 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   late AnimationController _controller;
   final List<Particle> _particles = [];
   final Random _random = Random();
-  String _currentType = AppText.stateDay;
+  GamePhase _currentPhase = GamePhase.day;
 
   @override
   void initState() {
     super.initState();
-    _currentType = widget.mode['type'] ?? AppText.stateDay;
+    _currentPhase = widget.phase;
     _initParticles();
     _controller = AnimationController(
       vsync: this,
@@ -34,9 +34,9 @@ class _ParticleBackgroundState extends State<ParticleBackground>
   @override
   void didUpdateWidget(covariant ParticleBackground oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.mode['type'] != oldWidget.mode['type']) {
+    if (widget.phase != oldWidget.phase) {
       setState(() {
-        _currentType = widget.mode['type'];
+        _currentPhase = widget.phase;
         _initParticles();
       });
     }
@@ -44,11 +44,11 @@ class _ParticleBackgroundState extends State<ParticleBackground>
 
   void _initParticles() {
     _particles.clear();
-    int count = _currentType == AppText.stateDay
+    int count = _currentPhase == GamePhase.day
         ? 20
-        : 50; // More stars at night
+        : 50; // More stars at night or waiting
     for (int i = 0; i < count; i++) {
-      _particles.add(Particle(_random, _currentType));
+      _particles.add(Particle(_random, _currentPhase));
     }
   }
 
@@ -69,7 +69,7 @@ class _ParticleBackgroundState extends State<ParticleBackground>
         // RepaintBoundary improves performance by isolating the painting
         return RepaintBoundary(
           child: CustomPaint(
-            painter: ParticlePainter(_particles, _currentType),
+            painter: ParticlePainter(_particles, _currentPhase),
             size: Size.infinite,
           ),
         );
@@ -86,21 +86,21 @@ class Particle {
   late double radius;
   late double opacity;
 
-  Particle(Random random, String type) {
-    reset(random, type, firstSpawn: true);
+  Particle(Random random, GamePhase phase) {
+    reset(random, phase, firstSpawn: true);
   }
 
-  void reset(Random random, String type, {bool firstSpawn = false}) {
+  void reset(Random random, GamePhase phase, {bool firstSpawn = false}) {
     x = random.nextDouble();
     y = firstSpawn
         ? random.nextDouble()
         : 1.1; // Start from bottom if respawning
-    if (type == AppText.stateNight) {
+    if (phase == GamePhase.night) {
       // Stars: Static or very slow twinkling
       speed = random.nextDouble() * 0.0005;
       y = random.nextDouble(); // Random Y for stars
     } else {
-      // Day: Floating dust/pollen, moving up
+      // Day/Other: Floating dust/pollen, moving up
       speed = random.nextDouble() * 0.002 + 0.001;
     }
 
@@ -122,15 +122,15 @@ class Particle {
 
 class ParticlePainter extends CustomPainter {
   final List<Particle> particles;
-  final String type;
+  final GamePhase phase;
 
-  ParticlePainter(this.particles, this.type);
+  ParticlePainter(this.particles, this.phase);
 
   @override
   void paint(Canvas canvas, Size size) {
     for (var particle in particles) {
       final paint = Paint()
-        ..color = type == AppText.stateDay
+        ..color = phase == GamePhase.day
             ? Colors.white.withOpacity(particle.opacity)
             : AppColors.accentYellow.withOpacity(
                 particle.opacity,
@@ -140,7 +140,7 @@ class ParticlePainter extends CustomPainter {
       double cy = particle.y * size.height;
 
       // Draw Twinkle for night
-      if (type == AppText.stateNight) {
+      if (phase == GamePhase.night) {
         // Simple twinkle effect
         double twinkle = sin(
           DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,

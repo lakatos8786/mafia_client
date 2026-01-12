@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
 
 class GameResultOverlay extends StatefulWidget {
@@ -71,174 +72,276 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20), // Reduced top spacing
-                    // 1. Winner Announcement (Compact)
+                    // 1. Winner Announcement (Big & Clear)
                     ZoomIn(
                       duration: const Duration(milliseconds: 600),
-                      child: Row(
-                        // Changed to Row for compactness
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Column(
                         children: [
                           Icon(
                             Icons.emoji_events,
                             color: mainColor,
-                            size: 50,
-                          ), // Smaller icon
-                          const SizedBox(width: 10),
+                            size: 80, // Much larger icon
+                          ),
+                          const SizedBox(height: 10),
                           Text(
                             isMafiaWin ? '마피아 승리' : '시민 승리',
                             style: GoogleFonts.gowunDodum(
-                              fontSize: 32, // Smaller font
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 1.5,
+                              fontSize: 50, // Massive font
+                              fontWeight: FontWeight.w900,
+                              color: mainColor, // Color the text itself
+                              letterSpacing: 2.0,
                               shadows: [
                                 Shadow(blurRadius: 15, color: mainColor),
                               ],
+                            ),
+                          ),
+                          Text(
+                            isMafiaWin ? '마피아가 도시를 장악했습니다.' : '도시의 평화를 지켜냈습니다.',
+                            style: GoogleFonts.gowunDodum(
+                              fontSize: 16,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 15), // Reduced gap
-                    // 2. Results Grid (Dense)
+                    const SizedBox(height: 30), // More spacing
+                    // 2. Results Grid (Highlight Winners)
                     Expanded(
                       child: _showCards
-                          ? GridView.builder(
+                          ? SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16, // Reduced padding
+                                horizontal: 16,
                               ),
-                              gridDelegate:
-                                  const SliverGridDelegateWithMaxCrossAxisExtent(
-                                    maxCrossAxisExtent:
-                                        200, // Wider for result cards
-                                    childAspectRatio: 2.8, // Flatter cards
-                                    crossAxisSpacing: 8,
-                                    mainAxisSpacing: 8,
-                                  ),
-                              itemCount: widget.game.endGamePlayers.length,
-                              itemBuilder: (context, index) {
-                                final players = widget.game.endGamePlayers;
-                                // ... cell content logic ... (keep it simple for brevity in replacement if possible, but forced here due to tool nature)
-                                final p = players[index];
-                                Color roleColor = Colors.grey;
-                                IconData roleIcon = Icons.person;
-                                if (p.role == '마피아') {
-                                  roleColor = const Color(0xFFE94560);
-                                  roleIcon = Icons.security;
-                                } else if (p.role == '의사') {
-                                  roleColor = Colors.greenAccent;
-                                  roleIcon = Icons.medical_services;
-                                } else if (p.role == '경찰') {
-                                  roleColor = Colors.blueAccent;
-                                  roleIcon = Icons.local_police;
-                                } else {
-                                  roleColor = Colors.white70;
-                                }
+                              child: Center(
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: widget.game.endGamePlayers.map((p) {
+                                    final index = widget.game.endGamePlayers
+                                        .indexOf(p);
 
-                                return FadeInLeft(
-                                  delay: Duration(milliseconds: 50 * index),
-                                  duration: const Duration(milliseconds: 400),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.08),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: p.isAlive
-                                            ? roleColor.withOpacity(0.6)
-                                            : Colors.grey.withOpacity(0.3),
-                                        width: 1.5,
+                                    // Determine if this player won
+                                    bool isPlayerWinner = false;
+                                    final role = p.role;
+                                    if (isMafiaWin) {
+                                      if (role == GameRole.mafia)
+                                        isPlayerWinner = true;
+                                    } else {
+                                      // Citizen win: All non-mafia win
+                                      if (role != GameRole.mafia)
+                                        isPlayerWinner = true;
+                                    }
+
+                                    Color roleColor = Colors.grey;
+                                    IconData roleIcon = Icons.person;
+                                    if (p.role == GameRole.mafia) {
+                                      roleColor = const Color(0xFFE94560);
+                                      roleIcon = Icons.security;
+                                    } else if (p.role == GameRole.doctor) {
+                                      roleColor = Colors.greenAccent;
+                                      roleIcon = Icons.medical_services;
+                                    } else if (p.role == GameRole.police) {
+                                      roleColor = Colors.blueAccent;
+                                      roleIcon = Icons.local_police;
+                                    } else {
+                                      roleColor = Colors.white70;
+                                    }
+
+                                    // Winner styling
+                                    final borderColor = isPlayerWinner
+                                        ? const Color(
+                                            0xFFFFD700,
+                                          ) // Gold for winner
+                                        : Colors.grey.withOpacity(0.3);
+                                    final borderWidth = isPlayerWinner
+                                        ? 3.0
+                                        : 1.0;
+
+                                    return FadeInLeft(
+                                      delay: Duration(milliseconds: 50 * index),
+                                      duration: const Duration(
+                                        milliseconds: 400,
                                       ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        // Avatar
-                                        Container(
-                                          width: 32,
-                                          height: 32,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: roleColor.withOpacity(0.2),
-                                          ),
-                                          child: Icon(
-                                            roleIcon,
-                                            color: roleColor,
-                                            size: 18,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        // Texts
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                p.nickname,
-                                                style: GoogleFonts.gowunDodum(
-                                                  color: p.isAlive
-                                                      ? Colors.white
-                                                      : Colors.grey,
-                                                  fontSize: 14, // Larger
-                                                  fontWeight: FontWeight.bold,
-                                                  decoration: p.isAlive
-                                                      ? null
-                                                      : TextDecoration
-                                                            .lineThrough,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              Text(
-                                                p.role?.label ?? '시민',
-                                                style: GoogleFonts.gowunDodum(
-                                                  color: roleColor,
-                                                  fontSize: 12, // Larger
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (!p.isAlive)
-                                          Transform.rotate(
-                                            angle: -0.2,
-                                            child: Container(
+                                      child: SizedBox(
+                                        width: 180,
+                                        height: 85, // Slightly taller for badge
+                                        child: Stack(
+                                          clipBehavior: Clip.none,
+                                          children: [
+                                            Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
-                                                    horizontal: 6,
-                                                    vertical: 2,
+                                                    horizontal: 10,
+                                                    vertical: 8,
                                                   ),
                                               decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  color: Colors.redAccent
-                                                      .withOpacity(0.8),
-                                                  width: 2,
-                                                ),
+                                                color: isPlayerWinner
+                                                    ? mainColor.withOpacity(0.1)
+                                                    : Colors.white.withOpacity(
+                                                        0.05,
+                                                      ),
                                                 borderRadius:
-                                                    BorderRadius.circular(4),
-                                              ),
-                                              child: Text(
-                                                '사망',
-                                                style: GoogleFonts.gowunDodum(
-                                                  color: Colors.redAccent,
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: isPlayerWinner
+                                                      ? mainColor
+                                                      : borderColor,
+                                                  width: borderWidth,
                                                 ),
+                                                boxShadow: isPlayerWinner
+                                                    ? [
+                                                        BoxShadow(
+                                                          color: mainColor
+                                                              .withOpacity(0.4),
+                                                          blurRadius: 15,
+                                                          spreadRadius: 1,
+                                                        ),
+                                                      ]
+                                                    : [],
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  // Avatar
+                                                  Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      shape: BoxShape.circle,
+                                                      color: roleColor
+                                                          .withOpacity(0.2),
+                                                      border: Border.all(
+                                                        color: roleColor,
+                                                        width: 2,
+                                                      ),
+                                                    ),
+                                                    child: Icon(
+                                                      roleIcon,
+                                                      color: roleColor,
+                                                      size: 20,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  // Texts
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          p.nickname,
+                                                          style: GoogleFonts.gowunDodum(
+                                                            color: p.isAlive
+                                                                ? Colors.white
+                                                                : Colors.grey,
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            decoration:
+                                                                p.isAlive
+                                                                ? null
+                                                                : TextDecoration
+                                                                      .lineThrough,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                        Text(
+                                                          p.role?.label ?? '시민',
+                                                          style:
+                                                              GoogleFonts.gowunDodum(
+                                                                color:
+                                                                    roleColor,
+                                                                fontSize: 13,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (!p.isAlive)
+                                                    Text(
+                                                      '💀',
+                                                      style: TextStyle(
+                                                        fontSize: 20,
+                                                      ),
+                                                    ),
+                                                ],
                                               ),
                                             ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                                            // Crown Badge for Winners
+                                            if (isPlayerWinner)
+                                              Positioned(
+                                                top: -12,
+                                                left: 0,
+                                                right: 0,
+                                                child: Center(
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 10,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: mainColor,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            20,
+                                                          ),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: Colors.black26,
+                                                          blurRadius: 4,
+                                                          offset: Offset(0, 2),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.emoji_events,
+                                                          size: 14,
+                                                          color: Colors.white,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 4,
+                                                        ),
+                                                        Text(
+                                                          'WINNER',
+                                                          style: GoogleFonts.roboto(
+                                                            // Bold condensed font for badges
+                                                            color: Colors.white,
+                                                            fontSize: 10,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 1.0,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             )
                           : const SizedBox(),
                     ),

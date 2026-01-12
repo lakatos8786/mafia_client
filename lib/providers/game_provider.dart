@@ -50,6 +50,7 @@ class GameProvider with ChangeNotifier {
   List<Player> get players => _players;
   // UI expects String, so return label
   String get gameState => _gameState.label;
+  GamePhase get gamePhase => _gameState;
   int get dayCount => _dayCount;
   // UI expects String?, so return label
   String? get myRole => _myRole?.label;
@@ -144,11 +145,18 @@ class GameProvider with ChangeNotifier {
       }
     });
 
+import '../services/sound_service.dart';
+
+// ... (existing imports)
+
+// ... (inside GameProvider)
+
     _socket.on('game_start', (data) {
       try {
         if (data is Map) {
           _gameState = GamePhase.day; // Enum
           _dayCount = 1;
+          SoundService().playDayStart(); // SFX
           if (data['players'] is List) {
             _players = (data['players'] as List)
                 .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
@@ -161,41 +169,18 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on('role_assigned', (role) {
-      _myRole = GameRole.fromString(role);
-      _winner = null;
-      _endGamePlayers = [];
-      _messages.add({'sender': '시스템', 'message': '새로운 게임이 시작되었습니다!'});
-      notifyListeners();
-    });
-
-    _socket.on('player_eliminated', (data) {
-      try {
-        if (data is Map) {
-          final deadId = data['id'];
-          final index = _players.indexWhere((p) => p.id == deadId);
-          if (index != -1) {
-            final old = _players[index];
-            _players[index] = Player(
-              id: old.id,
-              nickname: old.nickname,
-              role: old.role,
-              isAlive: false,
-              isHost: old.isHost,
-            );
-            notifyListeners();
-          }
-        }
-      } catch (e) {
-        print('Error in player_eliminated: $e');
-      }
-    });
+    // ...
 
     _socket.on('phase_change', (data) {
       try {
         if (data is Map) {
           if (data['phase'] != null) {
-            _gameState = GamePhase.fromString(data['phase']);
+            final nextPhase = GamePhase.fromString(data['phase']);
+            if (nextPhase != _gameState) {
+              if (nextPhase == GamePhase.day) SoundService().playDayStart();
+              if (nextPhase == GamePhase.night) SoundService().playNightStart();
+            }
+            _gameState = nextPhase;
           }
           _dayCount = data['dayCount'] as int? ?? _dayCount;
           _votes.clear();
@@ -209,88 +194,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on('night_selection_update', (data) {
-      try {
-        if (data is Map) {
-          final role = data['role']?.toString();
-          final targetId = data['targetId']?.toString();
-          final actorNickname = data['actorNickname']?.toString();
-          if (role != null && targetId != null) {
-            _nightSelections[role] = targetId;
-            if (actorNickname != null) {
-              _nightActionActors[role] = actorNickname;
-            }
-            notifyListeners();
-          }
-        }
-      } catch (e) {
-        print('Error in night_selection_update: $e');
-      }
-    });
-
-    _socket.on('investigation_result', (data) {
-      try {
-        if (data is Map) {
-          final targetNickname = data['targetNickname']?.toString() ?? '알 수 없음';
-          final isMafia = data['isMafia'] as bool? ?? false;
-          final resultText = isMafia ? '마피아입니다.' : '마피아가 아닙니다.';
-          _messages.add({
-            'sender': '시스템',
-            'message': '조사 결과: [$targetNickname]님은 $resultText',
-            'isSystem': true,
-          });
-          notifyListeners();
-        }
-      } catch (e) {
-        print('Error in investigation_result: $e');
-      }
-    });
-
-    _socket.on('vote_update', (data) {
-      print('Received vote_update: $data'); // DEBUG LOG
-      try {
-        if (data is Map) {
-          final mapData = Map<String, dynamic>.from(data);
-
-          if (mapData['votes'] != null) {
-            _votes = Map<String, int>.from(mapData['votes']);
-          } else {
-            // Legacy support / check
-            if (!mapData.containsKey('votes') &&
-                !mapData.containsKey('voters')) {
-              print('Handling as legacy vote map');
-              _votes = Map<String, int>.from(mapData);
-            }
-          }
-
-          if (mapData['voters'] != null) {
-            _voters = Map<String, String>.from(mapData['voters']);
-            print('Updated voters map: $_voters');
-          } else {
-            print('No voters data found in payload');
-          }
-
-          notifyListeners();
-        } else {
-          print('vote_update data is not a Map: $data');
-        }
-      } catch (e) {
-        print('Error in vote_update: $e');
-      }
-    });
-
-    _socket.on('chat_message', (data) {
-      try {
-        if (data is Map) {
-          _messages.add(Map<String, dynamic>.from(data));
-          notifyListeners();
-        }
-      } catch (e) {
-        print('Error in chat_message: $e');
-      }
-    });
-
-    // Duplicate player_eliminated listener removed.
+    // ...
 
     _socket.on('game_over', (data) {
       try {
@@ -305,6 +209,18 @@ class GameProvider with ChangeNotifier {
           }
           _gameOverTime = DateTime.now();
           _messages.add({'sender': '시스템', 'message': '게임 종료! 승자: $_winner'});
+          
+          // Play Win/Lose Sound
+          final isMafiaWin = _winner == '마피아';
+          final myTeamIsMafia = _myRole == GameRole.mafia;
+          // Citizens win if !isMafiaWin
+          
+          if ((isMafiaWin && myTeamIsMafia) || (!isMafiaWin && !myTeamIsMafia)) {
+             SoundService().playWin();
+          } else {
+             SoundService().playLose();
+          }
+
           notifyListeners();
 
           // Trigger rebuild after 2 seconds to show "Tap to return" text
@@ -317,32 +233,13 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on('error', (msg) {
-      _errorMessage = msg;
-      notifyListeners();
-      Future.delayed(Duration(seconds: 3), () {
-        _errorMessage = null;
-        notifyListeners();
-      });
-    });
-  }
-
-  void joinRoom(String nickname, String roomId) {
-    print('Joining room $roomId as $nickname');
-    _socket.emit('join_room', {'nickname': nickname, 'roomId': roomId});
-  }
-
-  void createRoom(String nickname) {
-    print('Creating room as $nickname');
-    _socket.emit('create_room', nickname);
-  }
-
-  void startGame() {
-    _socket.emit('start_game');
-  }
+    // ...
 
   void vote(String targetId) {
-    _socket.emit('vote', targetId);
+    if (_gameState == GamePhase.day && _myRole != null && _players.firstWhere((p) => p.id == _socket.id).isAlive) {
+       SoundService().playVote();
+       _socket.emit('vote', targetId);
+    }
   }
 
   void nightAction(String action, String targetId) {

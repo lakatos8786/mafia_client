@@ -11,11 +11,17 @@ class GameHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
+    final topPadding = MediaQuery.of(context).padding.top;
 
     return FadeInDown(
       duration: const Duration(milliseconds: 600),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        padding: EdgeInsets.only(
+          top: 15 + topPadding, // Add status bar height
+          bottom: 15,
+          left: 20,
+          right: 20,
+        ),
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.3),
           borderRadius: const BorderRadius.vertical(

@@ -7,7 +7,15 @@ import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
 import 'theme/app_colors.dart';
 
+import 'package:flutter/services.dart';
+
 void main() {
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
   runApp(MyApp());
 }
 

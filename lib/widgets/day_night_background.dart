@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import '../models/game_enums.dart'; // Import GameEnum
 import 'particle_background.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_text.dart';
 
 class DayNightBackground extends StatelessWidget {
-  final String phase; // '낮' or '밤'
+  final GamePhase phase;
   final Widget child;
 
   const DayNightBackground({
@@ -18,7 +18,7 @@ class DayNightBackground extends StatelessWidget {
     // Determine colors based on phase
     Decoration mainDecoration;
 
-    if (phase == AppText.stateDay) {
+    if (phase == GamePhase.day) {
       // Day: Cyber Blue Sky with bright center
       mainDecoration = const BoxDecoration(
         gradient: RadialGradient(
@@ -69,7 +69,7 @@ class DayNightBackground extends StatelessWidget {
             ),
           ),
           // Particle Layer
-          ParticleBackground(mode: {'type': phase}),
+          ParticleBackground(phase: phase),
 
           child,
         ],
