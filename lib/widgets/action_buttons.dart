@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_colors.dart';
 
@@ -18,16 +19,17 @@ class ActionButtons extends StatelessWidget {
     return Column(
       children: [
         // Skip Vote Row
-        if (game.gameState == '낮')
+        if (game.gamePhase == GamePhase.day)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (game.votes['skip'] != null && game.votes['skip']! > 0)
+                if (game.votes[GameAction.skip] != null &&
+                    game.votes[GameAction.skip]! > 0)
                   Flexible(
                     child: Text(
-                      '건너뛰기 투표: ${game.votes['skip']} (${game.skipVoterNicknames.join(", ")})  ',
+                      '건너뛰기 투표: ${game.votes[GameAction.skip]} (${game.skipVoterNicknames.join(", ")})  ',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.6),
                         fontWeight: FontWeight.bold,
@@ -74,7 +76,7 @@ class ActionButtons extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      game.vote('skip');
+                      game.vote(GameAction.skip);
                     },
                     child: const Text(
                       '투표 건너뛰기',
@@ -89,7 +91,8 @@ class ActionButtons extends StatelessWidget {
             ),
           ),
 
-        if (game.gameState == '밤' && game.myRole == '마피아')
+        if (game.gamePhase == GamePhase.night &&
+            game.myRoleEnum == GameRole.mafia)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
@@ -137,7 +140,7 @@ class ActionButtons extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      game.nightAction('kill', 'skip');
+                      game.nightAction(NightAction.kill, GameAction.skip);
                     },
                     child: Text(
                       game.mafiaSkipButtonText,

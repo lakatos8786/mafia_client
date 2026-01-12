@@ -5,6 +5,7 @@ import 'providers/game_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
+import 'models/game_enums.dart';
 import 'theme/app_colors.dart';
 
 import 'package:flutter/services.dart';
@@ -97,7 +98,7 @@ class ScreenRouter extends StatelessWidget {
       return LoginScreen();
     }
 
-    if (game.gameState == '대기중') {
+    if (game.gamePhase == GamePhase.waiting) {
       return LobbyScreen();
     } else {
       return GameScreen();

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
+import '../models/game_enums.dart';
 import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
 import '../widgets/player_grid.dart';
@@ -78,7 +79,8 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ],
             ),
-            if (game.gameState == '결과') GameResultOverlay(game: game),
+            if (game.gamePhase == GamePhase.result)
+              GameResultOverlay(game: game),
           ],
         ),
       ),

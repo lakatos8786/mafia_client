@@ -32,7 +32,14 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
   @override
   Widget build(BuildContext context) {
     final winner = widget.game.winner;
-    final isMafiaWin = winner == '마피아';
+    // Normalize winner string to check who won
+    GameRole? winnerRole = GameRole.fromString(winner);
+    final isMafiaWin = winnerRole == GameRole.mafia;
+
+    // Fallback if 'winner' was already a Korean string like '마피아' (though fromString handles aliases if defined)
+    // safe check: if winner is string '마피아' fromString might return mafia if aliases set,
+    // otherwise manual check needed if strictly English.
+    // Our refactored fromString handles Korean labels too! So this is safe.
 
     // Theme colors based on winner
     final mainColor = isMafiaWin

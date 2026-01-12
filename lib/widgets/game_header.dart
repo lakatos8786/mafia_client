@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_colors.dart';
 
@@ -37,7 +38,7 @@ class GameHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
                   BoxShadow(
-                    color: game.gameState == '낮'
+                    color: game.gamePhase == GamePhase.day
                         ? Colors.orangeAccent.withOpacity(0.4)
                         : const Color(0xFF6366F1).withOpacity(0.3),
                     blurRadius: 20,
@@ -51,17 +52,17 @@ class GameHeader extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    game.gameState == '낮'
+                    game.gamePhase == GamePhase.day
                         ? Icons.wb_sunny
                         : Icons.nightlight_round,
-                    color: game.gameState == '낮'
+                    color: game.gamePhase == GamePhase.day
                         ? Colors.orangeAccent
                         : const Color(0xFF818CF8),
                     size: 28,
                   ),
                   const SizedBox(width: 15),
                   Text(
-                    '${game.gameState} ${game.dayCount}일차', // Removed hyphen
+                    '${game.gamePhase.label} ${game.dayCount}일차', // Removed hyphen
                     style: GoogleFonts.gowunDodum(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
@@ -69,7 +70,7 @@ class GameHeader extends StatelessWidget {
                       letterSpacing: 2.0,
                       shadows: [
                         Shadow(
-                          color: game.gameState == '낮'
+                          color: game.gamePhase == GamePhase.day
                               ? Colors.orangeAccent
                               : const Color(0xFF6366F1),
                           blurRadius: 15,

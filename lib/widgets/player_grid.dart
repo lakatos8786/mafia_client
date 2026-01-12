@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/game_enums.dart';
+import '../models/player.dart';
 import '../providers/game_provider.dart';
 
 class PlayerGrid extends StatelessWidget {
@@ -58,14 +60,17 @@ class PlayerGrid extends StatelessWidget {
                         if (!player.isAlive) return;
 
                         // Voting/Action Logic
-                        if (game.gameState == '낮') {
+                        if (game.gamePhase == GamePhase.day) {
                           game.vote(player.id);
-                        } else if (game.gameState == '밤') {
+                        } else if (game.gamePhase == GamePhase.night) {
                           String? action;
                           // Use strict Enums now
-                          if (game.myRole == '마피아') action = 'kill';
-                          if (game.myRole == '의사') action = 'heal';
-                          if (game.myRole == '경찰') action = 'investigate';
+                          if (game.myRoleEnum == GameRole.mafia)
+                            action = NightAction.kill;
+                          if (game.myRoleEnum == GameRole.doctor)
+                            action = NightAction.heal;
+                          if (game.myRoleEnum == GameRole.police)
+                            action = NightAction.investigate;
                           if (action != null)
                             game.nightAction(action, player.id);
                         }
@@ -81,69 +86,106 @@ class PlayerGrid extends StatelessWidget {
                             colors: player.isAlive
                                 ? (selectionTargetForRole.isNotEmpty
                                       ? [
-                                          selectionTargetForRole.contains('마피아')
+                                          selectionTargetForRole.contains(
+                                                GameRole.mafia.name,
+                                              )
                                               ? const Color(
                                                   0xFF9F1239,
                                                 ).withOpacity(0.6)
                                               : selectionTargetForRole.contains(
-                                                  '의사',
+                                                  GameRole.doctor.name,
                                                 )
                                               ? const Color(
                                                   0xFF065F46,
                                                 ).withOpacity(0.6)
                                               : const Color(
-                                                  0xFF1E40AF,
+                                                  0xFF1E3A8A,
                                                 ).withOpacity(0.6),
-                                          Colors.black.withOpacity(0.4),
+                                          const Color(
+                                            0xFF000000,
+                                          ).withOpacity(0.0),
                                         ]
                                       : [
-                                          Colors.white.withOpacity(0.1),
-                                          Colors.white.withOpacity(0.05),
+                                          const Color(
+                                            0xFF1E293B,
+                                          ).withOpacity(0.7),
+                                          const Color(
+                                            0xFF0F172A,
+                                          ).withOpacity(0.7),
                                         ])
                                 : [
-                                    Colors.black.withOpacity(0.8),
-                                    Colors.black.withOpacity(0.9),
+                                    const Color(0xFF0F172A).withOpacity(0.8),
+                                    const Color(0xFF0F172A).withOpacity(0.8),
                                   ],
                           ),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: selectionTargetForRole.isNotEmpty
-                                ? Colors.white.withOpacity(
-                                    0.8,
-                                  ) // Selected glow border
-                                : Colors.white.withOpacity(0.1),
-                            width: selectionTargetForRole.isNotEmpty ? 1.5 : 1,
+                            color: player.isAlive
+                                ? (selectionTargetForRole.isNotEmpty
+                                      ? (selectionTargetForRole.contains(
+                                                  GameRole.mafia.name,
+                                                )
+                                                ? const Color(0xFFF43F5E)
+                                                : selectionTargetForRole
+                                                      .contains(
+                                                        GameRole.doctor.name,
+                                                      )
+                                                ? const Color(0xFF10B981)
+                                                : const Color(0xFF60A5FA))
+                                            .withOpacity(0.8)
+                                      : Colors.white.withOpacity(0.12))
+                                : Colors.red.withOpacity(0.3),
+                            width: selectionTargetForRole.isNotEmpty
+                                ? 2.5
+                                : 1.2,
                           ),
-                          boxShadow: selectionTargetForRole.isNotEmpty
-                              ? [
-                                  BoxShadow(
-                                    color:
-                                        selectionTargetForRole.contains('마피아')
-                                        ? const Color(
-                                            0xFFF43F5E,
-                                          ).withOpacity(0.6)
-                                        : selectionTargetForRole.contains('의사')
-                                        ? const Color(
-                                            0xFF34D399,
-                                          ).withOpacity(0.6)
-                                        : const Color(
-                                            0xFF38BDF8,
-                                          ).withOpacity(0.6),
-                                    blurRadius: 15,
-                                    spreadRadius: 2,
-                                  ),
-                                ]
-                              : [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                          boxShadow: [
+                            if (player.isAlive &&
+                                selectionTargetForRole.isNotEmpty)
+                              BoxShadow(
+                                color:
+                                    (selectionTargetForRole.contains(
+                                              GameRole.mafia.name,
+                                            )
+                                            ? const Color(0xFFF43F5E)
+                                            : selectionTargetForRole.contains(
+                                                GameRole.doctor.name,
+                                              )
+                                            ? const Color(0xFF10B981)
+                                            : const Color(0xFF60A5FA))
+                                        .withOpacity(0.4),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                              ),
+                          ],
                         ),
                         child: Stack(
-                          alignment: Alignment.center,
                           children: [
+                            // Selection Glow Effect
+                            if (player.isAlive &&
+                                selectionTargetForRole.isNotEmpty)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: RadialGradient(
+                                      colors: [
+                                        (selectionTargetForRole.contains(
+                                                  GameRole.mafia.name,
+                                                )
+                                                ? const Color(0xFFF43F5E)
+                                                : selectionTargetForRole
+                                                      .contains(
+                                                        GameRole.doctor.name,
+                                                      )
+                                                ? const Color(0xFF10B981)
+                                                : const Color(0xFF60A5FA))
+                                            .withOpacity(0.15),
+                                        Colors.transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -227,7 +269,7 @@ class PlayerGrid extends StatelessWidget {
                                   ),
                                 ),
                                 // Vote Count Pill
-                                if (game.gameState == '낮' &&
+                                if (game.gamePhase == GamePhase.day &&
                                     player.isAlive &&
                                     voteCount > 0)
                                   Container(
@@ -263,7 +305,7 @@ class PlayerGrid extends StatelessWidget {
                                     ),
                                   ),
                                 // Voters List Logic (Preserved)
-                                if (game.gameState == '낮' &&
+                                if (game.gamePhase == GamePhase.day &&
                                     player.isAlive &&
                                     voteCount > 0)
                                   Padding(
