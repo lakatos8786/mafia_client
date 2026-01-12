@@ -12,6 +12,15 @@ class ChatWidget extends StatefulWidget {
 class _ChatWidgetState extends State<ChatWidget> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _msgController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
@@ -20,6 +29,8 @@ class _ChatWidgetState extends State<ChatWidget> {
         listen: false,
       ).sendMessage(_msgController.text);
       _msgController.clear();
+      // Keep keyboard open after sending
+      _focusNode.requestFocus();
     }
   }
 
@@ -115,6 +126,7 @@ class _ChatWidgetState extends State<ChatWidget> {
               Expanded(
                 child: TextField(
                   controller: _msgController,
+                  focusNode: _focusNode,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     hintText: '메시지를 입력하세요...',

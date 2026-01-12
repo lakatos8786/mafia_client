@@ -32,21 +32,51 @@ class _GameScreenState extends State<GameScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            const SafeArea(
-              child: Column(
-                children: [
-                  // --- Custom Header Area ---
-                  GameHeader(),
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // If screen is too short (e.g. window resize on desktop), make it scrollable
+                  if (constraints.maxHeight < 600) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          const GameHeader(),
+                          const ActionButtons(),
+                          const SizedBox(height: 300, child: PlayerGrid()),
+                          const Divider(color: Colors.white10),
+                          const SizedBox(height: 250, child: ChatWidget()),
+                        ],
+                      ),
+                    );
+                  }
 
-                  // Skip Vote & Role Actions
-                  ActionButtons(),
+                  // Default responsive layout
+                  return Column(
+                    children: [
+                      // --- Custom Header Area ---
+                      const GameHeader(),
 
-                  // Game Area
-                  Expanded(flex: 3, child: PlayerGrid()),
-                  Divider(color: Colors.white10),
-                  // Chat Area
-                  Expanded(flex: 1, child: ChatWidget()),
-                ],
+                      // Skip Vote & Role Actions
+                      const ActionButtons(),
+
+                      // Game Area
+                      Expanded(
+                        flex: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? 2
+                            : 3,
+                        child: PlayerGrid(),
+                      ),
+                      const Divider(color: Colors.white10),
+                      // Chat Area
+                      Expanded(
+                        flex: MediaQuery.of(context).viewInsets.bottom > 0
+                            ? 3
+                            : 1,
+                        child: ChatWidget(),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
             if (game.gameState == '결과') GameResultOverlay(game: game),
