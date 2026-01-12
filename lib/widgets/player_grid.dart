@@ -71,32 +71,17 @@ class PlayerGrid extends StatelessWidget {
                 .map((entry) => entry.key)
                 .toList();
 
-            // Colors
-            Color baseColor = Colors.white.withOpacity(0.05);
-            Color borderColor = Colors.white.withOpacity(0.1);
-
-            if (game.gameState == '밤' && selectionTargetForRole.isNotEmpty) {
-              if (selectionTargetForRole.contains('마피아')) {
-                baseColor = Colors.red.withOpacity(0.2);
-                borderColor = Colors.redAccent;
-              } else if (selectionTargetForRole.contains('의사')) {
-                baseColor = Colors.green.withOpacity(0.2);
-                borderColor = Colors.greenAccent;
-              } else if (selectionTargetForRole.contains('경찰')) {
-                baseColor = Colors.blue.withOpacity(0.2);
-                borderColor = Colors.blueAccent;
-              }
-            } else if (!player.isAlive) {
-              baseColor = Colors.black54;
-              borderColor = Colors.grey.withOpacity(0.3);
-            }
+            // Colors Logic moved to AnimatedContainer decoration
 
             return FadeInUp(
               delay: Duration(milliseconds: 50 * index),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16), // Rounded corners
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  filter: ImageFilter.blur(
+                    sigmaX: 10,
+                    sigmaY: 10,
+                  ), // Glass effect
                   child: InkWell(
                     onTap: () {
                       // Check if *I* am alive first
@@ -108,13 +93,10 @@ class PlayerGrid extends StatelessWidget {
                           isAlive: false,
                         ),
                       );
-                      if (!me.isAlive) {
-                        // feedback
-                        return;
-                      }
+                      if (!me.isAlive) return;
                       if (!player.isAlive) return;
 
-                      // Copied logic from refactor
+                      // Voting/Action Logic
                       if (game.gameState == '낮') {
                         game.vote(player.id);
                       } else if (game.gameState == '밤') {
@@ -125,184 +107,264 @@ class PlayerGrid extends StatelessWidget {
                         if (action != null) game.nightAction(action, player.id);
                       }
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
                       decoration: BoxDecoration(
-                        color: baseColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: borderColor, width: 1.5),
+                        // Dynamic Gradient based on state
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: player.isAlive
+                              ? (selectionTargetForRole.isNotEmpty
+                                    ? [
+                                        selectionTargetForRole.contains('마피아')
+                                            ? const Color(
+                                                0xFF9F1239,
+                                              ).withOpacity(0.6)
+                                            : selectionTargetForRole.contains(
+                                                '의사',
+                                              )
+                                            ? const Color(
+                                                0xFF065F46,
+                                              ).withOpacity(0.6)
+                                            : const Color(
+                                                0xFF1E40AF,
+                                              ).withOpacity(0.6),
+                                        Colors.black.withOpacity(0.4),
+                                      ]
+                                    : [
+                                        Colors.white.withOpacity(0.1),
+                                        Colors.white.withOpacity(0.05),
+                                      ])
+                              : [
+                                  Colors.black.withOpacity(0.8),
+                                  Colors.black.withOpacity(0.9),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: selectionTargetForRole.isNotEmpty
+                              ? Colors.white.withOpacity(
+                                  0.8,
+                                ) // Selected glow border
+                              : Colors.white.withOpacity(0.1),
+                          width: selectionTargetForRole.isNotEmpty ? 1.5 : 1,
+                        ),
                         boxShadow: selectionTargetForRole.isNotEmpty
                             ? [
                                 BoxShadow(
-                                  color: borderColor.withOpacity(0.5),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
+                                  color: selectionTargetForRole.contains('마피아')
+                                      ? const Color(0xFFF43F5E).withOpacity(0.6)
+                                      : selectionTargetForRole.contains('의사')
+                                      ? const Color(0xFF34D399).withOpacity(0.6)
+                                      : const Color(
+                                          0xFF38BDF8,
+                                        ).withOpacity(0.6),
+                                  blurRadius: 15,
+                                  spreadRadius: 2,
                                 ),
                               ]
-                            : [],
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                       ),
                       child: Stack(
+                        alignment: Alignment.center,
                         children: [
-                          Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // Avatar
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: player.isAlive
-                                        ? Colors.white10
-                                        : Colors.red.withOpacity(0.1),
-                                  ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Avatar with Halo
+                              Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: player.isAlive
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF38BDF8),
+                                            Color(0xFF818CF8),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : null,
+                                  color: player.isAlive
+                                      ? null
+                                      : Colors.grey[800],
+                                  boxShadow: player.isAlive
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(
+                                              0xFF38BDF8,
+                                            ).withOpacity(0.4),
+                                            blurRadius: 10,
+                                            spreadRadius: 1,
+                                          ),
+                                        ]
+                                      : [],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: const Color(0xFF1E293B),
                                   child: Icon(
                                     player.isAlive ? Icons.person : Icons.close,
                                     color: player.isAlive
                                         ? Colors.white
-                                        : Colors.red,
-                                    size: 30,
+                                        : Colors.grey[600],
+                                    size: 24,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                // Name
-                                Text(
+                              ),
+                              const SizedBox(height: 10),
+                              // Name
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: Text(
                                   player.nickname + (isMe ? ' (나)' : ''),
                                   textAlign: TextAlign.center,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
+                                  style: GoogleFonts.gowunDodum(
                                     color: player.isAlive
                                         ? Colors.white
-                                        : Colors.grey,
+                                        : Colors.grey[600],
                                     fontWeight: isMe
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                        ? FontWeight.w900
+                                        : FontWeight.bold,
                                     decoration: player.isAlive
                                         ? null
                                         : TextDecoration.lineThrough,
                                     fontSize: 14,
+                                    shadows: isMe
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.blue.withOpacity(
+                                                0.8,
+                                              ),
+                                              blurRadius: 10,
+                                            ),
+                                          ]
+                                        : [],
                                   ),
                                 ),
-                                // Vote Count Bubble
-                                if (game.gameState == '낮' &&
-                                    player.isAlive &&
-                                    voteCount > 0)
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 4),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE94560),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      '$voteCount',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
+                              ),
+                              // Vote Count Pill
+                              if (game.gameState == '낮' &&
+                                  player.isAlive &&
+                                  voteCount > 0)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
                                   ),
-
-                                // Voters List (New: "Who voted for me")
-                                if (game.gameState == '낮' &&
-                                    player.isAlive &&
-                                    voteCount > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 2.0),
-                                    child: Builder(
-                                      builder: (context) {
-                                        final votersForThisPlayer = game
-                                            .voters
-                                            .entries
-                                            .where((e) => e.value == player.id)
-                                            .map((e) {
-                                              return game.players
-                                                  .firstWhere(
-                                                    (p) => p.id == e.key,
-                                                    orElse: () => Player(
-                                                      id: '',
-                                                      nickname: '?',
-                                                      isAlive: true,
-                                                    ),
-                                                  )
-                                                  .nickname;
-                                            })
-                                            .toList();
-
-                                        final displayStr = votersForThisPlayer
-                                            .join(', ');
-
-                                        return Tooltip(
-                                          message:
-                                              displayStr, // Show ALL voters on long press
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(
-                                              0.9,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: const Color(0xFFE94560),
-                                            ),
-                                          ),
-                                          textStyle: GoogleFonts.gowunDodum(
-                                            color: Colors.white,
-                                            fontSize: 14,
-                                          ),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 4,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(
-                                                0.6,
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              displayStr,
-                                              style: const TextStyle(
-                                                color: Colors.yellowAccent,
-                                                fontSize: 11, // Slightly larger
-                                              ),
-                                              maxLines: 2, // Allow 2 lines
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFF43F5E),
+                                        Color(0xFFE11D48),
+                                      ],
                                     ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          // Dead Overlay
-                          if (!player.isAlive)
-                            Center(
-                              child: Transform.rotate(
-                                angle: -0.5,
-                                child: Text(
-                                  '사망',
-                                  style: GoogleFonts.gowunDodum(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(
-                                      0xFFE94560,
-                                    ).withOpacity(0.8),
-                                    shadows: [
-                                      const Shadow(
-                                        blurRadius: 10,
-                                        color: Colors.black,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFFF43F5E,
+                                        ).withOpacity(0.5),
+                                        blurRadius: 8,
                                       ),
                                     ],
+                                  ),
+                                  child: Text(
+                                    '$voteCount표',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              // Voters List Logic (Preserved)
+                              if (game.gameState == '낮' &&
+                                  player.isAlive &&
+                                  voteCount > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4.0),
+                                  child: Builder(
+                                    builder: (context) {
+                                      final votersForThisPlayer = game
+                                          .voters
+                                          .entries
+                                          .where((e) => e.value == player.id)
+                                          .map(
+                                            (e) => game.players
+                                                .firstWhere(
+                                                  (p) => p.id == e.key,
+                                                  orElse: () => Player(
+                                                    id: '',
+                                                    nickname: '?',
+                                                    isAlive: true,
+                                                  ),
+                                                )
+                                                .nickname,
+                                          )
+                                          .toList()
+                                          .join(', ');
+
+                                      return Text(
+                                        votersForThisPlayer,
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.5),
+                                          fontSize: 10,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      );
+                                    },
+                                  ),
+                                ),
+                            ],
+                          ),
+                          // Dead Overlay Text
+                          if (!player.isAlive)
+                            IgnorePointer(
+                              child: Container(
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Transform.rotate(
+                                  angle: -0.2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.red.withOpacity(0.5),
+                                        width: 2,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '사망',
+                                      style: GoogleFonts.gowunDodum(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red.withOpacity(0.8),
+                                        letterSpacing: 2.0,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),

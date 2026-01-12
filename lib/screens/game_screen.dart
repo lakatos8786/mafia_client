@@ -16,6 +16,8 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+  bool _isChatExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
@@ -33,25 +35,9 @@ class _GameScreenState extends State<GameScreen> {
           fit: StackFit.expand,
           children: [
             SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // If screen is too short (e.g. window resize on desktop), make it scrollable
-                  if (constraints.maxHeight < 600) {
-                    return SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          const GameHeader(),
-                          const ActionButtons(),
-                          const SizedBox(height: 300, child: PlayerGrid()),
-                          const Divider(color: Colors.white10),
-                          const SizedBox(height: 250, child: ChatWidget()),
-                        ],
-                      ),
-                    );
-                  }
-
-                  // Default responsive layout
-                  return Column(
+              child: Stack(
+                children: [
+                  Column(
                     children: [
                       // --- Custom Header Area ---
                       const GameHeader(),
@@ -59,24 +45,42 @@ class _GameScreenState extends State<GameScreen> {
                       // Skip Vote & Role Actions
                       const ActionButtons(),
 
-                      // Game Area
+                      // Game Area - Occupy remaining space, but leave padding for collapsed chat
                       Expanded(
-                        flex: MediaQuery.of(context).viewInsets.bottom > 0
-                            ? 2
-                            : 3,
-                        child: PlayerGrid(),
-                      ),
-                      const Divider(color: Colors.white10),
-                      // Chat Area
-                      Expanded(
-                        flex: MediaQuery.of(context).viewInsets.bottom > 0
-                            ? 3
-                            : 1,
-                        child: ChatWidget(),
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: 120,
+                          ), // Height of collapsed chat
+                          child: PlayerGrid(),
+                        ),
                       ),
                     ],
-                  );
-                },
+                  ),
+
+                  // Expandable Chat Layer
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.fastOutSlowIn,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    // Expanded: 70% of screen, Collapsed: 160px (approx)
+                    height: _isChatExpanded
+                        ? MediaQuery.of(context).size.height * 0.7
+                        : 180,
+                    child: Container(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: ChatWidget(
+                        isExpanded: _isChatExpanded,
+                        onToggleExpand: () {
+                          setState(() {
+                            _isChatExpanded = !_isChatExpanded;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             if (game.gameState == '결과') GameResultOverlay(game: game),

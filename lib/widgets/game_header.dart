@@ -23,28 +23,55 @@ class GameHeader extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  game.gameState == '낮'
-                      ? Icons.wb_sunny
-                      : Icons.nightlight_round,
-                  color: game.gameState == '낮'
-                      ? Colors.orangeAccent
-                      : Colors.purpleAccent,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  '${game.gameState} - ${game.dayCount}일차',
-                  style: GoogleFonts.gowunDodum(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: game.gameState == '낮'
+                        ? Colors.orangeAccent.withOpacity(0.4)
+                        : const Color(0xFF6366F1).withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
                   ),
-                ),
-              ],
+                ],
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    game.gameState == '낮'
+                        ? Icons.wb_sunny
+                        : Icons.nightlight_round,
+                    color: game.gameState == '낮'
+                        ? Colors.orangeAccent
+                        : const Color(0xFF818CF8),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 15),
+                  Text(
+                    '${game.gameState} ${game.dayCount}일차', // Removed hyphen
+                    style: GoogleFonts.gowunDodum(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 2.0,
+                      shadows: [
+                        Shadow(
+                          color: game.gameState == '낮'
+                              ? Colors.orangeAccent
+                              : const Color(0xFF6366F1),
+                          blurRadius: 15,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 8),

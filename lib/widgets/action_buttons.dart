@@ -56,30 +56,55 @@ class ActionButtons extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: iVotedSkip
-                            ? const Color(0xFF0F3460) // Active dark blue
-                            : Colors.grey[800],
-                        foregroundColor: Colors.white,
-                        elevation: iVotedSkip ? 5 : 0,
-                        shadowColor: const Color(0xFF0F3460).withOpacity(0.5),
-                        side: iVotedSkip
-                            ? const BorderSide(
-                                color: Color(0xFFE94560), // Red accent border
-                                width: 1,
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: iVotedSkip
+                            ? const LinearGradient(
+                                colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                               )
-                            : BorderSide(color: Colors.white.withOpacity(0.1)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                            : const LinearGradient(
+                                colors: [Color(0xFF334155), Color(0xFF1E293B)],
+                              ),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: iVotedSkip
+                            ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF38BDF8,
+                                  ).withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ]
+                            : [],
+                        border: Border.all(
+                          color: iVotedSkip
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.1),
                         ),
                       ),
-                      onPressed: () {
-                        game.vote('skip');
-                      },
-                      child: const Text(
-                        '투표 건너뛰기',
-                        style: TextStyle(fontSize: 14),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        onPressed: () {
+                          game.vote('skip');
+                        },
+                        child: const Text(
+                          '투표 건너뛰기',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -100,25 +125,56 @@ class ActionButtons extends StatelessWidget {
                     final actor = game.nightActionActors['마피아'] ?? '';
                     final btnText = isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
 
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isMafiaSkip
-                            ? const Color(0xFFE94560)
-                            : const Color(0xFF1A1A2E),
-                        foregroundColor: Colors.white,
-                        side: BorderSide(
-                          color: const Color(0xFFE94560).withOpacity(0.5),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: isMafiaSkip
+                            ? const LinearGradient(
+                                colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
+                              )
+                            : const LinearGradient(
+                                colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                              ),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: isMafiaSkip
+                            ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFF43F5E,
+                                  ).withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ]
+                            : [],
+                        border: Border.all(
+                          color: isMafiaSkip
+                              ? Colors.white.withOpacity(0.5)
+                              : Colors.white.withOpacity(0.1),
                         ),
                       ),
-                      onPressed: () {
-                        game.nightAction('kill', 'skip');
-                      },
-                      child: Text(
-                        btnText,
-                        style: const TextStyle(fontSize: 14),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        onPressed: () {
+                          game.nightAction('kill', 'skip');
+                        },
+                        child: Text(
+                          btnText,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     );
                   },

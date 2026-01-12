@@ -21,26 +21,34 @@ class MyApp extends StatelessWidget {
         title: '마피아 온라인',
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-          primaryColor: const Color(0xFFE94560), // Neon Red
+          scaffoldBackgroundColor: const Color(0xFF0F172A), // Deep Slate
+          primaryColor: const Color(0xFFF43F5E), // Neon Crimson
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFFE94560),
-            secondary: Color(0xFF0F3460), // Dark Blue
-            surface: Color(0xFF16213E), // Slightly Lighter Blue
+            primary: Color(0xFFF43F5E), // Neon Crimson
+            secondary: Color(0xFF0EA5E9), // Cyber Blue
+            surface: Color(0xFF1E293B), // Slate 800
+            background: Color(0xFF0F172A), // Deep Slate
+            error: Color(0xFFFF1744),
           ),
           textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
               .copyWith(
                 displayLarge: GoogleFonts.gowunDodum(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900, // Extra Bold
+                  letterSpacing: 2.0,
                 ),
                 headlineMedium: GoogleFonts.gowunDodum(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+                bodyLarge: GoogleFonts.gowunDodum(
+                  color: Colors.white.withOpacity(0.9),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
         ),
-        home: ScreenRouter(),
+        home: const ScreenRouter(),
       ),
     );
   }
