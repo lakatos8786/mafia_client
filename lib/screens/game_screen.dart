@@ -72,20 +72,29 @@ class _GameScreenState extends State<GameScreen> {
                     ),
 
                     // Chat area - expands based on state
+                    // Add bottom padding to account for keyboard + input area
                     Expanded(
                       flex: _isChatExpanded ? 3 : 1,
-                      child: ChatWidget(
-                        isExpanded: _isChatExpanded,
-                        onToggleExpand: () {
-                          setState(() {
-                            _isChatExpanded = !_isChatExpanded;
-                          });
-                        },
-                        onUnreadCountChanged: (count) {
-                          setState(() {
-                            _unreadCount = count;
-                          });
-                        },
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          // When keyboard is open, add padding for input area + keyboard
+                          bottom: isKeyboardOpen ? keyboardHeight + 80 : 80,
+                        ),
+                        child: ChatWidget(
+                          isExpanded: _isChatExpanded,
+                          onToggleExpand: () {
+                            // Dismiss keyboard when toggling chat
+                            FocusScope.of(context).unfocus();
+                            setState(() {
+                              _isChatExpanded = !_isChatExpanded;
+                            });
+                          },
+                          onUnreadCountChanged: (count) {
+                            setState(() {
+                              _unreadCount = count;
+                            });
+                          },
+                        ),
                       ),
                     ),
                   ],

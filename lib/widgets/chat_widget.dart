@@ -94,7 +94,11 @@ class _ChatWidgetState extends State<ChatWidget> {
     });
 
     return GestureDetector(
-      onTap: widget.onToggleExpand, // Tap background to toggle
+      onTap: () {
+        // First dismiss keyboard, then toggle
+        FocusScope.of(context).unfocus();
+        widget.onToggleExpand();
+      },
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(

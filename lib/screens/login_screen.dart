@@ -97,10 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E),
-      // Use Flutter's built-in keyboard handling
-      resizeToAvoidBottomInset: true,
+      // Disable Flutter's automatic keyboard handling - we handle it manually
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -144,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // Main content with proper keyboard handling
+          // Main content with manual keyboard handling
           GestureDetector(
             onTap: () {
               // Dismiss keyboard when tapping outside
@@ -163,7 +165,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: IntrinsicHeight(
                           child: Padding(
-                            padding: const EdgeInsets.all(32.0),
+                            // Add keyboard height to bottom padding
+                            padding: EdgeInsets.only(
+                              left: 32.0,
+                              right: 32.0,
+                              top: 32.0,
+                              bottom: 32.0 + keyboardHeight,
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
