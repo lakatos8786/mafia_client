@@ -103,344 +103,356 @@ class _ChatWidgetState extends State<ChatWidget> {
       _updateUnreadCount(game);
     });
 
-    return Column(
-      children: [
-        // Chat Area with Glassmorphism
-        Expanded(
-          flex: 1,
-          child: GestureDetector(
-            onTap: widget.onToggleExpand, // Tap background to toggle
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(
-                      widget.isExpanded ? 0.7 : 0.4,
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Column(
+        children: [
+          // Chat Area with Glassmorphism
+          Expanded(
+            flex: 1,
+            child: GestureDetector(
+              onTap: widget.onToggleExpand, // Tap background to toggle
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(
+                        widget.isExpanded ? 0.7 : 0.4,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.05)),
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
-                  ),
-                  child: Stack(
-                    children: [
-                      ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        controller: _scrollController,
-                        reverse: true, // Standard Chat Behavior
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        itemCount: game.messages.length,
-                        itemBuilder: (context, index) {
-                          // REVERSED INDEX mapping for standard chat feel
-                          final reversedIndex =
-                              game.messages.length - 1 - index;
-                          final msg = game.messages[reversedIndex];
-                          final sender = msg['sender'];
-                          final text = msg['message'];
-                          final type = msg['type'];
+                    child: Stack(
+                      children: [
+                        ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          controller: _scrollController,
+                          reverse: true, // Standard Chat Behavior
+                          keyboardDismissBehavior:
+                              ScrollViewKeyboardDismissBehavior.onDrag,
+                          itemCount: game.messages.length,
+                          itemBuilder: (context, index) {
+                            // REVERSED INDEX mapping for standard chat feel
+                            final reversedIndex =
+                                game.messages.length - 1 - index;
+                            final msg = game.messages[reversedIndex];
+                            final sender = msg['sender'];
+                            final text = msg['message'];
+                            final type = msg['type'];
 
-                          // Cache my nickname for comparison (avoids repeated players.any)
-                          final myNickname = game.players
-                              .where((p) => p.id == game.socket.id)
-                              .map((p) => p.nickname)
-                              .firstOrNull;
-                          final isMe =
-                              sender == game.socket.id ||
-                              (myNickname == sender && type != 'system');
+                            // Cache my nickname for comparison (avoids repeated players.any)
+                            final myNickname = game.players
+                                .where((p) => p.id == game.socket.id)
+                                .map((p) => p.nickname)
+                                .firstOrNull;
+                            final isMe =
+                                sender == game.socket.id ||
+                                (myNickname == sender && type != 'system');
 
-                          if (msg['isSystem'] == true) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Semantics(
-                                label: '시스템 메시지: $text',
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.policeBlue.withOpacity(
-                                            0.15,
+                            if (msg['isSystem'] == true) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Semantics(
+                                  label: '시스템 메시지: $text',
+                                  child: Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            AppColors.policeBlue.withOpacity(
+                                              0.15,
+                                            ),
+                                            AppColors.accentYellow.withOpacity(
+                                              0.1,
+                                            ),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.accentYellow
+                                              .withOpacity(0.4),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _getSystemMessageIcon(text),
+                                            color: AppColors.accentYellow,
+                                            size: 16,
                                           ),
-                                          AppColors.accentYellow.withOpacity(
-                                            0.1,
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              text,
+                                              style: GoogleFonts.gowunDodum(
+                                                color: Colors.white.withOpacity(
+                                                  0.95,
+                                                ),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.accentYellow
-                                            .withOpacity(0.4),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          _getSystemMessageIcon(text),
-                                          color: AppColors.accentYellow,
-                                          size: 16,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: Text(
-                                            text,
-                                            style: GoogleFonts.gowunDodum(
-                                              color: Colors.white.withOpacity(
-                                                0.95,
-                                              ),
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ],
                                     ),
                                   ),
                                 ),
+                              );
+                            }
+
+                            Color bubbleColor = isMe
+                                ? const Color(0xFFF43F5E)
+                                : const Color(0xFF1E293B);
+                            Color textColor = Colors.white;
+                            Color nameColor = Colors.white70;
+
+                            if (type == 'dead') {
+                              bubbleColor = Colors.grey[800]!;
+                              textColor = Colors.grey[400]!;
+                              nameColor = Colors.grey;
+                            } else if (type == 'mafia') {
+                              bubbleColor = const Color(0xFF9F1239);
+                              nameColor = const Color(0xFFF43F5E);
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Column(
+                                crossAxisAlignment: isMe
+                                    ? CrossAxisAlignment.end
+                                    : CrossAxisAlignment.start,
+                                children: [
+                                  if (!isMe)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        left: 4,
+                                        bottom: 2,
+                                      ),
+                                      child: Text(
+                                        sender,
+                                        style: TextStyle(
+                                          color: nameColor,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth:
+                                          MediaQuery.of(context).size.width *
+                                          0.7,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: bubbleColor.withOpacity(
+                                          isMe ? 0.9 : 0.8,
+                                        ),
+                                        borderRadius: BorderRadius.only(
+                                          topLeft: const Radius.circular(16),
+                                          topRight: const Radius.circular(16),
+                                          bottomLeft: isMe
+                                              ? const Radius.circular(16)
+                                              : const Radius.circular(2),
+                                          bottomRight: isMe
+                                              ? const Radius.circular(2)
+                                              : const Radius.circular(16),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.1,
+                                            ),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        text,
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
-                          }
+                          },
+                        ),
 
-                          Color bubbleColor = isMe
-                              ? const Color(0xFFF43F5E)
-                              : const Color(0xFF1E293B);
-                          Color textColor = Colors.white;
-                          Color nameColor = Colors.white70;
-
-                          if (type == 'dead') {
-                            bubbleColor = Colors.grey[800]!;
-                            textColor = Colors.grey[400]!;
-                            nameColor = Colors.grey;
-                          } else if (type == 'mafia') {
-                            bubbleColor = const Color(0xFF9F1239);
-                            nameColor = const Color(0xFFF43F5E);
-                          }
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Column(
-                              crossAxisAlignment: isMe
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                if (!isMe)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 4,
-                                      bottom: 2,
-                                    ),
-                                    child: Text(
-                                      sender,
-                                      style: TextStyle(
-                                        color: nameColor,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth:
-                                        MediaQuery.of(context).size.width * 0.7,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: bubbleColor.withOpacity(
-                                        isMe ? 0.9 : 0.8,
-                                      ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(16),
-                                        topRight: const Radius.circular(16),
-                                        bottomLeft: isMe
-                                            ? const Radius.circular(16)
-                                            : const Radius.circular(2),
-                                        bottomRight: isMe
-                                            ? const Radius.circular(2)
-                                            : const Radius.circular(16),
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      text,
-                                      style: TextStyle(
-                                        color: textColor,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                        // Expand/Collapse Icon Overlay
+                        Positioned(
+                          top: 5,
+                          right: 20,
+                          child: IgnorePointer(
+                            child: Icon(
+                              widget.isExpanded
+                                  ? Icons.keyboard_arrow_down
+                                  : Icons.keyboard_arrow_up,
+                              color: Colors.white.withOpacity(0.2),
+                              size: 20,
                             ),
-                          );
-                        },
-                      ),
-
-                      // Expand/Collapse Icon Overlay
-                      Positioned(
-                        top: 5,
-                        right: 20,
-                        child: IgnorePointer(
-                          child: Icon(
-                            widget.isExpanded
-                                ? Icons.keyboard_arrow_down
-                                : Icons.keyboard_arrow_up,
-                            color: Colors.white.withOpacity(0.2),
-                            size: 20,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
 
-        // Input Area
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            children: [
-              // Expand Toggle Button with unread badge
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: InkWell(
-                      onTap: widget.onToggleExpand,
-                      customBorder: const CircleBorder(),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        width: 48,
-                        height: 48,
-                        child: CustomPaint(
-                          painter: ArrowPainter(
-                            isUp: !widget.isExpanded,
-                            color: Colors.white,
-                          ),
-                        ),
+          // Input Area
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              children: [
+                // Expand Toggle Button with unread badge
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                    ),
-                  ),
-                  // Unread badge
-                  if (_unreadCount > 0 && !widget.isExpanded)
-                    Positioned(
-                      top: -4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.mafiaRed,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
-                              blurRadius: 4,
+                      child: InkWell(
+                        onTap: widget.onToggleExpand,
+                        customBorder: const CircleBorder(),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          width: 48,
+                          height: 48,
+                          child: CustomPaint(
+                            painter: ArrowPainter(
+                              isUp: !widget.isExpanded,
+                              color: Colors.white,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          _unreadCount > 99 ? '99+' : '$_unreadCount',
-                          style: GoogleFonts.gowunDodum(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
                         ),
                       ),
                     ),
-                ],
-              ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
-                  ),
-                  child: TextField(
-                    controller: _msgController,
-                    focusNode: _focusNode,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: AppStrings.chatHint,
-                      hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                    // Unread badge
+                    if (_unreadCount > 0 && !widget.isExpanded)
+                      Positioned(
+                        top: -4,
+                        right: 4,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.mafiaRed,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.mafiaRed.withOpacity(0.5),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            _unreadCount > 99 ? '99+' : '$_unreadCount',
+                            style: GoogleFonts.gowunDodum(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
                       ),
-                      filled: false, // handled by container
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
+                  ],
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
                     ),
-                    onSubmitted: (_) => _sendMessage(),
-                    onTapOutside: (event) {
-                      // Do nothing to prevent focus loss on button tap
-                      // focusNode.unfocus() is default, we override it.
-                    },
+                    child: TextField(
+                      controller: _msgController,
+                      focusNode: _focusNode,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: AppStrings.chatHint,
+                        hintStyle: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                        ),
+                        filled: false, // handled by container
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 15,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                      onSubmitted: (_) => _sendMessage(),
+                      onTapOutside: (event) {
+                        // Do nothing to prevent focus loss on button tap
+                        // focusNode.unfocus() is default, we override it.
+                      },
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              InkWell(
-                onTap: _sendMessage,
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFF43F5E).withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
+                const SizedBox(width: 10),
+                InkWell(
+                  onTap: _sendMessage,
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFF43F5E).withOpacity(0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: CustomPaint(
+                      painter: SendPainter(color: Colors.white),
+                    ),
                   ),
-                  child: CustomPaint(painter: SendPainter(color: Colors.white)),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

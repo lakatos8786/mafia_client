@@ -40,7 +40,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-      resizeToAvoidBottomInset: true, // Adjust layout when keyboard appears
+      resizeToAvoidBottomInset:
+          false, // Prevent layout shifts when keyboard appears
       body: Stack(
         fit: StackFit.expand,
         children: [

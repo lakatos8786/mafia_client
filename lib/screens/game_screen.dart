@@ -38,7 +38,7 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: DayNightBackground(
         phase: game.gamePhase,
         child: Stack(
