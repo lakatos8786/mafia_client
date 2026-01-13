@@ -109,158 +109,173 @@ class _ChatWidgetState extends State<ChatWidget> {
           ),
           child: Stack(
             children: [
-              ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                controller: _scrollController,
-                reverse: true, // Standard Chat Behavior
-                itemCount: game.messages.length,
-                itemBuilder: (context, index) {
-                  // REVERSED INDEX mapping for standard chat feel
-                  final reversedIndex = game.messages.length - 1 - index;
-                  final msg = game.messages[reversedIndex];
-                  final sender = msg['sender'];
-                  final text = msg['message'];
-                  final type = msg['type'];
+              GestureDetector(
+                // Toggle expand/collapse on tap without affecting keyboard
+                onTap: widget.onToggleExpand,
+                behavior: HitTestBehavior.opaque,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  controller: _scrollController,
+                  reverse: true, // Standard Chat Behavior
+                  itemCount: game.messages.length,
+                  itemBuilder: (context, index) {
+                    // REVERSED INDEX mapping for standard chat feel
+                    final reversedIndex = game.messages.length - 1 - index;
+                    final msg = game.messages[reversedIndex];
+                    final sender = msg['sender'];
+                    final text = msg['message'];
+                    final type = msg['type'];
 
-                  // Cache my nickname for comparison (avoids repeated players.any)
-                  final myNickname = game.players
-                      .where((p) => p.id == game.socket.id)
-                      .map((p) => p.nickname)
-                      .firstOrNull;
-                  final isMe =
-                      sender == game.socket.id ||
-                      (myNickname == sender && type != 'system');
+                    // Cache my nickname for comparison (avoids repeated players.any)
+                    final myNickname = game.players
+                        .where((p) => p.id == game.socket.id)
+                        .map((p) => p.nickname)
+                        .firstOrNull;
+                    final isMe =
+                        sender == game.socket.id ||
+                        (myNickname == sender && type != 'system');
 
-                  if (msg['isSystem'] == true) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Semantics(
-                        label: '시스템 메시지: $text',
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.policeBlue.withValues(alpha: 0.15),
-                                  AppColors.accentYellow.withValues(alpha: 0.1),
-                                ],
+                    if (msg['isSystem'] == true) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Semantics(
+                          label: '시스템 메시지: $text',
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: AppColors.accentYellow.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  _getSystemMessageIcon(text),
-                                  color: AppColors.accentYellow,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    text,
-                                    style: GoogleFonts.gowunDodum(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.95,
-                                      ),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.policeBlue.withValues(
+                                      alpha: 0.15,
                                     ),
-                                    textAlign: TextAlign.center,
+                                    AppColors.accentYellow.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.accentYellow.withValues(
+                                    alpha: 0.4,
                                   ),
                                 ),
-                              ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getSystemMessageIcon(text),
+                                    color: AppColors.accentYellow,
+                                    size: 16,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      text,
+                                      style: GoogleFonts.gowunDodum(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.95,
+                                        ),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
+                      );
+                    }
+
+                    Color bubbleColor = isMe
+                        ? const Color(0xFFF43F5E)
+                        : const Color(0xFF1E293B);
+                    Color textColor = Colors.white;
+                    Color nameColor = Colors.white70;
+
+                    if (type == 'dead') {
+                      bubbleColor = Colors.grey[800]!;
+                      textColor = Colors.grey[400]!;
+                      nameColor = Colors.grey;
+                    } else if (type == 'mafia') {
+                      bubbleColor = const Color(0xFF9F1239);
+                      nameColor = const Color(0xFFF43F5E);
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                        children: [
+                          if (!isMe)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 4,
+                                bottom: 2,
+                              ),
+                              child: Text(
+                                sender,
+                                style: TextStyle(
+                                  color: nameColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width * 0.7,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: bubbleColor.withValues(
+                                  alpha: isMe ? 0.9 : 0.8,
+                                ),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(16),
+                                  topRight: const Radius.circular(16),
+                                  bottomLeft: isMe
+                                      ? const Radius.circular(16)
+                                      : const Radius.circular(2),
+                                  bottomRight: isMe
+                                      ? const Radius.circular(2)
+                                      : const Radius.circular(16),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                text,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     );
-                  }
-
-                  Color bubbleColor = isMe
-                      ? const Color(0xFFF43F5E)
-                      : const Color(0xFF1E293B);
-                  Color textColor = Colors.white;
-                  Color nameColor = Colors.white70;
-
-                  if (type == 'dead') {
-                    bubbleColor = Colors.grey[800]!;
-                    textColor = Colors.grey[400]!;
-                    nameColor = Colors.grey;
-                  } else if (type == 'mafia') {
-                    bubbleColor = const Color(0xFF9F1239);
-                    nameColor = const Color(0xFFF43F5E);
-                  }
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Column(
-                      crossAxisAlignment: isMe
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (!isMe)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4, bottom: 2),
-                            child: Text(
-                              sender,
-                              style: TextStyle(
-                                color: nameColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.7,
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: bubbleColor.withValues(
-                                alpha: isMe ? 0.9 : 0.8,
-                              ),
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(16),
-                                topRight: const Radius.circular(16),
-                                bottomLeft: isMe
-                                    ? const Radius.circular(16)
-                                    : const Radius.circular(2),
-                                bottomRight: isMe
-                                    ? const Radius.circular(2)
-                                    : const Radius.circular(16),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              text,
-                              style: TextStyle(color: textColor, fontSize: 15),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
 
               // Expand/Collapse Icon Overlay
