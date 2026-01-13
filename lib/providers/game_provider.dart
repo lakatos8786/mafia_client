@@ -124,9 +124,10 @@ class GameProvider with ChangeNotifier {
       'transports': ['websocket'],
       'autoConnect': false,
       'reconnection': true,
-      'reconnectionAttempts': 5,
-      'reconnectionDelay': 1000,
-      'reconnectionDelayMax': 5000,
+      'reconnectionAttempts': 15, // Increased for cold start handling
+      'reconnectionDelay': 2000, // Start with 2s delay
+      'reconnectionDelayMax': 30000, // Allow up to 30s for cold starts
+      'timeout': 60000, // 60s initial connection timeout
     });
 
     _setupListeners();
@@ -159,7 +160,7 @@ class GameProvider with ChangeNotifier {
 
     _socket.on('reconnect_attempt', (attemptNumber) {
       _connectionState = 'reconnecting';
-      _errorMessage = '재연결 시도 중... ($attemptNumber/5)';
+      _errorMessage = '재연결 시도 중... ($attemptNumber/15)';
       notifyListeners();
     });
 
