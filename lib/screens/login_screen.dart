@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_provider.dart';
+import '../widgets/custom_snackbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,14 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.grey[900],
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+    CustomSnackBar.show(context, message);
   }
 
   void _createRoom() {
@@ -102,8 +96,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-      resizeToAvoidBottomInset:
-          false, // Prevent layout shifts when keyboard appears
+      resizeToAvoidBottomInset: true, // Let Flutter handle keyboard resizing
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -157,9 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Center(
                 child: SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
-                  ),
+                  padding: EdgeInsets.zero, // Remove manual padding
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
                     child: Column(
@@ -230,8 +221,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       inputFormatters: [
                                         FilteringTextInputFormatter.allow(
                                           RegExp(
-                                            r'[가-힣a-zA-Z0-9 ]',
-                                          ), // Added space
+                                            r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]',
+                                          ), // Added Jamo (ㄱ-ㅎ, ㅏ-ㅣ)
                                         ),
                                       ],
                                     ),

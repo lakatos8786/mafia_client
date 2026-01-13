@@ -9,6 +9,7 @@ import '../widgets/particle_background.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
+import '../widgets/custom_snackbar.dart';
 
 class LobbyScreen extends StatelessWidget {
   const LobbyScreen({super.key});
@@ -38,20 +39,7 @@ class LobbyScreen extends StatelessWidget {
             onPressed: () {
               if (game.roomId != null) {
                 Clipboard.setData(ClipboardData(text: game.roomId!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '복사됨: ${game.roomId}',
-                      style: GoogleFonts.gowunDodum(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    backgroundColor: Colors.grey[800],
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating, // Floating is better
-                  ),
-                );
+                CustomSnackBar.show(context, '복사됨: ${game.roomId}');
               }
             },
           ),

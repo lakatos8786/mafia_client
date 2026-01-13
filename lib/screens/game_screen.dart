@@ -70,7 +70,7 @@ class _GameScreenState extends State<GameScreen> {
                   curve: Curves.fastOutSlowIn,
                   left: 0,
                   right: 0,
-                  bottom: 0,
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
                   height: _isChatExpanded
                       ? MediaQuery.of(context).size.height * 0.7
                       : 160,
