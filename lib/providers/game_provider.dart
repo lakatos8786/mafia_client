@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../models/game_enums.dart';
 import '../models/player.dart';
 import '../models/event_models.dart';
 import '../theme/app_strings.dart';
 import '../config/app_config.dart';
+import '../services/error_handler.dart';
+import '../services/socket_service.dart';
 
 // Player class moved to models/player.dart
 
@@ -75,7 +76,8 @@ class GameProvider with ChangeNotifier {
 
   bool get canReturnToLobby {
     if (_gameOverTime == null) return true;
-    return DateTime.now().difference(_gameOverTime!).inSeconds >= 2;
+    return DateTime.now().difference(_gameOverTime!).inSeconds >=
+        AppConfig.gameOverDelaySeconds;
   }
 
   // --- UI Helpers ---
@@ -124,10 +126,10 @@ class GameProvider with ChangeNotifier {
       'transports': ['websocket'],
       'autoConnect': false,
       'reconnection': true,
-      'reconnectionAttempts': 15, // Increased for cold start handling
-      'reconnectionDelay': 2000, // Start with 2s delay
-      'reconnectionDelayMax': 30000, // Allow up to 30s for cold starts
-      'timeout': 60000, // 60s initial connection timeout
+      'reconnectionAttempts': AppConfig.reconnectionAttempts,
+      'reconnectionDelay': AppConfig.reconnectionDelayMs,
+      'reconnectionDelayMax': AppConfig.reconnectionDelayMaxMs,
+      'timeout': AppConfig.connectionTimeoutMs,
     });
 
     _setupListeners();
@@ -160,7 +162,8 @@ class GameProvider with ChangeNotifier {
 
     _socket.on('reconnect_attempt', (attemptNumber) {
       _connectionState = 'reconnecting';
-      _errorMessage = '재연결 시도 중... ($attemptNumber/15)';
+      _errorMessage =
+          '재연결 시도 중... ($attemptNumber/${AppConfig.reconnectionAttempts})';
       notifyListeners();
     });
 
@@ -178,12 +181,12 @@ class GameProvider with ChangeNotifier {
 
     _socket.onConnectError((data) {
       _connectionState = 'error';
-      _errorMessage = '서버 연결 실패: $data';
+      _errorMessage = ErrorHandler.handleError('socket_connection', data);
       notifyListeners();
     });
 
     _socket.onError((data) {
-      _errorMessage = '오류 발생: $data';
+      _errorMessage = ErrorHandler.handleError('socket_error', data);
       notifyListeners();
     });
   }
@@ -210,8 +213,13 @@ class GameProvider with ChangeNotifier {
           _myRole = _deriveMyRole();
           notifyListeners();
         }
-      } catch (e) {
-        debugPrint('Error in player_update: $e');
+      } catch (e, stackTrace) {
+        _errorMessage = ErrorHandler.handleError(
+          'player_update',
+          e,
+          stackTrace,
+        );
+        notifyListeners();
       }
     });
 
@@ -221,8 +229,12 @@ class GameProvider with ChangeNotifier {
           _roleCounts = data.map(
             (k, v) => MapEntry(k.toString(), (v as num).toInt()),
           );
-        } catch (e) {
-          debugPrint('Error parsing role_counts: $e');
+        } catch (e, stackTrace) {
+          _errorMessage = ErrorHandler.handleError(
+            'role_counts',
+            e,
+            stackTrace,
+          );
         }
         notifyListeners();
       }
@@ -258,8 +270,9 @@ class GameProvider with ChangeNotifier {
           _resetTurnData();
           notifyListeners();
         }
-      } catch (e) {
-        debugPrint('Error in phase_change: $e');
+      } catch (e, stackTrace) {
+        _errorMessage = ErrorHandler.handleError('phase_change', e, stackTrace);
+        notifyListeners();
       }
     });
 
@@ -284,8 +297,9 @@ class GameProvider with ChangeNotifier {
               : AppStrings.citizenWin;
           _addSystemMessage(winMsg);
           notifyListeners();
-        } catch (e) {
-          debugPrint('Error in game_over: $e');
+        } catch (e, stackTrace) {
+          _errorMessage = ErrorHandler.handleError('game_over', e, stackTrace);
+          notifyListeners();
         }
       }
     });
@@ -320,8 +334,13 @@ class GameProvider with ChangeNotifier {
             notifyListeners();
           }
         }
-      } catch (e) {
-        debugPrint('Error in night_selection_update: $e');
+      } catch (e, stackTrace) {
+        _errorMessage = ErrorHandler.handleError(
+          'night_selection',
+          e,
+          stackTrace,
+        );
+        notifyListeners();
       }
     });
 
@@ -375,8 +394,9 @@ class GameProvider with ChangeNotifier {
 
           notifyListeners();
         }
-      } catch (e) {
-        debugPrint('Error in chat_message: $e');
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('chat_message', e, stackTrace);
+        // Don't show error to user for chat messages, just log it
       }
     });
   }

@@ -4,12 +4,14 @@ class AppConfig {
   /// Change this for different environments (development, staging, production)
   static const String serverUrl = 'https://mafia-server-py70.onrender.com';
 
-  /// Connection settings
-  static const int connectionTimeoutMs = 10000;
-  static const int reconnectionAttempts = 3;
+  /// Socket connection settings
+  static const int connectionTimeoutMs = 60000; // 60s for cold start handling
+  static const int reconnectionAttempts =
+      15; // Increased for cold start handling
+  static const int reconnectionDelayMs = 2000; // Start with 2s delay
+  static const int reconnectionDelayMaxMs =
+      30000; // Allow up to 30s for cold starts
 
   /// Game settings
   static const int gameOverDelaySeconds = 2;
-  static const int dayTimerSeconds = 120;
-  static const int nightTimerSeconds = 60;
 }
