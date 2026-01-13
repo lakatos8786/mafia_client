@@ -103,9 +103,11 @@ class _ChatWidgetState extends State<ChatWidget> {
             margin: const EdgeInsets.symmetric(horizontal: 10),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(widget.isExpanded ? 0.7 : 0.4),
+              color: Colors.black.withValues(
+                alpha: widget.isExpanded ? 0.7 : 0.4,
+              ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: Stack(
               children: [
@@ -147,14 +149,18 @@ class _ChatWidgetState extends State<ChatWidget> {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    AppColors.policeBlue.withOpacity(0.15),
-                                    AppColors.accentYellow.withOpacity(0.1),
+                                    AppColors.policeBlue.withValues(
+                                      alpha: 0.15,
+                                    ),
+                                    AppColors.accentYellow.withValues(
+                                      alpha: 0.1,
+                                    ),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.accentYellow.withOpacity(
-                                    0.4,
+                                  color: AppColors.accentYellow.withValues(
+                                    alpha: 0.4,
                                   ),
                                 ),
                               ),
@@ -171,7 +177,9 @@ class _ChatWidgetState extends State<ChatWidget> {
                                     child: Text(
                                       text,
                                       style: GoogleFonts.gowunDodum(
-                                        color: Colors.white.withOpacity(0.95),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.95,
+                                        ),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -233,8 +241,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: bubbleColor.withOpacity(
-                                  isMe ? 0.9 : 0.8,
+                                color: bubbleColor.withValues(
+                                  alpha: isMe ? 0.9 : 0.8,
                                 ),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(16),
@@ -248,7 +256,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -278,7 +286,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                       widget.isExpanded
                           ? Icons.keyboard_arrow_down
                           : Icons.keyboard_arrow_up,
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       size: 20,
                     ),
                   ),

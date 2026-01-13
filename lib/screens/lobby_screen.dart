@@ -54,8 +54,8 @@ class LobbyScreen extends StatelessWidget {
           // 2. Ambient Glow Overlay (to make it distinct from GameScreen)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(
-                0.3,
+              color: Colors.black.withValues(
+                alpha: 0.3,
               ), // Slightly darker for text readability
             ),
           ),
@@ -69,10 +69,12 @@ class LobbyScreen extends StatelessWidget {
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.1), // Adjusted opacity
+                color: AppColors.primary.withValues(
+                  alpha: 0.1,
+                ), // Adjusted opacity
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 150,
                     spreadRadius: 20,
                   ),
@@ -90,13 +92,13 @@ class LobbyScreen extends StatelessWidget {
                   child: Text(
                     '플레이어 대기 중...',
                     style: GoogleFonts.gowunDodum(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 18,
                       letterSpacing: 4.0,
                       fontWeight: FontWeight.bold,
                       shadows: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 20,
                         ),
                       ],
@@ -130,20 +132,20 @@ class LobbyScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isMe
-                                    ? AppColors.primary.withOpacity(0.2)
-                                    : Colors.white.withOpacity(0.05),
+                                    ? AppColors.primary.withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
                                   color: isMe
-                                      ? AppColors.primary.withOpacity(0.6)
-                                      : Colors.white.withOpacity(0.1),
+                                      ? AppColors.primary.withValues(alpha: 0.6)
+                                      : Colors.white.withValues(alpha: 0.1),
                                   width: isMe ? 1.5 : 1.0,
                                 ),
                                 boxShadow: isMe
                                     ? [
                                         BoxShadow(
-                                          color: AppColors.primary.withOpacity(
-                                            0.2,
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.2,
                                           ),
                                           blurRadius: 15,
                                         ),
@@ -243,7 +245,9 @@ class LobbyScreen extends StatelessWidget {
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 8,
-                                shadowColor: AppColors.primary.withOpacity(0.6),
+                                shadowColor: AppColors.primary.withValues(
+                                  alpha: 0.6,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),

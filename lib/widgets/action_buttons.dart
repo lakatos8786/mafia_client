@@ -32,7 +32,7 @@ class ActionButtons extends StatelessWidget {
                     child: Text(
                       '건너뛰기 투표: ${game.votes[GameAction.skip]} (${game.skipVoterNicknames.join(", ")})  ',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -52,15 +52,17 @@ class ActionButtons extends StatelessWidget {
                     boxShadow: game.iVotedSkip
                         ? [
                             BoxShadow(
-                              color: AppColors.policeBlue.withOpacity(0.5),
+                              color: AppColors.policeBlue.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 10,
                             ),
                           ]
                         : [],
                     border: Border.all(
                       color: game.iVotedSkip
-                          ? Colors.white.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: ElevatedButton(
@@ -115,15 +117,15 @@ class ActionButtons extends StatelessWidget {
                     boxShadow: game.isMafiaSkip
                         ? [
                             BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
+                              color: AppColors.mafiaRed.withValues(alpha: 0.5),
                               blurRadius: 10,
                             ),
                           ]
                         : [],
                     border: Border.all(
                       color: game.isMafiaSkip
-                          ? Colors.white.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: ElevatedButton(

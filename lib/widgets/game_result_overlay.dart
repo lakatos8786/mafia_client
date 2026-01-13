@@ -74,7 +74,7 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
       child: FadeIn(
         duration: const Duration(milliseconds: 500),
         child: Container(
-          color: Colors.black.withOpacity(0.9), // Darkened background
+          color: Colors.black.withValues(alpha: 0.9), // Darkened background
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -87,10 +87,10 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                   height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: mainColor.withOpacity(0.2),
+                    color: mainColor.withValues(alpha: 0.2),
                     boxShadow: [
                       BoxShadow(
-                        color: mainColor.withOpacity(0.3),
+                        color: mainColor.withValues(alpha: 0.3),
                         blurRadius: 150,
                         spreadRadius: 20,
                       ),
@@ -190,7 +190,7 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                         ? const Color(
                                             0xFFFFD700,
                                           ) // Gold for winner
-                                        : Colors.grey.withOpacity(0.3);
+                                        : Colors.grey.withValues(alpha: 0.3);
                                     final borderWidth = isPlayerWinner
                                         ? 3.0
                                         : 1.0;
@@ -214,9 +214,11 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                                   ),
                                               decoration: BoxDecoration(
                                                 color: isPlayerWinner
-                                                    ? mainColor.withOpacity(0.1)
-                                                    : Colors.white.withOpacity(
-                                                        0.05,
+                                                    ? mainColor.withValues(
+                                                        alpha: 0.1,
+                                                      )
+                                                    : Colors.white.withValues(
+                                                        alpha: 0.05,
                                                       ),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
@@ -230,7 +232,9 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                                     ? [
                                                         BoxShadow(
                                                           color: mainColor
-                                                              .withOpacity(0.4),
+                                                              .withValues(
+                                                                alpha: 0.4,
+                                                              ),
                                                           blurRadius: 15,
                                                           spreadRadius: 1,
                                                         ),
@@ -246,7 +250,9 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                                     decoration: BoxDecoration(
                                                       shape: BoxShape.circle,
                                                       color: roleColor
-                                                          .withOpacity(0.2),
+                                                          .withValues(
+                                                            alpha: 0.2,
+                                                          ),
                                                       border: Border.all(
                                                         color: roleColor,
                                                         width: 2,
@@ -419,7 +425,7 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                   borderRadius: BorderRadius.circular(25),
                                 ),
                                 elevation: 5,
-                                shadowColor: mainColor.withOpacity(0.5),
+                                shadowColor: mainColor.withValues(alpha: 0.5),
                               ),
                               child: Text(
                                 AppStrings.returnToLobby,

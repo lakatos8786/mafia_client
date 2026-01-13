@@ -54,12 +54,12 @@ class ErrorDialog extends StatelessWidget {
             color: AppColors.backgroundDark,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _getErrorColor().withOpacity(0.5),
+              color: _getErrorColor().withValues(alpha: 0.5),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: _getErrorColor().withOpacity(0.2),
+                color: _getErrorColor().withValues(alpha: 0.2),
                 blurRadius: 20,
                 spreadRadius: 2,
               ),
@@ -73,7 +73,7 @@ class ErrorDialog extends StatelessWidget {
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _getErrorColor().withOpacity(0.15),
+                  color: _getErrorColor().withValues(alpha: 0.15),
                 ),
                 child: Icon(_getErrorIcon(), size: 32, color: _getErrorColor()),
               ),
@@ -92,7 +92,7 @@ class ErrorDialog extends StatelessWidget {
                 message,
                 style: GoogleFonts.gowunDodum(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -136,7 +136,7 @@ class ErrorDialog extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: isPrimary
             ? _getErrorColor()
-            : Colors.white.withOpacity(0.1),
+            : Colors.white.withValues(alpha: 0.1),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

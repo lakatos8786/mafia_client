@@ -17,7 +17,7 @@ class RoleRevealModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.85),
+      color: Colors.black.withValues(alpha: 0.85),
       child: SafeArea(
         child: Semantics(
           label: '당신의 역할은 ${role.label}입니다',
@@ -33,7 +33,7 @@ class RoleRevealModal extends StatelessWidget {
                       '당신의 역할',
                       style: GoogleFonts.gowunDodum(
                         fontSize: 18,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         letterSpacing: 4,
                       ),
                     ),
@@ -53,7 +53,7 @@ class RoleRevealModal extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: _getRoleColor().withOpacity(0.5),
+                            color: _getRoleColor().withValues(alpha: 0.5),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -79,7 +79,7 @@ class RoleRevealModal extends StatelessWidget {
                         letterSpacing: 8,
                         shadows: [
                           Shadow(
-                            color: _getRoleColor().withOpacity(0.8),
+                            color: _getRoleColor().withValues(alpha: 0.8),
                             blurRadius: 20,
                           ),
                         ],
@@ -95,10 +95,10 @@ class RoleRevealModal extends StatelessWidget {
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Text(
@@ -106,7 +106,7 @@ class RoleRevealModal extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: GoogleFonts.gowunDodum(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           height: 1.6,
                         ),
                       ),
@@ -128,7 +128,7 @@ class RoleRevealModal extends StatelessWidget {
                           borderRadius: BorderRadius.circular(30),
                         ),
                         elevation: 8,
-                        shadowColor: _getRoleColor().withOpacity(0.5),
+                        shadowColor: _getRoleColor().withValues(alpha: 0.5),
                       ),
                       child: Text(
                         '확인',

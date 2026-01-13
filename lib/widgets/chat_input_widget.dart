@@ -60,7 +60,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Colors.black.withOpacity(0.3)],
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.3)],
         ),
       ),
       child: Row(
@@ -72,7 +72,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
               Container(
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: InkWell(
@@ -106,7 +106,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.mafiaRed.withOpacity(0.5),
+                          color: AppColors.mafiaRed.withValues(alpha: 0.5),
                           blurRadius: 4,
                         ),
                       ],
@@ -126,9 +126,9 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
               ),
               child: TextField(
                 controller: _msgController,
@@ -136,7 +136,9 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: AppStrings.chatHint,
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                  ),
                   filled: false,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -170,7 +172,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF43F5E).withOpacity(0.4),
+                    color: const Color(0xFFF43F5E).withValues(alpha: 0.4),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),

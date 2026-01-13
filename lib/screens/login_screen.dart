@@ -113,10 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE94560).withOpacity(0.3),
+                color: const Color(0xFFE94560).withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE94560).withOpacity(0.5),
+                    color: const Color(0xFFE94560).withValues(alpha: 0.5),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -132,10 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0F3460).withOpacity(0.3),
+                color: const Color(0xFF0F3460).withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F3460).withOpacity(0.5),
+                    color: const Color(0xFF0F3460).withValues(alpha: 0.5),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -183,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                             Shadow(
                                               color: const Color(
                                                 0xFFE94560,
-                                              ).withOpacity(0.5),
+                                              ).withValues(alpha: 0.5),
                                               blurRadius: 20,
                                               offset: const Offset(0, 5),
                                             ),
@@ -219,13 +219,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                         width: 350,
                                         padding: const EdgeInsets.all(30),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.05),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.05,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
                                           border: Border.all(
-                                            color: Colors.white.withOpacity(
-                                              0.1,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.1,
                                             ),
                                             width: 1,
                                           ),
@@ -340,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         counterText: '', // Hide the counter
         labelStyle: TextStyle(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
@@ -349,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
         fillColor: Colors.black26,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -375,14 +377,16 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: isOutlined ? Colors.transparent : color,
           foregroundColor: Colors.white,
           elevation: isOutlined ? 0 : 5,
-          shadowColor: isOutlined ? Colors.transparent : color.withOpacity(0.5),
+          shadowColor: isOutlined
+              ? Colors.transparent
+              : color.withValues(alpha: 0.5),
           side: isOutlined ? BorderSide(color: color, width: 2) : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           disabledBackgroundColor: isOutlined
               ? Colors.transparent
-              : color.withOpacity(0.5),
+              : color.withValues(alpha: 0.5),
         ),
         child: isLoading
             ? const SizedBox(
