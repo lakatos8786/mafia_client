@@ -16,23 +16,84 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _roomCodeController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _roomCodeController.dispose();
+    super.dispose();
+  }
+
+  bool _validateNickname() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      _showError('닉네임을 입력해주세요');
+      return false;
+    }
+    if (name.length < 2) {
+      _showError('닉네임은 최소 2자 이상이어야 합니다');
+      return false;
+    }
+    if (name.length > 10) {
+      _showError('닉네임은 최대 10자까지 가능합니다');
+      return false;
+    }
+    return true;
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFE94560),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 
   void _createRoom() {
-    if (_nameController.text.isNotEmpty) {
+    if (_isLoading) return;
+    if (!_validateNickname()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
       Provider.of<GameProvider>(
         context,
         listen: false,
-      ).createRoom(_nameController.text);
+      ).createRoom(_nameController.text.trim());
+    } catch (e) {
+      _showError('방 생성 중 오류가 발생했습니다');
+      setState(() => _isLoading = false);
     }
   }
 
   void _joinRoom() {
-    if (_nameController.text.isNotEmpty &&
-        _roomCodeController.text.isNotEmpty) {
+    if (_isLoading) return;
+    if (!_validateNickname()) return;
+
+    final roomCode = _roomCodeController.text.trim();
+    if (roomCode.isEmpty) {
+      _showError('방 코드를 입력해주세요');
+      return;
+    }
+    if (roomCode.length != 6) {
+      _showError('방 코드는 6자리 숫자입니다');
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
       Provider.of<GameProvider>(
         context,
         listen: false,
-      ).joinRoom(_roomCodeController.text.toUpperCase(), _nameController.text);
+      ).joinRoom(roomCode.toUpperCase(), _nameController.text.trim());
+    } catch (e) {
+      _showError('방 참여 중 오류가 발생했습니다');
+      setState(() => _isLoading = false);
     }
   }
 
@@ -162,13 +223,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                   children: [
                                     _buildTextField(
                                       controller: _nameController,
-                                      label: '닉네임',
+                                      label: '닉네임 (2-10자)',
                                       icon: Icons.person_outline,
+                                      maxLength: 10,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'[가-힣a-zA-Z0-9]'),
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 20),
                                     _buildTextField(
                                       controller: _roomCodeController,
-                                      label: '방 코드 (참여 전용)',
+                                      label: '방 코드 (6자리)',
                                       icon: Icons.vpn_key_outlined,
                                       isNumber: true,
                                       maxLength: 6,
@@ -179,15 +246,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                     const SizedBox(height: 30),
                                     _buildButton(
                                       text: '방 만들기',
-                                      onPressed: _createRoom,
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _createRoom,
                                       color: const Color(0xFFE94560),
+                                      isLoading: _isLoading,
                                     ),
                                     const SizedBox(height: 15),
                                     _buildButton(
                                       text: '방 참여하기',
-                                      onPressed: _joinRoom,
+                                      onPressed: _isLoading ? null : _joinRoom,
                                       color: const Color(0xFF0F3460),
                                       isOutlined: true,
+                                      isLoading: _isLoading,
                                     ),
                                   ],
                                 ),
@@ -246,9 +317,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildButton({
     required String text,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
     required Color color,
     bool isOutlined = false,
+    bool isLoading = false,
   }) {
     return SizedBox(
       width: double.infinity,
@@ -264,15 +336,27 @@ class _LoginScreenState extends State<LoginScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          disabledBackgroundColor: isOutlined
+              ? Colors.transparent
+              : color.withOpacity(0.5),
         ),
-        child: Text(
-          text,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.2,
-          ),
-        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
       ),
     );
   }
