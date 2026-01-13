@@ -40,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
+      resizeToAvoidBottomInset: true, // Adjust layout when keyboard appears
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -85,6 +86,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
           Center(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(
