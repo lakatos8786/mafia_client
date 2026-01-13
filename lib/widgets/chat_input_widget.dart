@@ -48,13 +48,8 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // Add padding at the bottom to account for safe area
-      padding: EdgeInsets.only(
-        left: 10,
-        right: 10,
-        top: 10,
-        bottom: MediaQuery.of(context).padding.bottom + 10,
-      ),
+      // Padding for visual spacing only
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         // Subtle gradient background for visual separation
         gradient: LinearGradient(
