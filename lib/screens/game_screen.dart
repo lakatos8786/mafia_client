@@ -6,6 +6,7 @@ import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/chat_widget.dart';
+import '../widgets/chat_input_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
@@ -22,11 +23,11 @@ class _GameScreenState extends State<GameScreen> {
   bool _roleRevealed = false;
   int? _lastDayCount;
   GameRole? _shownRole;
+  int _unreadCount = 0;
 
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
-    final screenHeight = MediaQuery.of(context).size.height;
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
@@ -61,13 +62,11 @@ class _GameScreenState extends State<GameScreen> {
                   const ActionButtons(),
 
                   // Game Area - expands to fill available space
-                  Expanded(child: PlayerGrid()),
+                  Expanded(flex: _isChatExpanded ? 1 : 2, child: PlayerGrid()),
 
-                  // Chat area - fixed height or expanded based on state
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    height: _isChatExpanded ? screenHeight * 0.6 : 160,
+                  // Chat area - uses Flexible to adapt to keyboard
+                  Flexible(
+                    flex: _isChatExpanded ? 3 : 1,
                     child: ChatWidget(
                       isExpanded: _isChatExpanded,
                       onToggleExpand: () {
@@ -75,7 +74,26 @@ class _GameScreenState extends State<GameScreen> {
                           _isChatExpanded = !_isChatExpanded;
                         });
                       },
+                      onUnreadCountChanged: (count) {
+                        setState(() {
+                          _unreadCount = count;
+                        });
+                      },
                     ),
+                  ),
+
+                  // Input area - always at the bottom, above keyboard
+                  ChatInputWidget(
+                    isExpanded: _isChatExpanded,
+                    unreadCount: _unreadCount,
+                    onToggleExpand: () {
+                      setState(() {
+                        _isChatExpanded = !_isChatExpanded;
+                        if (_isChatExpanded) {
+                          _unreadCount = 0;
+                        }
+                      });
+                    },
                   ),
                 ],
               ),
