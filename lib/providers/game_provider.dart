@@ -1,572 +1,120 @@
-import 'package:flutter/material.dart';
-
+import 'package:flutter/foundation.dart';
 import '../models/game_enums.dart';
 import '../models/player.dart';
-import '../models/event_models.dart';
-import '../theme/app_strings.dart';
-import '../config/app_config.dart';
-import '../services/error_handler.dart';
 import '../services/socket_service.dart';
+import 'connection_provider.dart';
+import 'game_state_provider.dart';
+import 'action_provider.dart';
 
-// Player class moved to models/player.dart
-
+/// Unified GameProvider that combines all sub-providers
+/// Maintains backward compatibility with existing code
+/// while providing better separation of concerns
 class GameProvider with ChangeNotifier {
-  final SocketService _socketService = SocketService();
+  final ConnectionProvider connectionProvider;
+  final GameStateProvider gameStateProvider;
+  final ActionProvider actionProvider;
 
-  // State Variables
-  List<Player> _players = [];
-  GamePhase _gameState = GamePhase.waiting;
-  int _dayCount = 1;
-  GameRole? _myRole;
-  final List<Map<String, dynamic>> _messages = [];
-  Map<String, int> _votes = {};
-  Map<String, String> _voters = {}; // { voterId: targetId }
-  final Map<String, String> _nightSelections = {};
-  final Map<String, String> _nightActionActors = {};
+  GameProvider({
+    required this.connectionProvider,
+    required this.gameStateProvider,
+    required this.actionProvider,
+  }) {
+    // Listen to sub-providers and propagate changes
+    connectionProvider.addListener(notifyListeners);
+    gameStateProvider.addListener(notifyListeners);
+    actionProvider.addListener(notifyListeners);
+  }
 
-  bool _isAdmin = false;
-  String? _myId;
-  String? _errorMessage;
-  String? _roomId;
-  String? _winner;
-  List<Player> _endGamePlayers = [];
-  DateTime? _gameOverTime;
+  // ========== Delegated Getters ==========
 
-  // Timer state
-  int _timerRemaining = 0;
-  int _timerTotal = 0;
+  // Connection
+  String get connectionState => connectionProvider.connectionState;
+  String? get errorMessage => connectionProvider.errorMessage;
+  SocketService get socket => connectionProvider.socketService;
+  String? get myId => connectionProvider.socketId;
+  bool get isConnected => connectionProvider.isConnected;
 
-  // Loading states
+  // Game State
+  List<Player> get players => gameStateProvider.players;
+  GamePhase get gamePhase => gameStateProvider.gamePhase;
+  String get gameState => gameStateProvider.gameState;
+  int get dayCount => gameStateProvider.dayCount;
+  GameRole? get myRoleEnum => gameStateProvider.myRoleEnum;
+  String? get myRole => gameStateProvider.myRole;
+  String? get roomId => gameStateProvider.roomId;
+  bool get isAdmin => gameStateProvider.isAdmin;
+  Map<String, int> get roleCounts => gameStateProvider.roleCounts;
+  List<String> get roleCountDisplayStrings =>
+      gameStateProvider.roleCountDisplayStrings;
+  int get timerRemaining => gameStateProvider.timerRemaining;
+  int get timerTotal => gameStateProvider.timerTotal;
+  double get timerProgress => gameStateProvider.timerProgress;
+  String? get winner => gameStateProvider.winner;
+  List<Player> get endGamePlayers => gameStateProvider.endGamePlayers;
+  List<Map<String, dynamic>> get gameLog => gameStateProvider.gameLog;
+  bool get canReturnToLobby => gameStateProvider.canReturnToLobby;
+
+  // Actions
+  Map<String, int> get votes => actionProvider.votes;
+  Map<String, String> get voters => actionProvider.voters;
+  Map<String, String> get nightSelections => actionProvider.nightSelections;
+  Map<String, String> get nightActionActors => actionProvider.nightActionActors;
+  List<Map<String, dynamic>> get messages => actionProvider.messages;
+  List<String> get skipVoterNicknames => actionProvider.skipVoterNicknames;
+  bool get iVotedSkip => actionProvider.iVotedSkip;
+  bool get isMafiaSkip => actionProvider.isMafiaSkip;
+  String get mafiaSkipButtonText => actionProvider.mafiaSkipButtonText;
+
+  // Loading state (kept for compatibility)
   bool _isLoading = false;
-
-  // Connection state
-  String _connectionState =
-      'connecting'; // connecting, connected, reconnecting, disconnected, error
-
-  // Game log
-  final List<Map<String, dynamic>> _gameLog = [];
-
-  // Getters
-  List<Player> get players => _players;
-  String get gameState => _gameState.label;
-  GamePhase get gamePhase => _gameState;
-  int get dayCount => _dayCount;
-  String? get myRole => _myRole?.label; // Deprecated: Use myRoleEnum for logic
-  GameRole? get myRoleEnum => _myRole;
-  List<Map<String, dynamic>> get messages => _messages;
-  Map<String, int> get votes => _votes;
-  Map<String, String> get voters => _voters;
-  Map<String, String> get nightSelections => _nightSelections;
-  Map<String, String> get nightActionActors => _nightActionActors;
-  String? get myId => _myId;
-  String? get errorMessage => _errorMessage;
-  String? get roomId => _roomId;
-  String? get winner => _winner;
-  List<Player> get endGamePlayers => _endGamePlayers;
-  bool get isAdmin => _isAdmin;
-  int get timerRemaining => _timerRemaining;
-  int get timerTotal => _timerTotal;
   bool get isLoading => _isLoading;
-  String get connectionState => _connectionState;
-  List<Map<String, dynamic>> get gameLog => _gameLog;
-
-  // Timer progress (0.0 to 1.0)
-  double get timerProgress =>
-      _timerTotal > 0 ? _timerRemaining / _timerTotal : 0.0;
-
-  bool get canReturnToLobby {
-    if (_gameOverTime == null) return true;
-    return DateTime.now().difference(_gameOverTime!).inSeconds >=
-        AppConfig.gameOverDelaySeconds;
-  }
-
-  // --- UI Helpers ---
-  List<String> get skipVoterNicknames {
-    return voters.entries.where((entry) => entry.value == GameAction.skip).map((
-      entry,
-    ) {
-      final voter = players.firstWhere(
-        (p) => p.id == entry.key,
-        orElse: () => Player(id: 'unknown', nickname: '알 수 없음', isAlive: true),
-      );
-      return voter.nickname;
-    }).toList();
-  }
-
-  bool get iVotedSkip => voters[_socketService.id] == GameAction.skip;
-
-  bool get isMafiaSkip =>
-      nightSelections[GameRole.mafia.name] == GameAction.skip;
-  String get mafiaSkipButtonText {
-    final actor = nightActionActors[GameRole.mafia.name] ?? '';
-    return isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
-  }
-
-  /// Access to socket for external use (e.g., checking socket.id)
-  SocketService get socket => _socketService;
-
-  Map<String, int> _roleCounts = {};
-  Map<String, int> get roleCounts => _roleCounts;
-
-  /// Returns role counts as "RoleName: Count" in Korean
-  List<String> get roleCountDisplayStrings {
-    return _roleCounts.entries.map((e) {
-      final role = GameRole.fromString(e.key);
-      final label = role?.label ?? e.key;
-      return '$label ${e.value}';
-    }).toList();
-  }
-
-  GameProvider() {
-    _initSocket();
-  }
-
-  void _initSocket() {
-    print('Initializing socket connection to ${AppConfig.serverUrl}');
-    _socketService.initialize();
-    _setupListeners();
-    _socketService.connect();
-  }
-
-  void _setupListeners() {
-    _handleConnectionEvents();
-    _handleRoomEvents();
-    _handleGameFlowEvents();
-    _handleActionEvents();
-    _handleMessageEvents();
-    _handleTimerEvents();
-  }
-
-  void _handleConnectionEvents() {
-    _socketService.on('connect', (_) {
-      print('DEBUG: Connected to server: ${_socketService.id}');
-      _myId = _socketService.id;
-      _errorMessage = null;
-      _connectionState = 'connected';
-      notifyListeners();
-    });
-
-    _socketService.on('disconnect', (_) {
-      _connectionState = 'disconnected';
-      _errorMessage = '서버와 연결이 끊어졌습니다.';
-      notifyListeners();
-    });
-
-    _socketService.on('reconnect_attempt', (attemptNumber) {
-      _connectionState = 'reconnecting';
-      _errorMessage =
-          '재연결 시도 중... ($attemptNumber/${AppConfig.reconnectionAttempts})';
-      notifyListeners();
-    });
-
-    _socketService.on('reconnect', (_) {
-      _connectionState = 'connected';
-      _errorMessage = null;
-      notifyListeners();
-    });
-
-    _socketService.on('reconnect_failed', (_) {
-      _connectionState = 'error';
-      _errorMessage = '재연결 실패. 앱을 다시 시작해 주세요.';
-      notifyListeners();
-    });
-
-    _socketService.onConnectError((data) {
-      _connectionState = 'error';
-      _errorMessage = ErrorHandler.handleError('socket_connection', data);
-      notifyListeners();
-    });
-
-    _socketService.onError((data) {
-      _errorMessage = ErrorHandler.handleError('socket_error', data);
-      notifyListeners();
-    });
-  }
-
-  void _handleRoomEvents() {
-    _socketService.on(SocketEvent.roomCreated, (roomId) {
-      _roomId = roomId;
-      _isAdmin = true;
-      notifyListeners();
-    });
-
-    _socketService.on(SocketEvent.joinedRoom, (roomId) {
-      _roomId = roomId;
-      _isAdmin = false;
-      notifyListeners();
-    });
-
-    _socketService.on(SocketEvent.playerUpdate, (data) {
-      try {
-        if (data is List) {
-          _players = data
-              .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
-              .toList();
-          _myRole = _deriveMyRole();
-          notifyListeners();
-        }
-      } catch (e, stackTrace) {
-        _errorMessage = ErrorHandler.handleError(
-          'player_update',
-          e,
-          stackTrace,
-        );
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.roleCounts, (data) {
-      if (data is Map) {
-        try {
-          _roleCounts = data.map(
-            (k, v) => MapEntry(k.toString(), (v as num).toInt()),
-          );
-        } catch (e, stackTrace) {
-          _errorMessage = ErrorHandler.handleError(
-            'role_counts',
-            e,
-            stackTrace,
-          );
-        }
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.roleAssigned, (data) {
-      _myRole = GameRole.fromString(data.toString());
-      notifyListeners();
-    });
-  }
-
-  void _handleGameFlowEvents() {
-    _socketService.on(SocketEvent.startGame, (_) {
-      _gameState = GamePhase.day;
-      _dayCount = 1;
-      _resetGameData();
-      _addSystemMessage(AppStrings.gameStarted);
-      notifyListeners();
-    });
-
-    _socketService.on(SocketEvent.phaseChange, (data) {
-      try {
-        if (data is Map) {
-          final event = PhaseChangeEvent.fromJson(
-            Map<String, dynamic>.from(data),
-          );
-          _gameState = event.phase;
-          _dayCount = event.dayCount;
-          final phaseMsg = _gameState == GamePhase.day
-              ? AppStrings.dayStarted
-              : AppStrings.nightStarted;
-          _addSystemMessage(phaseMsg);
-          _resetTurnData();
-          notifyListeners();
-        }
-      } catch (e, stackTrace) {
-        _errorMessage = ErrorHandler.handleError('phase_change', e, stackTrace);
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.gameOver, (data) {
-      if (data is Map) {
-        try {
-          final mappedData = Map<String, dynamic>.from(data);
-          final winnerRole = GameRole.fromString(
-            mappedData[ProtocolKey.winner],
-          );
-          _winner = winnerRole?.label ?? '알 수 없음';
-          _gameState = GamePhase.result;
-
-          if (mappedData[ProtocolKey.players] is List) {
-            _endGamePlayers = (mappedData[ProtocolKey.players] as List)
-                .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
-                .toList();
-          }
-          _gameOverTime = DateTime.now();
-          final winMsg = _winner == '마피아'
-              ? AppStrings.mafiaWin
-              : AppStrings.citizenWin;
-          _addSystemMessage(winMsg);
-          notifyListeners();
-        } catch (e, stackTrace) {
-          _errorMessage = ErrorHandler.handleError('game_over', e, stackTrace);
-          notifyListeners();
-        }
-      }
-    });
-  }
-
-  void _handleActionEvents() {
-    _socketService.on(SocketEvent.voteUpdate, (data) {
-      if (data is Map) {
-        _votes = Map<String, int>.from(data[ProtocolKey.votes] ?? {});
-        _voters = Map<String, String>.from(data[ProtocolKey.voters] ?? {});
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.nightSelectionUpdate, (data) {
-      try {
-        if (data is Map) {
-          final event = NightSelectionEvent.fromJson(
-            Map<String, dynamic>.from(data),
-          );
-          if (event.role != null) {
-            // Handle cancel (null targetId)
-            if (event.targetId == null) {
-              _nightSelections.remove(event.role!.name);
-              _nightActionActors.remove(event.role!.name);
-            } else {
-              _nightSelections[event.role!.name] = event.targetId!;
-              if (event.actorNickname != null) {
-                _nightActionActors[event.role!.name] = event.actorNickname!;
-              }
-            }
-            notifyListeners();
-          }
-        }
-      } catch (e, stackTrace) {
-        _errorMessage = ErrorHandler.handleError(
-          'night_selection',
-          e,
-          stackTrace,
-        );
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.investigationResult, (data) {
-      if (data is Map) {
-        final targetId = data[ProtocolKey.targetId];
-        final role = GameRole.fromString(data[ProtocolKey.role]);
-        final targetNick = _players
-            .firstWhere(
-              (p) => p.id == targetId,
-              orElse: () => Player(id: '', nickname: '?', isAlive: true),
-            )
-            .nickname;
-
-        final resultMsg = role == GameRole.mafia
-            ? AppStrings.investigationMafia(targetNick)
-            : AppStrings.investigationClear(targetNick);
-        _addSystemMessage(resultMsg);
-        notifyListeners();
-      }
-    });
-
-    _socketService.on(SocketEvent.nightResult, (data) {
-      if (data is Map && data[ProtocolKey.message] != null) {
-        _addSystemMessage(data[ProtocolKey.message]);
-        notifyListeners();
-      }
-    });
-  }
-
-  void _handleMessageEvents() {
-    _socketService.on(SocketEvent.chatMessage, (data) {
-      try {
-        if (data is Map) {
-          final event = ChatMessageEvent.fromJson(
-            Map<String, dynamic>.from(data),
-          );
-          _messages.add({
-            'sender': event.sender,
-            'message': event.message,
-            'type': event.type.name,
-            'isSystem': event.sender == SystemConstant.sender,
-          });
-
-          // Log to game log for replay
-          _addGameLogEntry('chat', {
-            'sender': event.sender,
-            'message': event.message,
-            'type': event.type.name,
-          });
-
-          notifyListeners();
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('chat_message', e, stackTrace);
-        // Don't show error to user for chat messages, just log it
-      }
-    });
-  }
-
-  void _handleTimerEvents() {
-    _socketService.on(SocketEvent.timerTick, (data) {
-      if (data is Map) {
-        _timerRemaining = (data['remaining'] as num?)?.toInt() ?? 0;
-        _timerTotal = (data['total'] as num?)?.toInt() ?? 0;
-        notifyListeners();
-      }
-    });
-  }
-
-  void _addGameLogEntry(String type, Map<String, dynamic> data) {
-    _gameLog.add({
-      'type': type,
-      'timestamp': DateTime.now().toIso8601String(),
-      'data': data,
-    });
-  }
-
-  // --- Internal Utilities ---
-  void _resetGameData() {
-    _votes.clear();
-    _voters.clear();
-    _nightSelections.clear();
-    _nightActionActors.clear();
-    _messages.clear();
-    _timerRemaining = 0;
-    _timerTotal = 0;
-    _gameLog.clear();
-  }
-
-  void _resetTurnData() {
-    _votes.clear();
-    _voters.clear();
-    _nightSelections.clear();
-    _nightActionActors.clear();
-  }
-
-  void _addSystemMessage(String msg) {
-    _messages.add({
-      'sender': SystemConstant.sender,
-      'message': msg,
-      'type': ChatMessageType.system.name,
-      'isSystem': true,
-    });
-    _addGameLogEntry('system', {'message': msg});
-  }
 
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
 
-  // Actions
+  // ========== Delegated Actions ==========
+
   void createRoom(String nickname) {
-    print('Emitting create_room: $nickname');
-    _socketService.emit(SocketEvent.createRoom, nickname);
+    debugPrint('Emitting create_room: $nickname');
+    socket.emit(SocketEvent.createRoom, nickname);
   }
 
   void joinRoom(String roomId, String nickname) {
-    print('Emitting join_room: $nickname, $roomId');
-    _socketService.emit(SocketEvent.joinRoom, {
+    debugPrint('Emitting join_room: $nickname, $roomId');
+    socket.emit(SocketEvent.joinRoom, {
       ProtocolKey.roomId: roomId,
       ProtocolKey.nickname: nickname,
     });
   }
 
   void startGame() {
-    print('Emitting start_game');
-    if (_roomId != null) {
-      _socketService.emit(SocketEvent.startGame);
+    debugPrint('Emitting start_game');
+    if (roomId != null) {
+      socket.emit(SocketEvent.startGame);
     }
   }
 
-  void sendMessage(String message) {
-    if (message.trim().isEmpty) return;
-    _socketService.emit(SocketEvent.chatMessage, message);
-  }
+  void vote(String targetId) => actionProvider.vote(targetId);
 
-  void vote(String targetId) {
-    if (_gameState == GamePhase.day && _socketService.id != null) {
-      print('Voting for: $targetId');
+  void nightAction(String action, String targetId) =>
+      actionProvider.nightAction(action, targetId);
 
-      // Optimistic UI Update - Mirror server logic locally
-      final myId = _socketService.id!;
-      final previousVote = _voters[myId];
-
-      // 1. Toggle (Same Target) -> Unvote
-      if (previousVote == targetId) {
-        _voters.remove(myId);
-        final voteKey = previousVote; // Already non-null due to if condition
-        if (voteKey != null && _votes[voteKey] != null) {
-          _votes[voteKey] = _votes[voteKey]! - 1;
-          if (_votes[voteKey]! <= 0) _votes.remove(voteKey);
-        }
-      } else {
-        // 2. Change Vote (Different Target)
-        if (previousVote != null && _votes[previousVote] != null) {
-          _votes[previousVote] = _votes[previousVote]! - 1;
-          if (_votes[previousVote]! <= 0) _votes.remove(previousVote);
-        }
-        _voters[myId] = targetId;
-        _votes[targetId] = (_votes[targetId] ?? 0) + 1;
-      }
-
-      notifyListeners(); // Update UI immediately
-
-      _socketService.emit(SocketEvent.vote, targetId);
-    }
-  }
-
-  void nightAction(String action, String targetId) {
-    if (_gameState == GamePhase.night && _myRole != null) {
-      print('Night Action: $action -> $targetId');
-
-      // Optimistic UI Update - Toggle logic
-      final roleKey = _myRole!.name;
-      final currentSelection = _nightSelections[roleKey];
-
-      if (currentSelection == targetId) {
-        // Toggle off - same target clicked again
-        _nightSelections.remove(roleKey);
-        _nightActionActors.remove(roleKey);
-      } else {
-        // New selection
-        _nightSelections[roleKey] = targetId;
-        // Find my nickname for actor display
-        final me = _players.firstWhere(
-          (p) => p.id == _socketService.id,
-          orElse: () => Player(id: '', nickname: '', isAlive: false),
-        );
-        _nightActionActors[roleKey] = me.nickname;
-      }
-
-      notifyListeners(); // Update UI immediately
-
-      _socketService.emit(SocketEvent.nightAction, {
-        ProtocolKey.action: action,
-        ProtocolKey.targetId: targetId,
-      });
-    }
-  }
+  void sendMessage(String message) => actionProvider.sendMessage(message);
 
   void returnToLobby() {
-    print('Returning to lobby (client-side reset)');
-    _gameState = GamePhase.waiting;
-    _winner = null;
-    _endGamePlayers = [];
-    _gameOverTime = null;
-    _dayCount = 1;
-    _votes.clear();
-    _voters.clear();
-    _messages.clear();
-    _myRole = null;
-    notifyListeners();
+    gameStateProvider.returnToLobby();
+    actionProvider.resetAllData();
   }
 
-  void clearError() {
-    _errorMessage = null;
-    notifyListeners();
-  }
-
-  GameRole? _deriveMyRole() {
-    try {
-      final me = _players.firstWhere((p) => p.id == _socketService.id);
-      return me.role;
-    } catch (_) {
-      return _myRole; // Keep old role if not found in update
-    }
-  }
+  void clearError() => connectionProvider.clearError();
 
   @override
   void dispose() {
-    _socketService.disconnect();
-    _socketService.dispose();
+    connectionProvider.removeListener(notifyListeners);
+    gameStateProvider.removeListener(notifyListeners);
+    actionProvider.removeListener(notifyListeners);
     super.dispose();
   }
 }

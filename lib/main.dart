@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'providers/connection_provider.dart';
+import 'providers/game_state_provider.dart';
+import 'providers/action_provider.dart';
 import 'providers/game_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/lobby_screen.dart';
@@ -33,7 +36,55 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
+      providers: [
+        // Create providers in dependency order
+        ChangeNotifierProvider(create: (_) => ConnectionProvider()),
+        ChangeNotifierProxyProvider<ConnectionProvider, GameStateProvider>(
+          create: (context) => GameStateProvider(
+            Provider.of<ConnectionProvider>(context, listen: false),
+          ),
+          update: (context, connection, previous) =>
+              previous ?? GameStateProvider(connection),
+        ),
+        ChangeNotifierProxyProvider2<
+          ConnectionProvider,
+          GameStateProvider,
+          ActionProvider
+        >(
+          create: (context) => ActionProvider(
+            Provider.of<ConnectionProvider>(context, listen: false),
+            Provider.of<GameStateProvider>(context, listen: false),
+          ),
+          update: (context, connection, gameState, previous) =>
+              previous ?? ActionProvider(connection, gameState),
+        ),
+        // Unified GameProvider for backward compatibility
+        ChangeNotifierProxyProvider3<
+          ConnectionProvider,
+          GameStateProvider,
+          ActionProvider,
+          GameProvider
+        >(
+          create: (context) => GameProvider(
+            connectionProvider: Provider.of<ConnectionProvider>(
+              context,
+              listen: false,
+            ),
+            gameStateProvider: Provider.of<GameStateProvider>(
+              context,
+              listen: false,
+            ),
+            actionProvider: Provider.of<ActionProvider>(context, listen: false),
+          ),
+          update: (context, connection, gameState, action, previous) =>
+              previous ??
+              GameProvider(
+                connectionProvider: connection,
+                gameStateProvider: gameState,
+                actionProvider: action,
+              ),
+        ),
+      ],
       child: MaterialApp(
         title: '마피아 온라인',
         debugShowCheckedModeBanner: false,

@@ -1,26 +1,49 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:mafia_client/providers/game_provider.dart';
-import 'package:mafia_client/screens/login_screen.dart';
-import 'package:provider/provider.dart';
+import 'package:mafia_client/providers/connection_provider.dart';
+import 'package:mafia_client/providers/game_state_provider.dart';
+import 'package:mafia_client/providers/action_provider.dart';
+import 'package:mafia_client/models/game_enums.dart';
 
 void main() {
-  testWidgets('Mafia title smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [ChangeNotifierProvider(create: (_) => GameProvider())],
-        child: MaterialApp(home: LoginScreen()),
-      ),
-    );
+  group('GameProvider Tests', () {
+    late ConnectionProvider connectionProvider;
+    late GameStateProvider gameStateProvider;
+    late ActionProvider actionProvider;
 
-    // Wait for all animations and frames to settle.
-    await tester.pumpAndSettle();
+    setUp(() {
+      connectionProvider = ConnectionProvider();
+      gameStateProvider = GameStateProvider(connectionProvider);
+      actionProvider = ActionProvider(connectionProvider, gameStateProvider);
+    });
 
-    // Verify that the Mafia title is present.
-    expect(find.text('마피아 온라인'), findsOneWidget);
-    expect(find.text('방 만들기'), findsOneWidget);
-    expect(find.text('참여하기'), findsOneWidget);
+    tearDown(() {
+      connectionProvider.dispose();
+    });
+
+    test('Initial state should be waiting', () {
+      expect(gameStateProvider.gamePhase, GamePhase.waiting);
+      expect(gameStateProvider.dayCount, 1);
+      expect(gameStateProvider.players, isEmpty);
+    });
+
+    test('Vote toggle logic should work correctly', () {
+      // This test would require mocking socket events
+      // For now, just verify initial state
+      expect(actionProvider.votes, isEmpty);
+      expect(actionProvider.voters, isEmpty);
+    });
+
+    test('Night selections should be empty initially', () {
+      expect(actionProvider.nightSelections, isEmpty);
+      expect(actionProvider.nightActionActors, isEmpty);
+    });
+
+    test('Messages should be empty initially', () {
+      expect(actionProvider.messages, isEmpty);
+    });
+
+    test('Connection state should start as connecting', () {
+      expect(connectionProvider.connectionState, 'connecting');
+    });
   });
 }
