@@ -26,7 +26,6 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final screenHeight = MediaQuery.of(context).size.height;
 
     // Show role modal when game starts or role changes
@@ -38,16 +37,10 @@ class _GameScreenState extends State<GameScreen> {
             _shownRole != game.myRoleEnum ||
             _lastDayCount != game.dayCount && game.dayCount == 1);
 
-    // Calculate chat height - when keyboard is open, use remaining space
-    final baseChatHeight = _isChatExpanded ? screenHeight * 0.7 : 160.0;
-    // When keyboard is open, adjust chat height to fill available space above keyboard
-    final chatHeight = bottomInset > 0
-        ? (screenHeight - bottomInset).clamp(200.0, screenHeight * 0.7)
-        : baseChatHeight;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
-      resizeToAvoidBottomInset: false,
+      // Use Flutter's built-in keyboard handling
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () {
           // Dismiss keyboard when tapping outside input areas
@@ -58,7 +51,7 @@ class _GameScreenState extends State<GameScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Main content layer
+              // Main game content - uses Column with chat at bottom
               Column(
                 children: [
                   // --- Custom Header Area ---
@@ -67,44 +60,27 @@ class _GameScreenState extends State<GameScreen> {
                   // Skip Vote & Role Actions
                   const ActionButtons(),
 
-                  // Game Area
-                  Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: bottomInset > 0 ? 0 : 160,
-                      ),
-                      child: PlayerGrid(),
+                  // Game Area - expands to fill available space
+                  Expanded(child: PlayerGrid()),
+
+                  // Chat area - fixed height or expanded based on state
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    height: _isChatExpanded ? screenHeight * 0.6 : 160,
+                    child: ChatWidget(
+                      isExpanded: _isChatExpanded,
+                      onToggleExpand: () {
+                        setState(() {
+                          _isChatExpanded = !_isChatExpanded;
+                        });
+                      },
                     ),
                   ),
                 ],
               ),
 
-              // Expandable Chat Layer with smooth keyboard animation
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  height: chatHeight,
-                  margin: EdgeInsets.only(bottom: bottomInset),
-                  child: ChatWidget(
-                    isExpanded: _isChatExpanded || bottomInset > 0,
-                    onToggleExpand: () {
-                      if (bottomInset > 0) {
-                        // If keyboard is open, close it first
-                        FocusScope.of(context).unfocus();
-                      } else {
-                        setState(() {
-                          _isChatExpanded = !_isChatExpanded;
-                        });
-                      }
-                    },
-                  ),
-                ),
-              ),
-
+              // Overlays
               if (game.gamePhase == GamePhase.result)
                 GameResultOverlay(game: game),
               // Role Reveal Modal
