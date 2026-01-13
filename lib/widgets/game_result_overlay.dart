@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../providers/game_provider.dart';
 import '../theme/app_strings.dart';
-import '../theme/app_colors.dart';
 import 'game_log_view.dart';
 
 class GameResultOverlay extends StatefulWidget {
@@ -161,19 +160,22 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                     bool isPlayerWinner = false;
                                     final role = p.role;
                                     if (isMafiaWin) {
-                                      if (role == GameRole.mafia)
+                                      if (role == GameRole.mafia) {
                                         isPlayerWinner = true;
+                                      }
                                     } else {
                                       // Citizen win: All non-mafia win
-                                      if (role != GameRole.mafia)
+                                      if (role != GameRole.mafia) {
                                         isPlayerWinner = true;
+                                      }
                                     }
 
                                     Color roleColor = Colors.grey;
                                     IconData roleIcon = Icons.person;
                                     if (p.role == GameRole.mafia) {
                                       roleColor = const Color(0xFFE94560);
-                                      roleIcon = Icons.water_drop; // Skull bug
+                                      roleIcon = Icons
+                                          .theater_comedy; // Mask icon - represents deception
                                     } else if (p.role == GameRole.doctor) {
                                       roleColor = Colors.greenAccent;
                                       roleIcon = Icons.medical_services;

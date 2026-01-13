@@ -178,7 +178,7 @@ class GameLogView extends StatelessWidget {
       case 'vote':
         return Icons.how_to_vote;
       case 'kill':
-        return Icons.dangerous;
+        return Icons.theater_comedy; // Mask icon - represents mafia
       case 'heal':
         return Icons.medical_services;
       case 'investigate':

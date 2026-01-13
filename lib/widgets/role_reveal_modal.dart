@@ -179,7 +179,7 @@ class RoleRevealModal extends StatelessWidget {
   IconData _getRoleIcon() {
     switch (role) {
       case GameRole.mafia:
-        return Icons.water_drop; // Skull bug = danger
+        return Icons.theater_comedy; // Mask icon - represents deception
       case GameRole.doctor:
         return Icons.medical_services;
       case GameRole.police:

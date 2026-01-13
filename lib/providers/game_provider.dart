@@ -312,8 +312,9 @@ class GameProvider with ChangeNotifier {
               _nightActionActors.remove(event.role!.name);
             } else {
               _nightSelections[event.role!.name] = event.targetId!;
-              if (event.actorNickname != null)
+              if (event.actorNickname != null) {
                 _nightActionActors[event.role!.name] = event.actorNickname!;
+              }
             }
             notifyListeners();
           }

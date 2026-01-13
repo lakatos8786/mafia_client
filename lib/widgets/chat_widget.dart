@@ -402,7 +402,7 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   IconData _getSystemMessageIcon(String text) {
     if (text.contains('마피아') && text.contains('승리') || text.contains('장악')) {
-      return Icons.dangerous;
+      return Icons.theater_comedy; // Mask icon - represents mafia
     } else if (text.contains('시민') && text.contains('승리') ||
         text.contains('처단')) {
       return Icons.celebration;

@@ -69,14 +69,18 @@ class PlayerGrid extends StatelessWidget {
                         } else if (game.gamePhase == GamePhase.night) {
                           String? action;
                           // Use strict Enums now
-                          if (game.myRoleEnum == GameRole.mafia)
+                          if (game.myRoleEnum == GameRole.mafia) {
                             action = NightAction.kill;
-                          if (game.myRoleEnum == GameRole.doctor)
+                          }
+                          if (game.myRoleEnum == GameRole.doctor) {
                             action = NightAction.heal;
-                          if (game.myRoleEnum == GameRole.police)
+                          }
+                          if (game.myRoleEnum == GameRole.police) {
                             action = NightAction.investigate;
-                          if (action != null)
+                          }
+                          if (action != null) {
                             game.nightAction(action, player.id);
+                          }
                         }
                       },
                       child: AnimatedContainer(
