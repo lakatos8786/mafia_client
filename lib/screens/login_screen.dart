@@ -85,109 +85,119 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    FadeInDown(
-                      duration: const Duration(milliseconds: 1000),
-                      child: Column(
-                        children: [
-                          Text(
-                            '마피아',
-                            style: GoogleFonts.gowunDodum(
-                              fontSize: 60,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFE94560),
-                              letterSpacing: 4.0,
-                              shadows: [
-                                Shadow(
-                                  color: const Color(
-                                    0xFFE94560,
-                                  ).withOpacity(0.5),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '온라인',
-                            style: GoogleFonts.gowunDodum(
-                              fontSize: 40,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 8.0,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 50),
-
-                    // Glassmorphism Container
-                    FadeInUp(
-                      delay: const Duration(milliseconds: 300),
-                      duration: const Duration(milliseconds: 800),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Container(
-                            width: 350,
-                            padding: const EdgeInsets.all(30),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.1),
-                                width: 1,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                _buildTextField(
-                                  controller: _nameController,
-                                  label: '닉네임',
-                                  icon: Icons.person_outline,
-                                ),
-                                const SizedBox(height: 20),
-                                _buildTextField(
-                                  controller: _roomCodeController,
-                                  label: '방 코드 (참여 전용)',
-                                  icon: Icons.vpn_key_outlined,
-                                  isNumber: true,
-                                  maxLength: 6,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
+          GestureDetector(
+            onTap: () {
+              // Dismiss keyboard when tapping outside
+              FocusScope.of(context).unfocus();
+            },
+            child: Container(
+              color: Colors.transparent,
+              child: Center(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FadeInDown(
+                          duration: const Duration(milliseconds: 1000),
+                          child: Column(
+                            children: [
+                              Text(
+                                '마피아',
+                                style: GoogleFonts.gowunDodum(
+                                  fontSize: 60,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFE94560),
+                                  letterSpacing: 4.0,
+                                  shadows: [
+                                    Shadow(
+                                      color: const Color(
+                                        0xFFE94560,
+                                      ).withOpacity(0.5),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 5),
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 30),
-                                _buildButton(
-                                  text: '방 만들기',
-                                  onPressed: _createRoom,
-                                  color: const Color(0xFFE94560),
+                              ),
+                              Text(
+                                '온라인',
+                                style: GoogleFonts.gowunDodum(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  letterSpacing: 8.0,
                                 ),
-                                const SizedBox(height: 15),
-                                _buildButton(
-                                  text: '방 참여하기',
-                                  onPressed: _joinRoom,
-                                  color: const Color(0xFF0F3460),
-                                  isOutlined: true,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 50),
+
+                        // Glassmorphism Container
+                        FadeInUp(
+                          delay: const Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 800),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                width: 350,
+                                padding: const EdgeInsets.all(30),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.1),
+                                    width: 1,
+                                  ),
                                 ),
-                              ],
+                                child: Column(
+                                  children: [
+                                    _buildTextField(
+                                      controller: _nameController,
+                                      label: '닉네임',
+                                      icon: Icons.person_outline,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildTextField(
+                                      controller: _roomCodeController,
+                                      label: '방 코드 (참여 전용)',
+                                      icon: Icons.vpn_key_outlined,
+                                      isNumber: true,
+                                      maxLength: 6,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                    ),
+                                    const SizedBox(height: 30),
+                                    _buildButton(
+                                      text: '방 만들기',
+                                      onPressed: _createRoom,
+                                      color: const Color(0xFFE94560),
+                                    ),
+                                    const SizedBox(height: 15),
+                                    _buildButton(
+                                      text: '방 참여하기',
+                                      onPressed: _joinRoom,
+                                      color: const Color(0xFF0F3460),
+                                      isOutlined: true,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
