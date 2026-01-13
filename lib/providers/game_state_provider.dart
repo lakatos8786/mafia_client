@@ -131,6 +131,13 @@ class GameStateProvider with ChangeNotifier {
         final event = PhaseChangeEvent.fromJson(data);
         _gamePhase = event.phase;
         _dayCount = event.dayCount;
+
+        // If phase returns to lobby, reset state
+        if (_gamePhase == GamePhase.waiting) {
+          returnToLobby();
+          return;
+        }
+
         notifyListeners();
       } catch (e, stackTrace) {
         ErrorHandler.logError('phase_change', e, stackTrace);
