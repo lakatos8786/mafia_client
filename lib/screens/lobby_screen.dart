@@ -230,26 +230,6 @@ class LobbyScreen extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      if (game.players.length < 2) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentYellow.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '최소 2명 필요',
-                            style: GoogleFonts.gowunDodum(
-                              color: AppColors.accentYellow,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -269,26 +249,19 @@ class LobbyScreen extends StatelessWidget {
                           if (game.players.any(
                             (p) => p.id == game.myId && p.isHost,
                           )) {
-                            final canStart = game.players.length >= 2;
                             return ElevatedButton(
-                              onPressed: canStart
-                                  ? () => game.startGame()
-                                  : null,
+                              onPressed: () => game.startGame(),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: canStart
-                                    ? AppColors.primary
-                                    : Colors.grey[700],
+                                backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
-                                elevation: canStart ? 8 : 0,
+                                elevation: 8,
                                 shadowColor: AppColors.primary.withOpacity(0.6),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),
                               ),
                               child: Text(
-                                canStart
-                                    ? AppStrings.startGame
-                                    : '${2 - game.players.length}명 더 필요',
+                                AppStrings.startGame,
                                 style: GoogleFonts.gowunDodum(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,

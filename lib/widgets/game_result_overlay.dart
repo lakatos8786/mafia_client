@@ -171,17 +171,16 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                     }
 
                                     Color roleColor = Colors.grey;
-                                    IconData roleIcon = Icons.person;
+                                    String roleEmoji = '👤';
                                     if (p.role == GameRole.mafia) {
                                       roleColor = const Color(0xFFE94560);
-                                      roleIcon = Icons
-                                          .theater_comedy; // Mask icon - represents deception
+                                      roleEmoji = '🕶️'; // Sunglasses
                                     } else if (p.role == GameRole.doctor) {
                                       roleColor = Colors.greenAccent;
-                                      roleIcon = Icons.medical_services;
+                                      roleEmoji = '💉'; // Syringe
                                     } else if (p.role == GameRole.police) {
                                       roleColor = Colors.blueAccent;
-                                      roleIcon = Icons.local_police;
+                                      roleEmoji = '🚨'; // Police siren
                                     } else {
                                       roleColor = Colors.white70;
                                     }
@@ -253,10 +252,13 @@ class _GameResultOverlayState extends State<GameResultOverlay> {
                                                         width: 2,
                                                       ),
                                                     ),
-                                                    child: Icon(
-                                                      roleIcon,
-                                                      color: roleColor,
-                                                      size: 20,
+                                                    child: Center(
+                                                      child: Text(
+                                                        roleEmoji,
+                                                        style: TextStyle(
+                                                          fontSize: 20,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
                                                   const SizedBox(width: 12),

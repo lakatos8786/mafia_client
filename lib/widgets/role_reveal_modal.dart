@@ -60,10 +60,9 @@ class RoleRevealModal extends StatelessWidget {
                         ],
                       ),
                       child: Center(
-                        child: Icon(
-                          _getRoleIcon(),
-                          size: 70,
-                          color: Colors.white,
+                        child: Text(
+                          _getRoleEmoji(),
+                          style: const TextStyle(fontSize: 70),
                         ),
                       ),
                     ),
@@ -176,16 +175,16 @@ class RoleRevealModal extends StatelessWidget {
     }
   }
 
-  IconData _getRoleIcon() {
+  String _getRoleEmoji() {
     switch (role) {
       case GameRole.mafia:
-        return Icons.theater_comedy; // Mask icon - represents deception
+        return '🕶️'; // Sunglasses - cool and mysterious
       case GameRole.doctor:
-        return Icons.medical_services;
+        return '💉'; // Syringe
       case GameRole.police:
-        return Icons.local_police; // Shield with star
+        return '🚨'; // Police siren
       case GameRole.citizen:
-        return Icons.person;
+        return '👤'; // Person silhouette
     }
   }
 

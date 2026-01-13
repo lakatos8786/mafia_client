@@ -141,10 +141,12 @@ class GameHeader extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    _getRoleIcon(game.myRoleEnum),
-                    color: _getRoleColor(game.myRoleEnum),
-                    size: 22,
+                  Text(
+                    _getRoleEmoji(game.myRoleEnum),
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: _getRoleColor(game.myRoleEnum),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Text(
@@ -180,18 +182,18 @@ class GameHeader extends StatelessWidget {
     }
   }
 
-  IconData _getRoleIcon(GameRole? role) {
+  String _getRoleEmoji(GameRole? role) {
     switch (role) {
       case GameRole.mafia:
-        return Icons.theater_comedy; // Mask icon - represents deception
+        return '🕶️'; // Sunglasses - cool and mysterious
       case GameRole.doctor:
-        return Icons.medical_services;
+        return '💉'; // Syringe
       case GameRole.police:
-        return Icons.local_police; // Shield with star
+        return '🚨'; // Police siren
       case GameRole.citizen:
-        return Icons.person;
+        return '👤'; // Person silhouette
       default:
-        return Icons.help_outline;
+        return '❓'; // Question mark for unknown
     }
   }
 }
