@@ -35,6 +35,53 @@ class _ChatWidgetState extends State<ChatWidget> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(ChatWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Reset unread count when chat is expanded
+    if (widget.isExpanded && !oldWidget.isExpanded) {
+      setState(() {
+        _unreadCount = 0;
+      });
+    }
+  }
+
+  void _updateUnreadCount(GameProvider game) {
+    // Only update unread count when chat is collapsed and new messages arrive
+    if (!widget.isExpanded && game.messages.length > _lastMessageCount) {
+      // Count only messages from others (not from me)
+      int newUnreadCount = 0;
+
+      // Get my socket ID for comparison
+      final mySocketId = game.socket.id;
+      final myNickname = game.players
+          .where((p) => p.id == mySocketId)
+          .map((p) => p.nickname)
+          .firstOrNull;
+
+      // Check new messages (from _lastMessageCount to current length)
+      for (int i = _lastMessageCount; i < game.messages.length; i++) {
+        final msg = game.messages[i];
+        final sender = msg['sender'];
+        final type = msg['type'];
+
+        // Count message if it's NOT from me
+        final isMyMessage =
+            sender == mySocketId || (myNickname == sender && type != 'system');
+
+        if (!isMyMessage) {
+          newUnreadCount++;
+        }
+      }
+
+      setState(() {
+        _unreadCount += newUnreadCount;
+      });
+    }
+    _lastMessageCount = game.messages.length;
+  }
+
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
       Provider.of<GameProvider>(
@@ -51,13 +98,10 @@ class _ChatWidgetState extends State<ChatWidget> {
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
 
-    // Track unread messages when collapsed
-    if (!widget.isExpanded && game.messages.length > _lastMessageCount) {
-      _unreadCount += game.messages.length - _lastMessageCount;
-    } else if (widget.isExpanded) {
-      _unreadCount = 0;
-    }
-    _lastMessageCount = game.messages.length;
+    // Update unread count based on message changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateUnreadCount(game);
+    });
 
     return Column(
       children: [
