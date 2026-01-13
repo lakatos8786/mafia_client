@@ -131,9 +131,9 @@ class ParticlePainter extends CustomPainter {
     for (var particle in particles) {
       final paint = Paint()
         ..color = phase == GamePhase.day
-            ? Colors.white.withValues(alpha: particle.opacity)
-            : AppColors.accentYellow.withValues(
-                alpha: particle.opacity,
+            ? Colors.white.withOpacity(particle.opacity)
+            : AppColors.accentYellow.withOpacity(
+                particle.opacity,
               ); // Star color
 
       double cx = particle.x * size.width;
@@ -145,8 +145,8 @@ class ParticlePainter extends CustomPainter {
         double twinkle = sin(
           DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,
         );
-        paint.color = paint.color.withValues(
-          alpha: (0.3 + 0.4 * (twinkle + 1) / 2).clamp(0.0, 1.0),
+        paint.color = paint.color.withOpacity(
+          (0.3 + 0.4 * (twinkle + 1) / 2).clamp(0.0, 1.0),
         );
       }
 

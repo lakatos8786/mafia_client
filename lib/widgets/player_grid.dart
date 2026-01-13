@@ -98,43 +98,39 @@ class PlayerGrid extends StatelessWidget {
                                           isMyVoteTarget
                                               ? const Color(
                                                   0xFFF59E0B,
-                                                ).withValues(
-                                                  alpha: 0.6,
+                                                ).withOpacity(
+                                                  0.6,
                                                 ) // Orange for Vote
                                               : selectionTargetForRole.contains(
                                                   GameRole.mafia.name,
                                                 )
                                               ? const Color(
                                                   0xFF9F1239,
-                                                ).withValues(alpha: 0.6)
+                                                ).withOpacity(0.6)
                                               : selectionTargetForRole.contains(
                                                   GameRole.doctor.name,
                                                 )
                                               ? const Color(
                                                   0xFF065F46,
-                                                ).withValues(alpha: 0.6)
+                                                ).withOpacity(0.6)
                                               : const Color(
                                                   0xFF1E3A8A,
-                                                ).withValues(alpha: 0.6),
+                                                ).withOpacity(0.6),
                                           const Color(
                                             0xFF000000,
-                                          ).withValues(alpha: 0.0),
+                                          ).withOpacity(0.0),
                                         ]
                                       : [
                                           const Color(
                                             0xFF1E293B,
-                                          ).withValues(alpha: 0.7),
+                                          ).withOpacity(0.7),
                                           const Color(
                                             0xFF0F172A,
-                                          ).withValues(alpha: 0.7),
+                                          ).withOpacity(0.7),
                                         ])
                                 : [
-                                    const Color(
-                                      0xFF0F172A,
-                                    ).withValues(alpha: 0.8),
-                                    const Color(
-                                      0xFF0F172A,
-                                    ).withValues(alpha: 0.8),
+                                    const Color(0xFF0F172A).withOpacity(0.8),
+                                    const Color(0xFF0F172A).withOpacity(0.8),
                                   ],
                           ),
                           borderRadius: BorderRadius.circular(16),
@@ -155,9 +151,9 @@ class PlayerGrid extends StatelessWidget {
                                                       )
                                                 ? const Color(0xFF10B981)
                                                 : const Color(0xFF60A5FA))
-                                            .withValues(alpha: 0.8)
-                                      : Colors.white.withValues(alpha: 0.12))
-                                : Colors.red.withValues(alpha: 0.3),
+                                            .withOpacity(0.8)
+                                      : Colors.white.withOpacity(0.12))
+                                : Colors.red.withOpacity(0.3),
                             width:
                                 (selectionTargetForRole.isNotEmpty ||
                                     isMyVoteTarget)
@@ -181,7 +177,7 @@ class PlayerGrid extends StatelessWidget {
                                               )
                                             ? const Color(0xFF10B981)
                                             : const Color(0xFF60A5FA))
-                                        .withValues(alpha: 0.4),
+                                        .withOpacity(0.4),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -212,7 +208,7 @@ class PlayerGrid extends StatelessWidget {
                                                       )
                                                 ? const Color(0xFF10B981)
                                                 : const Color(0xFF60A5FA))
-                                            .withValues(alpha: 0.15),
+                                            .withOpacity(0.15),
                                         Colors.transparent,
                                       ],
                                     ),
@@ -246,7 +242,7 @@ class PlayerGrid extends StatelessWidget {
                                             BoxShadow(
                                               color: const Color(
                                                 0xFF38BDF8,
-                                              ).withValues(alpha: 0.4),
+                                              ).withOpacity(0.4),
                                               blurRadius: 10,
                                               spreadRadius: 1,
                                             ),
@@ -292,8 +288,8 @@ class PlayerGrid extends StatelessWidget {
                                       shadows: isMe
                                           ? [
                                               BoxShadow(
-                                                color: Colors.blue.withValues(
-                                                  alpha: 0.8,
+                                                color: Colors.blue.withOpacity(
+                                                  0.8,
                                                 ),
                                                 blurRadius: 10,
                                               ),
@@ -324,7 +320,7 @@ class PlayerGrid extends StatelessWidget {
                                         BoxShadow(
                                           color: const Color(
                                             0xFFF43F5E,
-                                          ).withValues(alpha: 0.5),
+                                          ).withOpacity(0.5),
                                           blurRadius: 8,
                                         ),
                                       ],
@@ -368,8 +364,8 @@ class PlayerGrid extends StatelessWidget {
                                         return Text(
                                           votersForThisPlayer,
                                           style: TextStyle(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.5,
+                                            color: Colors.white.withOpacity(
+                                              0.5,
                                             ),
                                             fontSize: 10,
                                           ),
@@ -387,7 +383,7 @@ class PlayerGrid extends StatelessWidget {
                                 child: Container(
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.5),
+                                    color: Colors.black.withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   child: Column(
@@ -404,9 +400,7 @@ class PlayerGrid extends StatelessWidget {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.red.withValues(
-                                            alpha: 0.8,
-                                          ),
+                                          color: Colors.red.withOpacity(0.8),
                                           borderRadius: BorderRadius.circular(
                                             8,
                                           ),
@@ -435,9 +429,7 @@ class PlayerGrid extends StatelessWidget {
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: AppColors.mafiaRed.withValues(
-                                      alpha: 0.8,
-                                    ),
+                                    color: AppColors.mafiaRed.withOpacity(0.8),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(

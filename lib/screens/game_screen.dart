@@ -6,7 +6,6 @@ import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
 import '../widgets/player_grid.dart';
 import '../widgets/chat_widget.dart';
-import '../widgets/chat_input_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
@@ -23,13 +22,10 @@ class _GameScreenState extends State<GameScreen> {
   bool _roleRevealed = false;
   int? _lastDayCount;
   GameRole? _shownRole;
-  int _unreadCount = 0;
 
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
-    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final isKeyboardOpen = keyboardHeight > 0;
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
@@ -42,84 +38,71 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      // Let Flutter handle keyboard resize
-      resizeToAvoidBottomInset: true,
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: DayNightBackground(
-          phase: game.gamePhase,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Main content in a Column - Flutter will resize this when keyboard opens
-              SafeArea(
-                child: Column(
+      resizeToAvoidBottomInset: false,
+      body: DayNightBackground(
+        phase: game.gamePhase,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Stack(
+              children: [
+                Column(
                   children: [
-                    // Header - always visible
+                    // --- Custom Header Area ---
                     const GameHeader(),
 
-                    // Action buttons - hide when keyboard is open to save space
-                    if (!isKeyboardOpen) const ActionButtons(),
+                    // Skip Vote & Role Actions
+                    const ActionButtons(),
 
-                    // Player Grid - hide when keyboard open or chat expanded
-                    if (!isKeyboardOpen && !_isChatExpanded)
-                      Expanded(flex: 2, child: PlayerGrid()),
-
-                    // Chat messages area - expands when keyboard is open
+                    // Game Area
                     Expanded(
-                      flex: isKeyboardOpen ? 1 : (_isChatExpanded ? 3 : 1),
-                      child: ChatWidget(
-                        isExpanded: _isChatExpanded || isKeyboardOpen,
-                        onToggleExpand: () {
-                          FocusScope.of(context).unfocus();
-                          setState(() {
-                            _isChatExpanded = !_isChatExpanded;
-                          });
-                        },
-                        onUnreadCountChanged: (count) {
-                          setState(() {
-                            _unreadCount = count;
-                          });
-                        },
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 160),
+                        child: PlayerGrid(),
                       ),
-                    ),
-
-                    // Chat input - at bottom, pushed up by keyboard automatically
-                    ChatInputWidget(
-                      isExpanded: _isChatExpanded,
-                      unreadCount: _unreadCount,
-                      onToggleExpand: () {
-                        setState(() {
-                          _isChatExpanded = !_isChatExpanded;
-                          if (_isChatExpanded) {
-                            _unreadCount = 0;
-                          }
-                        });
-                      },
                     ),
                   ],
                 ),
-              ),
 
-              // Overlays
-              if (game.gamePhase == GamePhase.result)
-                GameResultOverlay(game: game),
-
-              if (shouldShowRoleModal && !_roleRevealed)
-                RoleRevealModal(
-                  role: game.myRoleEnum!,
-                  onDismiss: () {
-                    setState(() {
-                      _roleRevealed = true;
-                      _shownRole = game.myRoleEnum;
-                      _lastDayCount = game.dayCount;
-                    });
-                  },
+                // Expandable Chat Layer
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.fastOutSlowIn,
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  height: _isChatExpanded
+                      ? MediaQuery.of(context).size.height * 0.7
+                      : 160,
+                  child: Container(
+                    padding: const EdgeInsets.only(bottom: 0),
+                    child: ChatWidget(
+                      isExpanded: _isChatExpanded,
+                      onToggleExpand: () {
+                        setState(() {
+                          _isChatExpanded = !_isChatExpanded;
+                        });
+                      },
+                    ),
+                  ),
                 ),
-            ],
-          ),
+              ],
+            ),
+            if (game.gamePhase == GamePhase.result)
+              GameResultOverlay(game: game),
+            // Role Reveal Modal
+            if (shouldShowRoleModal && !_roleRevealed)
+              RoleRevealModal(
+                role: game.myRoleEnum!,
+                onDismiss: () {
+                  setState(() {
+                    _roleRevealed = true;
+                    _shownRole = game.myRoleEnum;
+                    _lastDayCount = game.dayCount;
+                  });
+                },
+              ),
+          ],
         ),
       ),
     );

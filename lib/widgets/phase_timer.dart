@@ -27,18 +27,18 @@ class PhaseTimer extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: Colors.black.withOpacity(0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isLowTime
-                ? AppColors.deadRed.withValues(alpha: 0.8)
-                : timerColor.withValues(alpha: 0.5),
+                ? AppColors.deadRed.withOpacity(0.8)
+                : timerColor.withOpacity(0.5),
             width: 1.5,
           ),
           boxShadow: isLowTime
               ? [
                   BoxShadow(
-                    color: AppColors.deadRed.withValues(alpha: 0.4),
+                    color: AppColors.deadRed.withOpacity(0.4),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -63,7 +63,7 @@ class PhaseTimer extends StatelessWidget {
               '초',
               style: GoogleFonts.gowunDodum(
                 fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+                color: Colors.white.withOpacity(0.7),
               ),
             ),
           ],
@@ -80,7 +80,7 @@ class PhaseTimer extends StatelessWidget {
         painter: _TimerPainter(
           progress: progress,
           color: isLowTime ? AppColors.deadRed : color,
-          backgroundColor: Colors.white.withValues(alpha: 0.2),
+          backgroundColor: Colors.white.withOpacity(0.2),
         ),
       ),
     );

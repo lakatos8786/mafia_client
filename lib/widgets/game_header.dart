@@ -26,7 +26,7 @@ class GameHeader extends StatelessWidget {
           right: 20,
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3),
+          color: Colors.black.withOpacity(0.3),
           borderRadius: const BorderRadius.vertical(
             bottom: Radius.circular(20),
           ),
@@ -43,20 +43,18 @@ class GameHeader extends StatelessWidget {
                     vertical: 10,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
+                    color: Colors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
                         color: game.gamePhase == GamePhase.day
-                            ? Colors.orangeAccent.withValues(alpha: 0.4)
-                            : const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            ? Colors.orangeAccent.withOpacity(0.4)
+                            : const Color(0xFF6366F1).withOpacity(0.3),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
                     ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -108,7 +106,7 @@ class GameHeader extends StatelessWidget {
                   return Text(
                     displayString,
                     style: GoogleFonts.gowunDodum(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withOpacity(0.6),
                       fontSize: 14,
                     ),
                   );
@@ -123,20 +121,18 @@ class GameHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    _getRoleColor(game.myRoleEnum).withValues(alpha: 0.3),
-                    AppColors.surface.withValues(alpha: 0.8),
+                    _getRoleColor(game.myRoleEnum).withOpacity(0.3),
+                    AppColors.surface.withOpacity(0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: _getRoleColor(game.myRoleEnum).withValues(alpha: 0.5),
+                  color: _getRoleColor(game.myRoleEnum).withOpacity(0.5),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _getRoleColor(
-                      game.myRoleEnum,
-                    ).withValues(alpha: 0.3),
+                    color: _getRoleColor(game.myRoleEnum).withOpacity(0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 2),
                   ),

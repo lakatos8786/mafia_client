@@ -11,7 +11,7 @@ class GameLogView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withValues(alpha: 0.9),
+      color: Colors.black.withOpacity(0.9),
       child: SafeArea(
         child: Column(
           children: [
@@ -20,9 +20,7 @@ class GameLogView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.1),
-                  ),
+                  bottom: BorderSide(color: Colors.white.withOpacity(0.1)),
                 ),
               ),
               child: Row(
@@ -45,7 +43,7 @@ class GameLogView extends StatelessWidget {
                     '총 ${gameLog.length}개',
                     style: GoogleFonts.gowunDodum(
                       fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withOpacity(0.6),
                     ),
                   ),
                 ],
@@ -59,7 +57,7 @@ class GameLogView extends StatelessWidget {
                         '게임 로그가 없습니다.',
                         style: GoogleFonts.gowunDodum(
                           fontSize: 16,
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: Colors.white.withOpacity(0.5),
                         ),
                       ),
                     )
@@ -87,9 +85,9 @@ class GameLogView extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _getTypeColor(type).withValues(alpha: 0.1),
+        color: _getTypeColor(type).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getTypeColor(type).withValues(alpha: 0.3)),
+        border: Border.all(color: _getTypeColor(type).withOpacity(0.3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +97,7 @@ class GameLogView extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _getTypeColor(type).withValues(alpha: 0.2),
+              color: _getTypeColor(type).withOpacity(0.2),
             ),
             child: Icon(
               _getTypeIcon(type),
@@ -128,7 +126,7 @@ class GameLogView extends StatelessWidget {
                         _formatTimestamp(timestamp),
                         style: GoogleFonts.gowunDodum(
                           fontSize: 10,
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: Colors.white.withOpacity(0.4),
                         ),
                       ),
                     ],
@@ -139,7 +137,7 @@ class GameLogView extends StatelessWidget {
                   _formatLogMessage(type, data),
                   style: GoogleFonts.gowunDodum(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: Colors.white.withOpacity(0.9),
                   ),
                 ),
               ],
