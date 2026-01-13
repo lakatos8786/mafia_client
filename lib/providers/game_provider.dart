@@ -11,7 +11,7 @@ import '../services/socket_service.dart';
 // Player class moved to models/player.dart
 
 class GameProvider with ChangeNotifier {
-  late IO.Socket _socket;
+  final SocketService _socketService = SocketService();
 
   // State Variables
   List<Player> _players = [];
@@ -93,7 +93,7 @@ class GameProvider with ChangeNotifier {
     }).toList();
   }
 
-  bool get iVotedSkip => voters[socket.id] == GameAction.skip;
+  bool get iVotedSkip => voters[_socketService.id] == GameAction.skip;
 
   bool get isMafiaSkip =>
       nightSelections[GameRole.mafia.name] == GameAction.skip;
@@ -102,7 +102,8 @@ class GameProvider with ChangeNotifier {
     return isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
   }
 
-  IO.Socket get socket => _socket;
+  /// Access to socket for external use (e.g., checking socket.id)
+  SocketService get socket => _socketService;
 
   Map<String, int> _roleCounts = {};
   Map<String, int> get roleCounts => _roleCounts;
@@ -122,18 +123,9 @@ class GameProvider with ChangeNotifier {
 
   void _initSocket() {
     print('Initializing socket connection to ${AppConfig.serverUrl}');
-    _socket = IO.io(AppConfig.serverUrl, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-      'reconnection': true,
-      'reconnectionAttempts': AppConfig.reconnectionAttempts,
-      'reconnectionDelay': AppConfig.reconnectionDelayMs,
-      'reconnectionDelayMax': AppConfig.reconnectionDelayMaxMs,
-      'timeout': AppConfig.connectionTimeoutMs,
-    });
-
+    _socketService.initialize();
     _setupListeners();
-    _socket.connect();
+    _socketService.connect();
   }
 
   void _setupListeners() {
@@ -146,65 +138,65 @@ class GameProvider with ChangeNotifier {
   }
 
   void _handleConnectionEvents() {
-    _socket.on('connect', (_) {
-      print('DEBUG: Connected to server: ${_socket.id}');
-      _myId = _socket.id;
+    _socketService.on('connect', (_) {
+      print('DEBUG: Connected to server: ${_socketService.id}');
+      _myId = _socketService.id;
       _errorMessage = null;
       _connectionState = 'connected';
       notifyListeners();
     });
 
-    _socket.onDisconnect((_) {
+    _socketService.on('disconnect', (_) {
       _connectionState = 'disconnected';
       _errorMessage = '서버와 연결이 끊어졌습니다.';
       notifyListeners();
     });
 
-    _socket.on('reconnect_attempt', (attemptNumber) {
+    _socketService.on('reconnect_attempt', (attemptNumber) {
       _connectionState = 'reconnecting';
       _errorMessage =
           '재연결 시도 중... ($attemptNumber/${AppConfig.reconnectionAttempts})';
       notifyListeners();
     });
 
-    _socket.on('reconnect', (_) {
+    _socketService.on('reconnect', (_) {
       _connectionState = 'connected';
       _errorMessage = null;
       notifyListeners();
     });
 
-    _socket.on('reconnect_failed', (_) {
+    _socketService.on('reconnect_failed', (_) {
       _connectionState = 'error';
       _errorMessage = '재연결 실패. 앱을 다시 시작해 주세요.';
       notifyListeners();
     });
 
-    _socket.onConnectError((data) {
+    _socketService.onConnectError((data) {
       _connectionState = 'error';
       _errorMessage = ErrorHandler.handleError('socket_connection', data);
       notifyListeners();
     });
 
-    _socket.onError((data) {
+    _socketService.onError((data) {
       _errorMessage = ErrorHandler.handleError('socket_error', data);
       notifyListeners();
     });
   }
 
   void _handleRoomEvents() {
-    _socket.on(SocketEvent.roomCreated, (roomId) {
+    _socketService.on(SocketEvent.roomCreated, (roomId) {
       _roomId = roomId;
       _isAdmin = true;
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.joinedRoom, (roomId) {
+    _socketService.on(SocketEvent.joinedRoom, (roomId) {
       _roomId = roomId;
       _isAdmin = false;
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.playerUpdate, (data) {
+    _socketService.on(SocketEvent.playerUpdate, (data) {
       try {
         if (data is List) {
           _players = data
@@ -223,7 +215,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.roleCounts, (data) {
+    _socketService.on(SocketEvent.roleCounts, (data) {
       if (data is Map) {
         try {
           _roleCounts = data.map(
@@ -240,14 +232,14 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.roleAssigned, (data) {
+    _socketService.on(SocketEvent.roleAssigned, (data) {
       _myRole = GameRole.fromString(data.toString());
       notifyListeners();
     });
   }
 
   void _handleGameFlowEvents() {
-    _socket.on(SocketEvent.startGame, (_) {
+    _socketService.on(SocketEvent.startGame, (_) {
       _gameState = GamePhase.day;
       _dayCount = 1;
       _resetGameData();
@@ -255,7 +247,7 @@ class GameProvider with ChangeNotifier {
       notifyListeners();
     });
 
-    _socket.on(SocketEvent.phaseChange, (data) {
+    _socketService.on(SocketEvent.phaseChange, (data) {
       try {
         if (data is Map) {
           final event = PhaseChangeEvent.fromJson(
@@ -276,7 +268,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.gameOver, (data) {
+    _socketService.on(SocketEvent.gameOver, (data) {
       if (data is Map) {
         try {
           final mappedData = Map<String, dynamic>.from(data);
@@ -306,7 +298,7 @@ class GameProvider with ChangeNotifier {
   }
 
   void _handleActionEvents() {
-    _socket.on(SocketEvent.voteUpdate, (data) {
+    _socketService.on(SocketEvent.voteUpdate, (data) {
       if (data is Map) {
         _votes = Map<String, int>.from(data[ProtocolKey.votes] ?? {});
         _voters = Map<String, String>.from(data[ProtocolKey.voters] ?? {});
@@ -314,7 +306,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.nightSelectionUpdate, (data) {
+    _socketService.on(SocketEvent.nightSelectionUpdate, (data) {
       try {
         if (data is Map) {
           final event = NightSelectionEvent.fromJson(
@@ -344,7 +336,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.investigationResult, (data) {
+    _socketService.on(SocketEvent.investigationResult, (data) {
       if (data is Map) {
         final targetId = data[ProtocolKey.targetId];
         final role = GameRole.fromString(data[ProtocolKey.role]);
@@ -363,7 +355,7 @@ class GameProvider with ChangeNotifier {
       }
     });
 
-    _socket.on(SocketEvent.nightResult, (data) {
+    _socketService.on(SocketEvent.nightResult, (data) {
       if (data is Map && data[ProtocolKey.message] != null) {
         _addSystemMessage(data[ProtocolKey.message]);
         notifyListeners();
@@ -372,7 +364,7 @@ class GameProvider with ChangeNotifier {
   }
 
   void _handleMessageEvents() {
-    _socket.on(SocketEvent.chatMessage, (data) {
+    _socketService.on(SocketEvent.chatMessage, (data) {
       try {
         if (data is Map) {
           final event = ChatMessageEvent.fromJson(
@@ -402,7 +394,7 @@ class GameProvider with ChangeNotifier {
   }
 
   void _handleTimerEvents() {
-    _socket.on(SocketEvent.timerTick, (data) {
+    _socketService.on(SocketEvent.timerTick, (data) {
       if (data is Map) {
         _timerRemaining = (data['remaining'] as num?)?.toInt() ?? 0;
         _timerTotal = (data['total'] as num?)?.toInt() ?? 0;
@@ -456,39 +448,35 @@ class GameProvider with ChangeNotifier {
   // Actions
   void createRoom(String nickname) {
     print('Emitting create_room: $nickname');
-    if (_socket.connected) {
-      _socket.emit(SocketEvent.createRoom, nickname);
-    }
+    _socketService.emit(SocketEvent.createRoom, nickname);
   }
 
   void joinRoom(String roomId, String nickname) {
     print('Emitting join_room: $nickname, $roomId');
-    if (_socket.connected) {
-      _socket.emit(SocketEvent.joinRoom, {
-        ProtocolKey.roomId: roomId,
-        ProtocolKey.nickname: nickname,
-      });
-    }
+    _socketService.emit(SocketEvent.joinRoom, {
+      ProtocolKey.roomId: roomId,
+      ProtocolKey.nickname: nickname,
+    });
   }
 
   void startGame() {
     print('Emitting start_game');
-    if (_socket.connected && _roomId != null) {
-      _socket.emit(SocketEvent.startGame);
+    if (_roomId != null) {
+      _socketService.emit(SocketEvent.startGame);
     }
   }
 
   void sendMessage(String message) {
     if (message.trim().isEmpty) return;
-    _socket.emit(SocketEvent.chatMessage, message);
+    _socketService.emit(SocketEvent.chatMessage, message);
   }
 
   void vote(String targetId) {
-    if (_gameState == GamePhase.day && _socket.id != null) {
+    if (_gameState == GamePhase.day && _socketService.id != null) {
       print('Voting for: $targetId');
 
       // Optimistic UI Update - Mirror server logic locally
-      final myId = _socket.id!;
+      final myId = _socketService.id!;
       final previousVote = _voters[myId];
 
       // 1. Toggle (Same Target) -> Unvote
@@ -511,7 +499,7 @@ class GameProvider with ChangeNotifier {
 
       notifyListeners(); // Update UI immediately
 
-      _socket.emit(SocketEvent.vote, targetId);
+      _socketService.emit(SocketEvent.vote, targetId);
     }
   }
 
@@ -532,7 +520,7 @@ class GameProvider with ChangeNotifier {
         _nightSelections[roleKey] = targetId;
         // Find my nickname for actor display
         final me = _players.firstWhere(
-          (p) => p.id == _socket.id,
+          (p) => p.id == _socketService.id,
           orElse: () => Player(id: '', nickname: '', isAlive: false),
         );
         _nightActionActors[roleKey] = me.nickname;
@@ -540,7 +528,7 @@ class GameProvider with ChangeNotifier {
 
       notifyListeners(); // Update UI immediately
 
-      _socket.emit(SocketEvent.nightAction, {
+      _socketService.emit(SocketEvent.nightAction, {
         ProtocolKey.action: action,
         ProtocolKey.targetId: targetId,
       });
@@ -568,7 +556,7 @@ class GameProvider with ChangeNotifier {
 
   GameRole? _deriveMyRole() {
     try {
-      final me = _players.firstWhere((p) => p.id == _socket.id);
+      final me = _players.firstWhere((p) => p.id == _socketService.id);
       return me.role;
     } catch (_) {
       return _myRole; // Keep old role if not found in update
@@ -577,8 +565,8 @@ class GameProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _socket.disconnect();
-    _socket.dispose();
+    _socketService.disconnect();
+    _socketService.dispose();
     super.dispose();
   }
 }
