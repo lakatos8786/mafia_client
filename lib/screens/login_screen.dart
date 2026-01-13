@@ -94,9 +94,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-      resizeToAvoidBottomInset: true, // Let Flutter handle keyboard resizing
+      resizeToAvoidBottomInset: false, // We handle keyboard manually
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -147,120 +149,146 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             child: Container(
               color: Colors.transparent,
-              child: Center(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.zero, // Remove manual padding
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 1000),
-                          child: Column(
-                            children: [
-                              Text(
-                                '마피아',
-                                style: GoogleFonts.gowunDodum(
-                                  fontSize: 60,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFE94560),
-                                  letterSpacing: 4.0,
-                                  shadows: [
-                                    Shadow(
-                                      color: const Color(
-                                        0xFFE94560,
-                                      ).withOpacity(0.5),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
+              child: SafeArea(
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(bottom: bottomInset),
+                  child: Center(
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Hide title when keyboard is open to save space
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 200),
+                              opacity: bottomInset > 100 ? 0.0 : 1.0,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                height: bottomInset > 100 ? 0 : null,
+                                child: bottomInset > 100
+                                    ? const SizedBox.shrink()
+                                    : FadeInDown(
+                                        duration: const Duration(
+                                          milliseconds: 1000,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '마피아',
+                                              style: GoogleFonts.gowunDodum(
+                                                fontSize: 60,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color(0xFFE94560),
+                                                letterSpacing: 4.0,
+                                                shadows: [
+                                                  Shadow(
+                                                    color: const Color(
+                                                      0xFFE94560,
+                                                    ).withOpacity(0.5),
+                                                    blurRadius: 20,
+                                                    offset: const Offset(0, 5),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              '온라인',
+                                              style: GoogleFonts.gowunDodum(
+                                                fontSize: 40,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                                letterSpacing: 8.0,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                               ),
-                              Text(
-                                '온라인',
-                                style: GoogleFonts.gowunDodum(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 8.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 50),
+                            ),
+                            SizedBox(height: bottomInset > 100 ? 20 : 50),
 
-                        // Glassmorphism Container
-                        FadeInUp(
-                          delay: const Duration(milliseconds: 300),
-                          duration: const Duration(milliseconds: 800),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                width: 350,
-                                padding: const EdgeInsets.all(30),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.1),
-                                    width: 1,
+                            // Glassmorphism Container
+                            FadeInUp(
+                              delay: const Duration(milliseconds: 300),
+                              duration: const Duration(milliseconds: 800),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 10,
+                                    sigmaY: 10,
                                   ),
-                                ),
-                                child: Column(
-                                  children: [
-                                    _buildTextField(
-                                      controller: _nameController,
-                                      label: '닉네임 (1-10자)',
-                                      icon: Icons.person_outline,
-                                      maxLength: 10,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.allow(
-                                          RegExp(
-                                            r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]',
-                                          ), // Added Jamo (ㄱ-ㅎ, ㅏ-ㅣ)
+                                  child: Container(
+                                    width: 350,
+                                    padding: const EdgeInsets.all(30),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white.withOpacity(0.1),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _buildTextField(
+                                          controller: _nameController,
+                                          label: '닉네임 (1-10자)',
+                                          icon: Icons.person_outline,
+                                          maxLength: 10,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                              RegExp(
+                                                r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]',
+                                              ), // Added Jamo (ㄱ-ㅎ, ㅏ-ㅣ)
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 20),
+                                        _buildTextField(
+                                          controller: _roomCodeController,
+                                          label: '방 코드 (참여 전용)',
+                                          icon: Icons.vpn_key_outlined,
+                                          isNumber: true,
+                                          maxLength: 6,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                        ),
+                                        const SizedBox(height: 30),
+                                        _buildButton(
+                                          text: '방 만들기',
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _createRoom,
+                                          color: const Color(0xFFE94560),
+                                          isLoading: _isLoading,
+                                        ),
+                                        const SizedBox(height: 15),
+                                        _buildButton(
+                                          text: '방 참여하기',
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _joinRoom,
+                                          color: const Color(0xFF0F3460),
+                                          isOutlined: true,
+                                          isLoading: _isLoading,
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
-                                    _buildTextField(
-                                      controller: _roomCodeController,
-                                      label: '방 코드 (6자리)',
-                                      icon: Icons.vpn_key_outlined,
-                                      isNumber: true,
-                                      maxLength: 6,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                    ),
-                                    const SizedBox(height: 30),
-                                    _buildButton(
-                                      text: '방 만들기',
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _createRoom,
-                                      color: const Color(0xFFE94560),
-                                      isLoading: _isLoading,
-                                    ),
-                                    const SizedBox(height: 15),
-                                    _buildButton(
-                                      text: '방 참여하기',
-                                      onPressed: _isLoading ? null : _joinRoom,
-                                      color: const Color(0xFF0F3460),
-                                      isOutlined: true,
-                                      isLoading: _isLoading,
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),

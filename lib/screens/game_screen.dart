@@ -26,6 +26,8 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
@@ -36,73 +38,89 @@ class _GameScreenState extends State<GameScreen> {
             _shownRole != game.myRoleEnum ||
             _lastDayCount != game.dayCount && game.dayCount == 1);
 
+    // Calculate chat height - when keyboard is open, use remaining space
+    final baseChatHeight = _isChatExpanded ? screenHeight * 0.7 : 160.0;
+    // When keyboard is open, adjust chat height to fill available space above keyboard
+    final chatHeight = bottomInset > 0
+        ? (screenHeight - bottomInset).clamp(200.0, screenHeight * 0.7)
+        : baseChatHeight;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
-      body: DayNightBackground(
-        phase: game.gamePhase,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Stack(
-              children: [
-                Column(
-                  children: [
-                    // --- Custom Header Area ---
-                    const GameHeader(),
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss keyboard when tapping outside input areas
+          FocusScope.of(context).unfocus();
+        },
+        child: DayNightBackground(
+          phase: game.gamePhase,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Main content layer
+              Column(
+                children: [
+                  // --- Custom Header Area ---
+                  const GameHeader(),
 
-                    // Skip Vote & Role Actions
-                    const ActionButtons(),
+                  // Skip Vote & Role Actions
+                  const ActionButtons(),
 
-                    // Game Area
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 160),
-                        child: PlayerGrid(),
+                  // Game Area
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: bottomInset > 0 ? 0 : 160,
                       ),
+                      child: PlayerGrid(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
 
-                // Expandable Chat Layer
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.fastOutSlowIn,
-                  left: 0,
-                  right: 0,
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                  height: _isChatExpanded
-                      ? MediaQuery.of(context).size.height * 0.7
-                      : 160,
-                  child: Container(
-                    padding: const EdgeInsets.only(bottom: 0),
-                    child: ChatWidget(
-                      isExpanded: _isChatExpanded,
-                      onToggleExpand: () {
+              // Expandable Chat Layer with smooth keyboard animation
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  height: chatHeight,
+                  margin: EdgeInsets.only(bottom: bottomInset),
+                  child: ChatWidget(
+                    isExpanded: _isChatExpanded || bottomInset > 0,
+                    onToggleExpand: () {
+                      if (bottomInset > 0) {
+                        // If keyboard is open, close it first
+                        FocusScope.of(context).unfocus();
+                      } else {
                         setState(() {
                           _isChatExpanded = !_isChatExpanded;
                         });
-                      },
-                    ),
+                      }
+                    },
                   ),
                 ),
-              ],
-            ),
-            if (game.gamePhase == GamePhase.result)
-              GameResultOverlay(game: game),
-            // Role Reveal Modal
-            if (shouldShowRoleModal && !_roleRevealed)
-              RoleRevealModal(
-                role: game.myRoleEnum!,
-                onDismiss: () {
-                  setState(() {
-                    _roleRevealed = true;
-                    _shownRole = game.myRoleEnum;
-                    _lastDayCount = game.dayCount;
-                  });
-                },
               ),
-          ],
+
+              if (game.gamePhase == GamePhase.result)
+                GameResultOverlay(game: game),
+              // Role Reveal Modal
+              if (shouldShowRoleModal && !_roleRevealed)
+                RoleRevealModal(
+                  role: game.myRoleEnum!,
+                  onDismiss: () {
+                    setState(() {
+                      _roleRevealed = true;
+                      _shownRole = game.myRoleEnum;
+                      _lastDayCount = game.dayCount;
+                    });
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
