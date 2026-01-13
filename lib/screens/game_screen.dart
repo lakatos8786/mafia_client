@@ -25,11 +25,20 @@ class _GameScreenState extends State<GameScreen> {
   GameRole? _shownRole;
   int _unreadCount = 0;
 
+  // Input area height (approximate)
+  static const double _inputAreaHeight = 80;
+
   @override
   Widget build(BuildContext context) {
     final game = Provider.of<GameProvider>(context);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final isKeyboardOpen = keyboardHeight > 0;
+    final bottomSafeArea = MediaQuery.of(context).padding.bottom;
+
+    // Calculate total bottom offset for chat area
+    final chatBottomOffset = isKeyboardOpen
+        ? keyboardHeight + _inputAreaHeight
+        : _inputAreaHeight + bottomSafeArea;
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
@@ -54,9 +63,9 @@ class _GameScreenState extends State<GameScreen> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // Main game content
+              // Game content (Header, ActionButtons, PlayerGrid)
               SafeArea(
-                bottom: false, // We handle bottom padding manually
+                bottom: false,
                 child: Column(
                   children: [
                     // --- Custom Header Area ---
@@ -65,39 +74,34 @@ class _GameScreenState extends State<GameScreen> {
                     // Skip Vote & Role Actions
                     const ActionButtons(),
 
-                    // Game Area - expands/contracts based on chat state
-                    Expanded(
-                      flex: _isChatExpanded ? 1 : 3,
-                      child: PlayerGrid(),
-                    ),
-
-                    // Chat area - expands based on state
-                    // Add bottom padding to account for keyboard + input area
-                    Expanded(
-                      flex: _isChatExpanded ? 3 : 1,
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          // When keyboard is open, add padding for input area + keyboard
-                          bottom: isKeyboardOpen ? keyboardHeight + 80 : 80,
-                        ),
-                        child: ChatWidget(
-                          isExpanded: _isChatExpanded,
-                          onToggleExpand: () {
-                            // Dismiss keyboard when toggling chat
-                            FocusScope.of(context).unfocus();
-                            setState(() {
-                              _isChatExpanded = !_isChatExpanded;
-                            });
-                          },
-                          onUnreadCountChanged: (count) {
-                            setState(() {
-                              _unreadCount = count;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
+                    // Game Area - show less when keyboard is open or chat expanded
+                    Expanded(child: PlayerGrid()),
                   ],
+                ),
+              ),
+
+              // Chat area - positioned above input, accounting for keyboard
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: chatBottomOffset,
+                height: _isChatExpanded
+                    ? MediaQuery.of(context).size.height * 0.5
+                    : (isKeyboardOpen ? 200 : 120), // Taller when keyboard open
+                child: ChatWidget(
+                  isExpanded: _isChatExpanded,
+                  onToggleExpand: () {
+                    // Dismiss keyboard when toggling chat
+                    FocusScope.of(context).unfocus();
+                    setState(() {
+                      _isChatExpanded = !_isChatExpanded;
+                    });
+                  },
+                  onUnreadCountChanged: (count) {
+                    setState(() {
+                      _unreadCount = count;
+                    });
+                  },
                 ),
               ),
 
