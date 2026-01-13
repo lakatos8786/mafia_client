@@ -31,8 +31,9 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError('닉네임을 입력해주세요');
       return false;
     }
-    if (name.length < 2) {
-      _showError('닉네임은 최소 2자 이상이어야 합니다');
+    // Min length check removed as isEmpty covers it, or if you want explicit 1 char:
+    if (name.length < 1) {
+      _showError('닉네임은 최소 1자 이상이어야 합니다');
       return false;
     }
     if (name.length > 10) {
@@ -46,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: const Color(0xFFE94560),
+        backgroundColor: Colors.grey[900],
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -223,12 +224,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   children: [
                                     _buildTextField(
                                       controller: _nameController,
-                                      label: '닉네임 (2-10자)',
+                                      label: '닉네임 (1-10자)',
                                       icon: Icons.person_outline,
                                       maxLength: 10,
                                       inputFormatters: [
                                         FilteringTextInputFormatter.allow(
-                                          RegExp(r'[가-힣a-zA-Z0-9]'),
+                                          RegExp(
+                                            r'[가-힣a-zA-Z0-9 ]',
+                                          ), // Added space
                                         ),
                                       ],
                                     ),

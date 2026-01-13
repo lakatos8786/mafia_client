@@ -62,6 +62,37 @@ class ActionProvider with ChangeNotifier {
   void _setupListeners() {
     final socket = _connectionProvider.socketService;
 
+    // Game Flow Events (for System Messages & Data Reset)
+    socket.on(SocketEvent.startGame, (_) {
+      _addSystemMessage(AppStrings.gameStarted);
+      resetAllData();
+    });
+
+    socket.on(SocketEvent.phaseChange, (data) {
+      if (data is Map) {
+        final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
+        final phaseMsg = phase == GamePhase.day
+            ? AppStrings.dayStarted
+            : AppStrings.nightStarted;
+
+        // Only show message if not returning to lobby (which handles its own reset)
+        if (phase != GamePhase.waiting) {
+          _addSystemMessage(phaseMsg);
+          resetTurnData();
+        }
+      }
+    });
+
+    socket.on(SocketEvent.gameOver, (data) {
+      if (data is Map) {
+        final winnerRole = GameRole.fromString(data['winner']?.toString());
+        final winMsg = winnerRole == GameRole.mafia
+            ? AppStrings.mafiaWin
+            : AppStrings.citizenWin;
+        _addSystemMessage(winMsg);
+      }
+    });
+
     // Vote events
     socket.on(SocketEvent.voteUpdate, (data) {
       try {
