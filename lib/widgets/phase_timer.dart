@@ -1,44 +1,44 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/game_provider.dart';
+import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
 
-class PhaseTimer extends StatelessWidget {
+class PhaseTimer extends ConsumerWidget {
   const PhaseTimer({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameState = ref.watch(gameStateProvider);
 
     // Don't show timer if no time is set
-    if (game.timerTotal == 0) {
+    if (gameState.timerTotal == 0) {
       return const SizedBox.shrink();
     }
 
-    final isNight = game.gamePhase == GamePhase.night;
+    final isNight = gameState.gamePhase == GamePhase.night;
     final timerColor = isNight ? AppColors.mafiaRed : AppColors.policeBlue;
-    final isLowTime = game.timerRemaining <= 10;
+    final isLowTime = gameState.timerRemaining <= 10;
 
     return Semantics(
-      label: '남은 시간 ${game.timerRemaining}초',
+      label: '남은 시간 ${gameState.timerRemaining}초',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.4),
+          color: Colors.black.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isLowTime
-                ? AppColors.deadRed.withOpacity(0.8)
-                : timerColor.withOpacity(0.5),
+                ? AppColors.deadRed.withValues(alpha: 0.8)
+                : timerColor.withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: isLowTime
               ? [
                   BoxShadow(
-                    color: AppColors.deadRed.withOpacity(0.4),
+                    color: AppColors.deadRed.withValues(alpha: 0.4),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -48,7 +48,7 @@ class PhaseTimer extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildCircularTimer(game.timerProgress, timerColor, isLowTime),
+            _buildCircularTimer(gameState.timerProgress, timerColor, isLowTime),
             const SizedBox(width: 8),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
@@ -57,13 +57,13 @@ class PhaseTimer extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
-              child: Text('${game.timerRemaining}'),
+              child: Text('${gameState.timerRemaining}'),
             ),
             Text(
               '초',
               style: GoogleFonts.gowunDodum(
                 fontSize: 14,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -80,7 +80,7 @@ class PhaseTimer extends StatelessWidget {
         painter: _TimerPainter(
           progress: progress,
           color: isLowTime ? AppColors.deadRed : color,
-          backgroundColor: Colors.white.withOpacity(0.2),
+          backgroundColor: Colors.white.withValues(alpha: 0.2),
         ),
       ),
     );

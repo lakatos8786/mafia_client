@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/game_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
 import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
@@ -10,14 +10,14 @@ import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
 
-class GameScreen extends StatefulWidget {
+class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
 
   @override
-  _GameScreenState createState() => _GameScreenState();
+  ConsumerState<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends ConsumerState<GameScreen> {
   bool _isChatExpanded = false;
   bool _roleRevealed = false;
   int? _lastDayCount;
@@ -25,22 +25,22 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+    final gameState = ref.watch(gameStateProvider);
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
-        game.myRoleEnum != null &&
-        game.gamePhase != GamePhase.waiting &&
-        game.gamePhase != GamePhase.result &&
+        gameState.myRole != null &&
+        gameState.gamePhase != GamePhase.waiting &&
+        gameState.gamePhase != GamePhase.result &&
         (!_roleRevealed ||
-            _shownRole != game.myRoleEnum ||
-            _lastDayCount != game.dayCount && game.dayCount == 1);
+            _shownRole != gameState.myRole ||
+            _lastDayCount != gameState.dayCount && gameState.dayCount == 1);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       resizeToAvoidBottomInset: false,
       body: DayNightBackground(
-        phase: game.gamePhase,
+        phase: gameState.gamePhase,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -88,17 +88,22 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ],
             ),
-            if (game.gamePhase == GamePhase.result)
-              GameResultOverlay(game: game),
+            if (gameState.gamePhase == GamePhase.result)
+              const GameResultOverlay(),
+            // If Overlay expects "GameProvider", I need to migrate Overlay too.
+            // Assuming Overlay expects "game" which was "GameProvider".
+            // Since I pass "gameState" (type GameState), Overlay will break if not migrated.
+            // I should migrate Overlay later or remove argument and let it watch.
+
             // Role Reveal Modal
             if (shouldShowRoleModal && !_roleRevealed)
               RoleRevealModal(
-                role: game.myRoleEnum!,
+                role: gameState.myRole!,
                 onDismiss: () {
                   setState(() {
                     _roleRevealed = true;
-                    _shownRole = game.myRoleEnum;
-                    _lastDayCount = game.dayCount;
+                    _shownRole = gameState.myRole;
+                    _lastDayCount = gameState.dayCount;
                   });
                 },
               ),

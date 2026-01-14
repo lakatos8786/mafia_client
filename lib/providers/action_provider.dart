@@ -1,68 +1,58 @@
-import 'package:flutter/foundation.dart';
-import '../models/game_enums.dart';
-import '../models/player.dart';
-import '../models/event_models.dart';
-import '../services/error_handler.dart';
-import '../theme/app_strings.dart';
+import 'dart:developer' as developer;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../models/game_enums.dart';
+import '../../models/player.dart';
+import '../../models/chat_message.dart';
+import '../../models/event_models.dart';
+import '../../services/error_handler.dart';
+import '../../theme/app_strings.dart';
+
 import 'connection_provider.dart';
 import 'game_state_provider.dart';
 
-/// Manages player actions (voting, night actions, chat)
-/// Separated from game state for better organization
-class ActionProvider with ChangeNotifier {
-  final ConnectionProvider _connectionProvider;
-  final GameStateProvider _gameStateProvider;
+part 'action_provider.g.dart';
 
-  // Vote state
-  Map<String, int> _votes = {};
-  Map<String, String> _voters = {};
+class ActionState {
+  final Map<String, int> votes;
+  final Map<String, String> voters;
+  final Map<String, String> nightSelections;
+  final Map<String, String> nightActionActors;
+  final List<ChatMessage> messages;
 
-  // Night action state
-  final Map<String, String> _nightSelections = {};
-  final Map<String, String> _nightActionActors = {};
+  const ActionState({
+    this.votes = const {},
+    this.voters = const {},
+    this.nightSelections = const {},
+    this.nightActionActors = const {},
+    this.messages = const [],
+  });
 
-  // Chat state
-  final List<Map<String, dynamic>> _messages = [];
-
-  // Getters
-  Map<String, int> get votes => _votes;
-  Map<String, String> get voters => _voters;
-  Map<String, String> get nightSelections => _nightSelections;
-  Map<String, String> get nightActionActors => _nightActionActors;
-  List<Map<String, dynamic>> get messages => _messages;
-
-  // UI Helpers
-  List<String> get skipVoterNicknames {
-    return voters.entries.where((entry) => entry.value == GameAction.skip).map((
-      entry,
-    ) {
-      final voter = _gameStateProvider.players.firstWhere(
-        (p) => p.id == entry.key,
-        orElse: () => Player(id: 'unknown', nickname: '알 수 없음', isAlive: true),
-      );
-      return voter.nickname;
-    }).toList();
+  ActionState copyWith({
+    Map<String, int>? votes,
+    Map<String, String>? voters,
+    Map<String, String>? nightSelections,
+    Map<String, String>? nightActionActors,
+    List<ChatMessage>? messages,
+  }) {
+    return ActionState(
+      votes: votes ?? this.votes,
+      voters: voters ?? this.voters,
+      nightSelections: nightSelections ?? this.nightSelections,
+      nightActionActors: nightActionActors ?? this.nightActionActors,
+      messages: messages ?? this.messages,
+    );
   }
+}
 
-  bool get iVotedSkip =>
-      voters[_connectionProvider.socketId] == GameAction.skip;
+@Riverpod(keepAlive: true)
+class ActionNotifier extends _$ActionNotifier {
+  @override
+  ActionState build() {
+    final socket = ref.read(connectionProvider.notifier).socketService;
 
-  bool get isMafiaSkip =>
-      nightSelections[GameRole.mafia.name] == GameAction.skip;
-
-  String get mafiaSkipButtonText {
-    final actor = nightActionActors[GameRole.mafia.name] ?? '';
-    return isMafiaSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
-  }
-
-  ActionProvider(this._connectionProvider, this._gameStateProvider) {
-    _setupListeners();
-  }
-
-  void _setupListeners() {
-    final socket = _connectionProvider.socketService;
-
-    // Game Flow Events (for System Messages & Data Reset)
+    // Listeners
     socket.on(SocketEvent.startGame, (_) {
       _addSystemMessage(AppStrings.gameStarted);
       resetAllData();
@@ -75,8 +65,21 @@ class ActionProvider with ChangeNotifier {
             ? AppStrings.dayStarted
             : AppStrings.nightStarted;
 
-        // Only show message if not returning to lobby (which handles its own reset)
         if (phase != GamePhase.waiting) {
+          // Special check for Doctor: if night ended and no heal action, show message
+          if (phase == GamePhase.day) {
+            final myRole = ref.read(gameStateProvider).myRole;
+            if (myRole == GameRole.doctor) {
+              final mySelection = state.nightSelections[GameRole.doctor.name];
+              // If selection is null or 'skip', validation implies no effective heal
+              // But usually 'skip' is explicit. If null, it means timeout/no selection.
+              // User asked for "when time passes without selection" mainly, but 'skip' implies same result visually if we want consistent feedback.
+              if (mySelection == null || mySelection == GameAction.skip) {
+                _addSystemMessage(AppStrings.doctorHealNone);
+              }
+            }
+          }
+
           _addSystemMessage(phaseMsg);
           resetTurnData();
         }
@@ -93,22 +96,18 @@ class ActionProvider with ChangeNotifier {
       }
     });
 
-    // Vote events
     socket.on(SocketEvent.voteUpdate, (data) {
       try {
         if (data is! Map<String, dynamic>) {
           throw FormatException('Invalid vote update data format');
         }
         final event = VoteUpdateEvent.fromJson(data);
-        _votes = event.votes;
-        _voters = event.voters;
-        notifyListeners();
+        state = state.copyWith(votes: event.votes, voters: event.voters);
       } catch (e, stackTrace) {
         ErrorHandler.logError('vote_update', e, stackTrace);
       }
     });
 
-    // Night action events
     socket.on(SocketEvent.nightSelectionUpdate, (data) {
       try {
         if (data is! Map<String, dynamic>) {
@@ -116,16 +115,22 @@ class ActionProvider with ChangeNotifier {
         }
         final event = NightSelectionEvent.fromJson(data);
         if (event.role != null) {
+          final newSelections = Map<String, String>.from(state.nightSelections);
+          final newActors = Map<String, String>.from(state.nightActionActors);
+
           if (event.targetId == null) {
-            _nightSelections.remove(event.role!.name);
-            _nightActionActors.remove(event.role!.name);
+            newSelections.remove(event.role!.name);
+            newActors.remove(event.role!.name);
           } else {
-            _nightSelections[event.role!.name] = event.targetId!;
+            newSelections[event.role!.name] = event.targetId!;
             if (event.actorNickname != null) {
-              _nightActionActors[event.role!.name] = event.actorNickname!;
+              newActors[event.role!.name] = event.actorNickname!;
             }
           }
-          notifyListeners();
+          state = state.copyWith(
+            nightSelections: newSelections,
+            nightActionActors: newActors,
+          );
         }
       } catch (e, stackTrace) {
         ErrorHandler.logError('night_selection', e, stackTrace);
@@ -138,18 +143,26 @@ class ActionProvider with ChangeNotifier {
           throw FormatException('Invalid investigation result data format');
         }
         final event = InvestigationResultEvent.fromJson(data);
-        final targetNick = _gameStateProvider.players
+
+        // Need player list to resolve nickname
+        final players = ref.read(gameStateProvider).players;
+
+        final targetNick = players
             .firstWhere(
               (p) => p.id == event.targetId,
               orElse: () => Player(id: '', nickname: '?', isAlive: true),
             )
             .nickname;
 
-        final resultMsg = event.role == GameRole.mafia
-            ? AppStrings.investigationMafia(targetNick)
-            : AppStrings.investigationClear(targetNick);
+        String resultMsg;
+        if (targetNick == '?' || event.targetId.isEmpty) {
+          resultMsg = AppStrings.investigationNone;
+        } else {
+          resultMsg = event.role == GameRole.mafia
+              ? AppStrings.investigationMafia(targetNick)
+              : AppStrings.investigationClear(targetNick);
+        }
         _addSystemMessage(resultMsg);
-        notifyListeners();
       } catch (e, stackTrace) {
         ErrorHandler.logError('investigation_result', e, stackTrace);
       }
@@ -164,135 +177,254 @@ class ActionProvider with ChangeNotifier {
         if (event.message.isNotEmpty) {
           _addSystemMessage(event.message);
         }
-        notifyListeners();
       } catch (e, stackTrace) {
         ErrorHandler.logError('night_result', e, stackTrace);
       }
     });
 
-    // Chat events
     socket.on(SocketEvent.chatMessage, (data) {
       try {
         if (data is! Map<String, dynamic>) {
           throw FormatException('Invalid chat message data format');
         }
         final event = ChatMessageEvent.fromJson(data);
-        _messages.add({
+
+        // Determine ownership
+        final socketId = ref.read(connectionProvider.notifier).socketId;
+
+        // We need 'my nickname' to compare with sender.
+        // GameState has players list, we can find ourselves.
+        final players = ref.read(gameStateProvider).players;
+        String myNickname = '';
+        try {
+          if (socketId != null && players.isNotEmpty) {
+            final me = players.firstWhere((p) => p.id == socketId);
+            myNickname = me.nickname;
+          }
+        } catch (_) {
+          // Player might not be found if joining or error
+        }
+
+        final bool isMe =
+            (socketId != null && event.sender == socketId) ||
+            (myNickname.isNotEmpty && event.sender == myNickname);
+
+        final newMsg = ChatMessage.fromMap({
           'sender': event.sender,
           'message': event.message,
           'type': event.type.name,
           'isSystem': event.sender == SystemConstant.sender,
-        });
+        }, isMine: isMe);
 
-        _gameStateProvider.addGameLogEntry('chat', {
+        state = state.copyWith(messages: [...state.messages, newMsg]);
+
+        // Also add to game log in GameState
+        ref.read(gameStateProvider.notifier).addGameLogEntry('chat', {
           'sender': event.sender,
           'message': event.message,
           'type': event.type.name,
         });
-
-        notifyListeners();
       } catch (e, stackTrace) {
         ErrorHandler.logError('chat_message', e, stackTrace);
       }
     });
+
+    ref.onDispose(() {
+      // Cleanup listeners if needed
+    });
+
+    return const ActionState();
   }
 
-  // Actions
   void vote(String targetId) {
-    if (_gameStateProvider.gamePhase == GamePhase.day &&
-        _connectionProvider.socketId != null) {
-      debugPrint('Voting for: $targetId');
+    final gamePhase = ref.read(gameStateProvider).gamePhase;
+    final socketId = ref.read(connectionProvider.notifier).socketId;
 
-      final myId = _connectionProvider.socketId!;
-      final previousVote = _voters[myId];
+    if (gamePhase == GamePhase.day && socketId != null) {
+      developer.log('Voting for: $targetId');
 
-      // Toggle logic
+      final myId = socketId;
+      final previousVote = state.voters[myId];
+
+      // Optimistic update
+      final newVoters = Map<String, String>.from(state.voters);
+      final newVotes = Map<String, int>.from(state.votes);
+
       if (previousVote == targetId) {
-        _voters.remove(myId);
-        // previousVote is non-null here due to equality check
-        final count = _votes[previousVote!];
-        if (count != null) {
-          _votes[previousVote] = count - 1;
-          if (_votes[previousVote]! <= 0) _votes.remove(previousVote);
+        newVoters.remove(myId);
+        final count =
+            newVotes[previousVote!] ??
+            0; // previousVote is safe here? Yes logic implies it.
+        if (count > 0) {
+          newVotes[previousVote] = count - 1;
+          if (newVotes[previousVote]! <= 0) newVotes.remove(previousVote);
         }
       } else {
         if (previousVote != null) {
-          final count = _votes[previousVote];
-          if (count != null) {
-            _votes[previousVote] = count - 1;
-            if (_votes[previousVote]! <= 0) _votes.remove(previousVote);
+          final count = newVotes[previousVote] ?? 0;
+          if (count > 0) {
+            newVotes[previousVote] = count - 1;
+            if (newVotes[previousVote]! <= 0) newVotes.remove(previousVote);
           }
         }
-        _voters[myId] = targetId;
-        _votes[targetId] = (_votes[targetId] ?? 0) + 1;
+        newVoters[myId] = targetId;
+        newVotes[targetId] = (newVotes[targetId] ?? 0) + 1;
       }
 
-      notifyListeners();
-      _connectionProvider.socketService.emit(SocketEvent.vote, targetId);
+      state = state.copyWith(votes: newVotes, voters: newVoters);
+
+      ref
+          .read(connectionProvider.notifier)
+          .socketService
+          .emit(SocketEvent.vote, targetId);
     }
   }
 
   void nightAction(String action, String targetId) {
-    if (_gameStateProvider.gamePhase == GamePhase.night &&
-        _gameStateProvider.myRoleEnum != null) {
-      debugPrint('Night Action: $action -> $targetId');
+    final gamePhase = ref.read(gameStateProvider).gamePhase;
+    final myRoleEnum = ref.read(gameStateProvider).myRole;
 
-      final roleKey = _gameStateProvider.myRoleEnum!.name;
-      final currentSelection = _nightSelections[roleKey];
+    if (gamePhase == GamePhase.night && myRoleEnum != null) {
+      developer.log('Night Action: $action -> $targetId');
+
+      final roleKey = myRoleEnum.name;
+      final currentSelection = state.nightSelections[roleKey];
+
+      final newSelections = Map<String, String>.from(state.nightSelections);
+      final newActors = Map<String, String>.from(state.nightActionActors);
 
       if (currentSelection == targetId) {
-        _nightSelections.remove(roleKey);
-        _nightActionActors.remove(roleKey);
+        newSelections.remove(roleKey);
+        newActors.remove(roleKey);
       } else {
-        _nightSelections[roleKey] = targetId;
-        final me = _gameStateProvider.players.firstWhere(
-          (p) => p.id == _connectionProvider.socketId,
+        newSelections[roleKey] = targetId;
+        final players = ref.read(gameStateProvider).players;
+        final myId = ref.read(connectionProvider.notifier).socketId;
+        final me = players.firstWhere(
+          (p) => p.id == myId,
           orElse: () => Player(id: '', nickname: '', isAlive: false),
         );
-        _nightActionActors[roleKey] = me.nickname;
+        newActors[roleKey] = me.nickname;
       }
 
-      notifyListeners();
+      state = state.copyWith(
+        nightSelections: newSelections,
+        nightActionActors: newActors,
+      );
 
-      _connectionProvider.socketService.emit(SocketEvent.nightAction, {
-        ProtocolKey.action: action,
-        ProtocolKey.targetId: targetId,
-      });
+      ref.read(connectionProvider.notifier).socketService.emit(
+        SocketEvent.nightAction,
+        {ProtocolKey.action: action, ProtocolKey.targetId: targetId},
+      );
     }
+  }
+
+  void createRoom(String nickname) {
+    developer.log('Emitting create_room: $nickname');
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit(SocketEvent.createRoom, nickname);
+  }
+
+  void joinRoom(String roomId, String nickname) {
+    developer.log('Emitting join_room: $nickname, $roomId');
+    ref.read(connectionProvider.notifier).socketService.emit(
+      SocketEvent.joinRoom,
+      {ProtocolKey.roomId: roomId, ProtocolKey.nickname: nickname},
+    );
+  }
+
+  void startGame() {
+    developer.log('Emitting start_game');
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit(SocketEvent.startGame);
   }
 
   void sendMessage(String message) {
     if (message.trim().isEmpty) return;
-    _connectionProvider.socketService.emit(SocketEvent.chatMessage, message);
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit(SocketEvent.chatMessage, message);
   }
 
   void resetTurnData() {
-    _votes.clear();
-    _voters.clear();
-    _nightSelections.clear();
-    _nightActionActors.clear();
-    notifyListeners();
+    state = state.copyWith(
+      votes: {},
+      voters: {},
+      nightSelections: {},
+      nightActionActors: {},
+    );
   }
 
   void resetAllData() {
-    _votes.clear();
-    _voters.clear();
-    _nightSelections.clear();
-    _nightActionActors.clear();
-    _messages.clear();
-    notifyListeners();
+    state = const ActionState();
   }
 
   void _addSystemMessage(String msg) {
-    _messages.add({
-      'sender': SystemConstant.sender,
-      'message': msg,
-      'type': ChatMessageType.system.name,
-      'isSystem': true,
-    });
-    // Only log if we have a valid socket connection
-    if (_connectionProvider.socketId != null) {
-      _gameStateProvider.addGameLogEntry('system', {'message': msg});
+    final newMsg = ChatMessage(
+      sender: SystemConstant.sender,
+      message: msg,
+      type: ChatMessageType.system,
+      isSystem: true,
+    );
+    state = state.copyWith(messages: [...state.messages, newMsg]);
+
+    // Log
+    if (ref.read(connectionProvider).isConnected) {
+      ref.read(gameStateProvider.notifier).addGameLogEntry('system', {
+        'message': msg,
+      });
     }
   }
 }
+
+// Derived providers for getters
+@riverpod
+List<String> skipVoterNicknames(Ref ref) {
+  final voters = ref.watch(actionProvider.select((s) => s.voters));
+  final players = ref.watch(gameStateProvider.select((s) => s.players));
+
+  return voters.entries
+      .where((entry) => entry.value == GameAction.skip)
+      .map((entry) {
+        final voter = players.firstWhere(
+          (p) => p.id == entry.key,
+          orElse: () =>
+              Player(id: 'unknown', nickname: '알 수 없음', isAlive: true),
+        );
+        return voter.nickname;
+      })
+      .toList()
+      .cast<String>();
+}
+
+@riverpod
+bool iVotedSkip(Ref ref) {
+  final voters = ref.watch(actionProvider.select((s) => s.voters));
+  final myId = ref.watch(connectionProvider.notifier).socketId;
+  return voters[myId] == GameAction.skip;
+}
+
+@riverpod
+bool isMafiaSkip(Ref ref) {
+  final nightSelections = ref.watch(
+    actionProvider.select((s) => s.nightSelections),
+  );
+  return nightSelections[GameRole.mafia.name] == GameAction.skip;
+}
+
+@riverpod
+String mafiaSkipButtonText(Ref ref) {
+  final nightActionActors = ref.watch(
+    actionProvider.select((s) => s.nightActionActors),
+  );
+  final isSkip = ref.watch(isMafiaSkipProvider);
+  final actor = nightActionActors[GameRole.mafia.name] ?? '';
+  return isSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
+}
+
+final actionProvider = actionNotifierProvider;

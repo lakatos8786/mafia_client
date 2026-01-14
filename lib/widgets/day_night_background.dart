@@ -62,7 +62,7 @@ class DayNightBackground extends StatelessWidget {
                 radius: 1.2,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.6), // Heavier vignette
+                  Colors.black.withValues(alpha: 0.6), // Heavier vignette
                 ],
                 stops: const [0.6, 1.0],
               ),

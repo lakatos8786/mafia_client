@@ -1,4 +1,4 @@
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../config/app_config.dart';
 
 /// Callback types for event handling
@@ -8,13 +8,13 @@ typedef SocketDataCallback = void Function(dynamic data);
 /// Service class responsible for Socket.IO connection management
 /// Separates socket logic from game state management
 class SocketService {
-  late IO.Socket _socket;
+  late io.Socket _socket;
 
-  IO.Socket get socket => _socket;
+  io.Socket get socket => _socket;
 
   /// Initialize and connect to the server
   void initialize() {
-    _socket = IO.io(AppConfig.serverUrl, <String, dynamic>{
+    _socket = io.io(AppConfig.serverUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
       'reconnection': true,

@@ -1,12 +1,17 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/game_provider.dart';
+import '../models/chat_message.dart';
+import '../models/game_enums.dart';
+import '../models/player.dart';
+import '../providers/game_state_provider.dart';
+import '../providers/action_provider.dart';
+import '../providers/connection_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 
-class ChatWidget extends StatefulWidget {
+class ChatWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpand;
 
@@ -17,10 +22,10 @@ class ChatWidget extends StatefulWidget {
   });
 
   @override
-  State<ChatWidget> createState() => _ChatWidgetState();
+  ConsumerState<ChatWidget> createState() => _ChatWidgetState();
 }
 
-class _ChatWidgetState extends State<ChatWidget> {
+class _ChatWidgetState extends ConsumerState<ChatWidget> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -47,30 +52,25 @@ class _ChatWidgetState extends State<ChatWidget> {
     }
   }
 
-  void _updateUnreadCount(GameProvider game) {
+  void _updateUnreadCount(
+    List<ChatMessage> messages,
+    String socketId,
+    List<Player> players,
+  ) {
     // Only update unread count when chat is collapsed and new messages arrive
-    if (!widget.isExpanded && game.messages.length > _lastMessageCount) {
+    if (!widget.isExpanded && messages.length > _lastMessageCount) {
       // Count only messages from others (not from me)
       int newUnreadCount = 0;
 
-      // Get my socket ID for comparison
-      final mySocketId = game.socket.id;
-      final myNickname = game.players
-          .where((p) => p.id == mySocketId)
-          .map((p) => p.nickname)
-          .firstOrNull;
+      // Get my nickname for comparison (assuming players list has it)
+      // Note: players is List<Player> usually.
+      // We need to access players from gameState.
+      // But passing players here is cleaner.
 
       // Check new messages (from _lastMessageCount to current length)
-      for (int i = _lastMessageCount; i < game.messages.length; i++) {
-        final msg = game.messages[i];
-        final sender = msg['sender'];
-        final type = msg['type'];
-
-        // Count message if it's NOT from me
-        final isMyMessage =
-            sender == mySocketId || (myNickname == sender && type != 'system');
-
-        if (!isMyMessage) {
+      for (int i = _lastMessageCount; i < messages.length; i++) {
+        final msg = messages[i];
+        if (!msg.isMine) {
           newUnreadCount++;
         }
       }
@@ -79,15 +79,12 @@ class _ChatWidgetState extends State<ChatWidget> {
         _unreadCount += newUnreadCount;
       });
     }
-    _lastMessageCount = game.messages.length;
+    _lastMessageCount = messages.length;
   }
 
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
-      Provider.of<GameProvider>(
-        context,
-        listen: false,
-      ).sendMessage(_msgController.text);
+      ref.read(actionProvider.notifier).sendMessage(_msgController.text);
       _msgController.clear();
       // Keep keyboard open after sending
       _focusNode.requestFocus();
@@ -96,11 +93,13 @@ class _ChatWidgetState extends State<ChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+    final gameState = ref.watch(gameStateProvider);
+    final actionState = ref.watch(actionProvider);
+    final socketId = ref.watch(connectionProvider.notifier).socketId ?? '';
 
     // Update unread count based on message changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateUnreadCount(game);
+      _updateUnreadCount(actionState.messages, socketId, gameState.players);
     });
 
     return Column(
@@ -118,11 +117,13 @@ class _ChatWidgetState extends State<ChatWidget> {
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(
-                      widget.isExpanded ? 0.7 : 0.4,
+                    color: Colors.black.withValues(
+                      alpha: widget.isExpanded ? 0.7 : 0.4,
                     ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.05),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -132,26 +133,17 @@ class _ChatWidgetState extends State<ChatWidget> {
                         reverse: true, // Standard Chat Behavior
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
-                        itemCount: game.messages.length,
+                        itemCount: actionState.messages.length,
                         itemBuilder: (context, index) {
                           // REVERSED INDEX mapping for standard chat feel
                           final reversedIndex =
-                              game.messages.length - 1 - index;
-                          final msg = game.messages[reversedIndex];
-                          final sender = msg['sender'];
-                          final text = msg['message'];
-                          final type = msg['type'];
+                              actionState.messages.length - 1 - index;
+                          final msg = actionState.messages[reversedIndex];
 
-                          // Cache my nickname for comparison (avoids repeated players.any)
-                          final myNickname = game.players
-                              .where((p) => p.id == game.socket.id)
-                              .map((p) => p.nickname)
-                              .firstOrNull;
-                          final isMe =
-                              sender == game.socket.id ||
-                              (myNickname == sender && type != 'system');
+                          final isMe = msg.isMine;
 
-                          if (msg['isSystem'] == true) {
+                          if (msg.isSystem) {
+                            final text = msg.message;
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Semantics(
@@ -165,18 +157,18 @@ class _ChatWidgetState extends State<ChatWidget> {
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          AppColors.policeBlue.withOpacity(
-                                            0.15,
+                                          AppColors.policeBlue.withValues(
+                                            alpha: 0.15,
                                           ),
-                                          AppColors.accentYellow.withOpacity(
-                                            0.1,
+                                          AppColors.accentYellow.withValues(
+                                            alpha: 0.1,
                                           ),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
                                         color: AppColors.accentYellow
-                                            .withOpacity(0.4),
+                                            .withValues(alpha: 0.4),
                                       ),
                                     ),
                                     child: Row(
@@ -192,8 +184,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                                           child: Text(
                                             text,
                                             style: GoogleFonts.gowunDodum(
-                                              color: Colors.white.withOpacity(
-                                                0.95,
+                                              color: Colors.white.withValues(
+                                                alpha: 0.95,
                                               ),
                                               fontSize: 13,
                                               fontWeight: FontWeight.w600,
@@ -209,19 +201,14 @@ class _ChatWidgetState extends State<ChatWidget> {
                             );
                           }
 
-                          Color bubbleColor = isMe
-                              ? const Color(0xFFF43F5E)
-                              : const Color(0xFF1E293B);
-                          Color textColor = Colors.white;
+                          Color bubbleColor = msg.bubbleColor;
+                          Color textColor = msg.textColor;
                           Color nameColor = Colors.white70;
 
-                          if (type == 'dead') {
-                            bubbleColor = Colors.grey[800]!;
-                            textColor = Colors.grey[400]!;
+                          if (msg.type == ChatMessageType.dead) {
                             nameColor = Colors.grey;
-                          } else if (type == 'mafia') {
-                            bubbleColor = const Color(0xFF9F1239);
-                            nameColor = const Color(0xFFF43F5E);
+                          } else if (msg.type == ChatMessageType.mafia) {
+                            nameColor = AppColors.primary;
                           }
 
                           return Padding(
@@ -238,7 +225,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                                       bottom: 2,
                                     ),
                                     child: Text(
-                                      sender,
+                                      msg.sender,
                                       style: TextStyle(
                                         color: nameColor,
                                         fontSize: 11,
@@ -257,8 +244,8 @@ class _ChatWidgetState extends State<ChatWidget> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: bubbleColor.withOpacity(
-                                        isMe ? 0.9 : 0.8,
+                                      color: bubbleColor.withValues(
+                                        alpha: isMe ? 0.9 : 0.8,
                                       ),
                                       borderRadius: BorderRadius.only(
                                         topLeft: const Radius.circular(16),
@@ -272,14 +259,16 @@ class _ChatWidgetState extends State<ChatWidget> {
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
                                       ],
                                     ),
                                     child: Text(
-                                      text,
+                                      msg.message,
                                       style: TextStyle(
                                         color: textColor,
                                         fontSize: 15,
@@ -302,7 +291,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                             widget.isExpanded
                                 ? Icons.keyboard_arrow_down
                                 : Icons.keyboard_arrow_up,
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             size: 20,
                           ),
                         ),
@@ -327,7 +316,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: InkWell(
@@ -361,7 +350,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
+                              color: AppColors.mafiaRed.withValues(alpha: 0.5),
                               blurRadius: 4,
                             ),
                           ],
@@ -381,9 +370,11 @@ class _ChatWidgetState extends State<ChatWidget> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: TextField(
                     controller: _msgController,
@@ -392,7 +383,7 @@ class _ChatWidgetState extends State<ChatWidget> {
                     decoration: InputDecoration(
                       hintText: AppStrings.chatHint,
                       hintStyle: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                       ),
                       filled: false, // handled by container
                       contentPadding: const EdgeInsets.symmetric(
@@ -421,14 +412,14 @@ class _ChatWidgetState extends State<ChatWidget> {
                   height: 48,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
+                      colors: [AppColors.primary, AppColors.votePillEnd],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFF43F5E).withOpacity(0.4),
+                        color: AppColors.primary.withValues(alpha: 0.4),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),

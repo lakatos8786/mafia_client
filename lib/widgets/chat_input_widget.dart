@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/game_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/action_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 
 /// Separate chat input widget that stays fixed at the bottom of the screen.
 /// This ensures the input field is always positioned above the keyboard.
-class ChatInputWidget extends StatefulWidget {
+class ChatInputWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
   final int unreadCount;
   final VoidCallback onToggleExpand;
@@ -19,10 +19,10 @@ class ChatInputWidget extends StatefulWidget {
   });
 
   @override
-  State<ChatInputWidget> createState() => _ChatInputWidgetState();
+  ConsumerState<ChatInputWidget> createState() => _ChatInputWidgetState();
 }
 
-class _ChatInputWidgetState extends State<ChatInputWidget> {
+class _ChatInputWidgetState extends ConsumerState<ChatInputWidget> {
   final TextEditingController _msgController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
@@ -35,10 +35,7 @@ class _ChatInputWidgetState extends State<ChatInputWidget> {
 
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
-      Provider.of<GameProvider>(
-        context,
-        listen: false,
-      ).sendMessage(_msgController.text);
+      ref.read(actionProvider.notifier).sendMessage(_msgController.text);
       _msgController.clear();
       // Keep keyboard open after sending
       _focusNode.requestFocus();

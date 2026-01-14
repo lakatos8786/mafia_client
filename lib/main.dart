@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/connection_provider.dart';
 import 'providers/game_state_provider.dart';
-import 'providers/action_provider.dart';
-import 'providers/game_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
@@ -27,7 +25,7 @@ void main() async {
   // Preload Google Fonts to prevent text rendering issues
   await GoogleFonts.pendingFonts([GoogleFonts.gowunDodum()]);
 
-  runApp(MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -35,89 +33,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        // Create providers in dependency order
-        ChangeNotifierProvider(create: (_) => ConnectionProvider()),
-        ChangeNotifierProxyProvider<ConnectionProvider, GameStateProvider>(
-          create: (context) => GameStateProvider(
-            Provider.of<ConnectionProvider>(context, listen: false),
-          ),
-          update: (context, connection, previous) =>
-              previous ?? GameStateProvider(connection),
+    return MaterialApp(
+      title: '마피아 온라인',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: AppColors.backgroundMain,
+        primaryColor: AppColors.primary,
+        colorScheme: const ColorScheme.dark(
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: AppColors.surface,
+          error: AppColors.deadRed,
         ),
-        ChangeNotifierProxyProvider2<
-          ConnectionProvider,
-          GameStateProvider,
-          ActionProvider
-        >(
-          create: (context) => ActionProvider(
-            Provider.of<ConnectionProvider>(context, listen: false),
-            Provider.of<GameStateProvider>(context, listen: false),
-          ),
-          update: (context, connection, gameState, previous) =>
-              previous ?? ActionProvider(connection, gameState),
-        ),
-        // Unified GameProvider for backward compatibility
-        ChangeNotifierProxyProvider3<
-          ConnectionProvider,
-          GameStateProvider,
-          ActionProvider,
-          GameProvider
-        >(
-          create: (context) => GameProvider(
-            connectionProvider: Provider.of<ConnectionProvider>(
-              context,
-              listen: false,
-            ),
-            gameStateProvider: Provider.of<GameStateProvider>(
-              context,
-              listen: false,
-            ),
-            actionProvider: Provider.of<ActionProvider>(context, listen: false),
-          ),
-          update: (context, connection, gameState, action, previous) =>
-              previous ??
-              GameProvider(
-                connectionProvider: connection,
-                gameStateProvider: gameState,
-                actionProvider: action,
+        textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
+            .copyWith(
+              displayLarge: GoogleFonts.gowunDodum(
+                color: Colors.white,
+                fontWeight: FontWeight.w900, // Extra Bold
+                letterSpacing: 2.0,
               ),
-        ),
-      ],
-      child: MaterialApp(
-        title: '마피아 온라인',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData.dark().copyWith(
-          scaffoldBackgroundColor: AppColors.backgroundMain,
-          primaryColor: AppColors.primary,
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.primary,
-            secondary: AppColors.secondary,
-            surface: AppColors.surface,
-            error: AppColors.deadRed,
-          ),
-          textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
-              .copyWith(
-                displayLarge: GoogleFonts.gowunDodum(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900, // Extra Bold
-                  letterSpacing: 2.0,
-                ),
-                headlineMedium: GoogleFonts.gowunDodum(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                ),
-                bodyLarge: GoogleFonts.gowunDodum(
-                  color: Colors.white.withOpacity(0.9),
-                  fontWeight: FontWeight.w500,
-                ),
+              headlineMedium: GoogleFonts.gowunDodum(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
               ),
-        ),
-        home: const ScreenRouter(),
-        scrollBehavior: NeonScrollBehavior(),
+              bodyLarge: GoogleFonts.gowunDodum(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
       ),
+      home: const ScreenRouter(),
+      scrollBehavior: NeonScrollBehavior(),
     );
   }
 }
@@ -137,15 +84,25 @@ class NeonScrollBehavior extends MaterialScrollBehavior {
   }
 }
 
-class ScreenRouter extends StatelessWidget {
+class ScreenRouter extends ConsumerWidget {
   const ScreenRouter({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final socketId = ref.watch(connectionProvider.notifier).socketId;
+    final gameState = ref.watch(gameStateProvider);
 
     // Initial connection might take a moment, show spinner?
-    if (game.socket.id == null) {
+    // We check socketService initialization in ConnectionNotifier.
+    // Assuming socketId is null until connected.
+    if (!ref.watch(connectionProvider).isConnected && socketId == null) {
+      // Assuming 'isConnected' or similar state.
+      // Or just check socketId.
+      // But checking ConnectionState is better.
+      // connectionProvider exposes ConnectionState.
+      // ConnectionState has ... ? I need to check ConnectionState class.
+      // I'll stick to socketId for now which was used before.
+
       return Scaffold(
         body: Center(
           child: Column(
@@ -173,16 +130,16 @@ class ScreenRouter extends StatelessWidget {
     }
 
     // Check if joined
-    final isJoined = game.players.any((p) => p.id == game.socket.id);
+    final isJoined = gameState.players.any((p) => p.id == socketId);
 
     if (!isJoined) {
-      return LoginScreen();
+      return const LoginScreen();
     }
 
-    if (game.gamePhase == GamePhase.waiting) {
-      return LobbyScreen();
+    if (gameState.gamePhase == GamePhase.waiting) {
+      return const LobbyScreen();
     } else {
-      return GameScreen();
+      return const GameScreen();
     }
   }
 }

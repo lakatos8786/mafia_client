@@ -1,38 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/game_enums.dart';
-import '../providers/game_provider.dart';
+import '../providers/game_state_provider.dart';
+import '../providers/action_provider.dart';
+import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 
-class ActionButtons extends StatelessWidget {
+class ActionButtons extends ConsumerWidget {
   const ActionButtons({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameState = ref.watch(gameStateProvider);
+    final actionState = ref.watch(actionProvider);
+    final socketId = ref.watch(connectionProvider.notifier).socketId;
+
+    // Derived values
+    final skipVoterNicknames = ref.watch(skipVoterNicknamesProvider);
+    final iVotedSkip = ref.watch(iVotedSkipProvider);
+    final isMafiaSkip = ref.watch(isMafiaSkipProvider);
+    final mafiaSkipButtonText = ref.watch(mafiaSkipButtonTextProvider);
 
     // Check if player is alive
-    if (!game.players.any((p) => p.id == game.socket.id && p.isAlive)) {
+    if (!gameState.players.any((p) => p.id == socketId && p.isAlive)) {
       return const SizedBox.shrink();
     }
 
     return Column(
       children: [
         // Skip Vote Row
-        if (game.gamePhase == GamePhase.day)
+        if (gameState.gamePhase == GamePhase.day)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (game.votes[GameAction.skip] != null &&
-                    game.votes[GameAction.skip]! > 0)
+                if (actionState.votes[GameAction.skip] != null &&
+                    actionState.votes[GameAction.skip]! > 0)
                   Flexible(
                     child: Text(
-                      '건너뛰기 투표: ${game.votes[GameAction.skip]} (${game.skipVoterNicknames.join(", ")})  ',
+                      '건너뛰기 투표: ${actionState.votes[GameAction.skip]} (${skipVoterNicknames.join(", ")})  ',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -41,7 +51,7 @@ class ActionButtons extends StatelessWidget {
                   ),
                 Container(
                   decoration: BoxDecoration(
-                    gradient: game.iVotedSkip
+                    gradient: iVotedSkip
                         ? const LinearGradient(
                             colors: [AppColors.policeBlue, Color(0xFF0284C7)],
                           )
@@ -49,18 +59,20 @@ class ActionButtons extends StatelessWidget {
                             colors: [Color(0xFF334155), AppColors.surface],
                           ),
                     borderRadius: BorderRadius.circular(25),
-                    boxShadow: game.iVotedSkip
+                    boxShadow: iVotedSkip
                         ? [
                             BoxShadow(
-                              color: AppColors.policeBlue.withOpacity(0.5),
+                              color: AppColors.policeBlue.withValues(
+                                alpha: 0.5,
+                              ),
                               blurRadius: 10,
                             ),
                           ]
                         : [],
                     border: Border.all(
-                      color: game.iVotedSkip
-                          ? Colors.white.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                      color: iVotedSkip
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: ElevatedButton(
@@ -77,11 +89,11 @@ class ActionButtons extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      game.vote(GameAction.skip);
+                      ref.read(actionProvider.notifier).vote(GameAction.skip);
                     },
                     child: Text(
                       AppStrings.skipVote,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -92,8 +104,8 @@ class ActionButtons extends StatelessWidget {
             ),
           ),
 
-        if (game.gamePhase == GamePhase.night &&
-            game.myRoleEnum == GameRole.mafia)
+        if (gameState.gamePhase == GamePhase.night &&
+            gameState.myRole == GameRole.mafia)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
@@ -101,7 +113,7 @@ class ActionButtons extends StatelessWidget {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    gradient: game.isMafiaSkip
+                    gradient: isMafiaSkip
                         ? const LinearGradient(
                             colors: [AppColors.mafiaRed, Color(0xFFE11D48)],
                           )
@@ -112,18 +124,18 @@ class ActionButtons extends StatelessWidget {
                             ],
                           ),
                     borderRadius: BorderRadius.circular(25),
-                    boxShadow: game.isMafiaSkip
+                    boxShadow: isMafiaSkip
                         ? [
                             BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
+                              color: AppColors.mafiaRed.withValues(alpha: 0.5),
                               blurRadius: 10,
                             ),
                           ]
                         : [],
                     border: Border.all(
-                      color: game.isMafiaSkip
-                          ? Colors.white.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.1),
+                      color: isMafiaSkip
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   child: ElevatedButton(
@@ -141,10 +153,12 @@ class ActionButtons extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      game.nightAction(NightAction.kill, GameAction.skip);
+                      ref
+                          .read(actionProvider.notifier)
+                          .nightAction(NightAction.kill, GameAction.skip);
                     },
                     child: Text(
-                      game.mafiaSkipButtonText,
+                      mafiaSkipButtonText,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

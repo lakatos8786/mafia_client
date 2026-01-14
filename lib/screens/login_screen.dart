@@ -1,20 +1,20 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/game_provider.dart';
+import '../providers/action_provider.dart';
 import '../widgets/custom_snackbar.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _roomCodeController = TextEditingController();
   bool _isLoading = false;
@@ -32,8 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _showError('닉네임을 입력해주세요');
       return false;
     }
-    // Min length check removed as isEmpty covers it, or if you want explicit 1 char:
-    if (name.length < 1) {
+    if (name.isEmpty) {
       _showError('닉네임은 최소 1자 이상이어야 합니다');
       return false;
     }
@@ -48,24 +47,30 @@ class _LoginScreenState extends State<LoginScreen> {
     CustomSnackBar.show(context, message);
   }
 
-  void _createRoom() {
+  Future<void> _createRoom() async {
     if (_isLoading) return;
     if (!_validateNickname()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      Provider.of<GameProvider>(
-        context,
-        listen: false,
-      ).createRoom(_nameController.text.trim());
+      ref.read(actionProvider.notifier).createRoom(_nameController.text.trim());
+      // Navigation is handled by listening to socket events or game state changes elsewhere?
+      // Original code did not await. It just emitted.
+      // We expect the app to navigate when `GamePhase` or joined room state changes.
+      // So we just set loading.
+      // Ideally we should reset loading if it fails, but socket emit is fire-and-forget mostly.
+      // We can listen to errors on ConnectionProvider or something.
+      // For now, keep as is (UI relies on Stream/Listener updates to navigate away).
+      // But we should probably timeout _isLoading?
+      // Original code kept _isLoading = true until navigation replaced the screen.
     } catch (e) {
       _showError('방 생성 중 오류가 발생했습니다');
       setState(() => _isLoading = false);
     }
   }
 
-  void _joinRoom() {
+  Future<void> _joinRoom() async {
     if (_isLoading) return;
     if (!_validateNickname()) return;
 
@@ -82,10 +87,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      Provider.of<GameProvider>(
-        context,
-        listen: false,
-      ).joinRoom(roomCode.toUpperCase(), _nameController.text.trim());
+      ref
+          .read(actionProvider.notifier)
+          .joinRoom(roomCode.toUpperCase(), _nameController.text.trim());
     } catch (e) {
       _showError('방 참여 중 오류가 발생했습니다');
       setState(() => _isLoading = false);
@@ -96,11 +100,11 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-      resizeToAvoidBottomInset: true, // Let Flutter handle keyboard resizing
+      resizeToAvoidBottomInset: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Elements (Abstract Neon Globs)
+          // Background Elements
           Positioned(
             top: -100,
             left: -100,
@@ -109,10 +113,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE94560).withOpacity(0.3),
+                color: const Color(0xFFE94560).withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE94560).withOpacity(0.5),
+                    color: const Color(0xFFE94560).withValues(alpha: 0.5),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -128,10 +132,10 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0F3460).withOpacity(0.3),
+                color: const Color(0xFF0F3460).withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F3460).withOpacity(0.5),
+                    color: const Color(0xFF0F3460).withValues(alpha: 0.5),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -142,7 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
           GestureDetector(
             onTap: () {
-              // Dismiss keyboard when tapping outside
               FocusScope.of(context).unfocus();
             },
             child: Container(
@@ -150,7 +153,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Center(
                 child: SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.zero, // Remove manual padding
+                  padding: EdgeInsets.zero,
                   child: Padding(
                     padding: const EdgeInsets.all(32.0),
                     child: Column(
@@ -171,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Shadow(
                                       color: const Color(
                                         0xFFE94560,
-                                      ).withOpacity(0.5),
+                                      ).withValues(alpha: 0.5),
                                       blurRadius: 20,
                                       offset: const Offset(0, 5),
                                     ),
@@ -204,10 +207,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 350,
                                 padding: const EdgeInsets.all(30),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
+                                  color: Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.1),
+                                    color: Colors.white.withValues(alpha: 0.1),
                                     width: 1,
                                   ),
                                 ),
@@ -220,9 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       maxLength: 10,
                                       inputFormatters: [
                                         FilteringTextInputFormatter.allow(
-                                          RegExp(
-                                            r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]',
-                                          ), // Added Jamo (ㄱ-ㅎ, ㅏ-ㅣ)
+                                          RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
                                         ),
                                       ],
                                     ),
@@ -288,9 +289,9 @@ class _LoginScreenState extends State<LoginScreen> {
       inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
-        counterText: '', // Hide the counter
+        counterText: '',
         labelStyle: TextStyle(
-          color: Colors.white.withOpacity(0.5),
+          color: Colors.white.withValues(alpha: 0.5),
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
@@ -299,7 +300,7 @@ class _LoginScreenState extends State<LoginScreen> {
         fillColor: Colors.black26,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -325,14 +326,16 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: isOutlined ? Colors.transparent : color,
           foregroundColor: Colors.white,
           elevation: isOutlined ? 0 : 5,
-          shadowColor: isOutlined ? Colors.transparent : color.withOpacity(0.5),
+          shadowColor: isOutlined
+              ? Colors.transparent
+              : color.withValues(alpha: 0.5),
           side: isOutlined ? BorderSide(color: color, width: 2) : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           disabledBackgroundColor: isOutlined
               ? Colors.transparent
-              : color.withOpacity(0.5),
+              : color.withValues(alpha: 0.5),
         ),
         child: isLoading
             ? const SizedBox(

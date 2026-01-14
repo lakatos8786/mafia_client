@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_strings.dart';
 
 class RoleRevealModal extends StatelessWidget {
   final GameRole role;
@@ -17,7 +18,7 @@ class RoleRevealModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withOpacity(0.85),
+      color: AppColors.overlayBlack85,
       child: SafeArea(
         child: Semantics(
           label: '당신의 역할은 ${role.label}입니다',
@@ -33,7 +34,7 @@ class RoleRevealModal extends StatelessWidget {
                       '당신의 역할',
                       style: GoogleFonts.gowunDodum(
                         fontSize: 18,
-                        color: Colors.white.withOpacity(0.7),
+                        color: AppColors.overlayWhite70,
                         letterSpacing: 4,
                       ),
                     ),
@@ -53,7 +54,7 @@ class RoleRevealModal extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: _getRoleColor().withOpacity(0.5),
+                            color: _getRoleColor().withValues(alpha: 0.5),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -79,7 +80,7 @@ class RoleRevealModal extends StatelessWidget {
                         letterSpacing: 8,
                         shadows: [
                           Shadow(
-                            color: _getRoleColor().withOpacity(0.8),
+                            color: _getRoleColor().withValues(alpha: 0.8),
                             blurRadius: 20,
                           ),
                         ],
@@ -95,18 +96,16 @@ class RoleRevealModal extends StatelessWidget {
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: AppColors.overlayWhite10,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                        ),
+                        border: Border.all(color: AppColors.overlayWhite20),
                       ),
                       child: Text(
                         _getRoleDescription(),
                         textAlign: TextAlign.center,
                         style: GoogleFonts.gowunDodum(
                           fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
+                          color: AppColors.overlayWhite90,
                           height: 1.6,
                         ),
                       ),
@@ -128,10 +127,10 @@ class RoleRevealModal extends StatelessWidget {
                           borderRadius: BorderRadius.circular(30),
                         ),
                         elevation: 8,
-                        shadowColor: _getRoleColor().withOpacity(0.5),
+                        shadowColor: _getRoleColor().withValues(alpha: 0.5),
                       ),
                       child: Text(
-                        '확인',
+                        AppStrings.confirm,
                         style: GoogleFonts.gowunDodum(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -171,7 +170,7 @@ class RoleRevealModal extends StatelessWidget {
       case GameRole.police:
         return [AppColors.policeBlue, AppColors.policeBlueDark];
       case GameRole.citizen:
-        return [AppColors.citizenLink, const Color(0xFF475569)];
+        return [AppColors.citizenLink, AppColors.citizenGradientEnd];
     }
   }
 

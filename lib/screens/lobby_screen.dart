@@ -1,30 +1,32 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/game_enums.dart'; // For GamePhase
+import '../models/game_enums.dart';
 import '../widgets/particle_background.dart';
-import '../providers/game_provider.dart';
+import '../providers/game_state_provider.dart';
+import '../providers/action_provider.dart';
+import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../widgets/custom_snackbar.dart';
 
-class LobbyScreen extends StatelessWidget {
+class LobbyScreen extends ConsumerWidget {
   const LobbyScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final game = Provider.of<GameProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameState = ref.watch(gameStateProvider);
+    final myId = ref.watch(connectionProvider.notifier).socketId;
 
-    // Using standard theme colors through AppColors
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
-          '방 번호: ${game.roomId}',
+          '방 번호: ${gameState.roomId}',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 2.0,
@@ -37,9 +39,9 @@ class LobbyScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.copy, color: AppColors.mafiaRed),
             onPressed: () {
-              if (game.roomId != null) {
-                Clipboard.setData(ClipboardData(text: game.roomId!));
-                CustomSnackBar.show(context, '복사됨: ${game.roomId}');
+              if (gameState.roomId != null) {
+                Clipboard.setData(ClipboardData(text: gameState.roomId!));
+                CustomSnackBar.show(context, '복사됨: ${gameState.roomId}');
               }
             },
           ),
@@ -48,19 +50,10 @@ class LobbyScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. Dynamic Particle Background (Day theme for Lobby)
           const ParticleBackground(phase: GamePhase.day),
-
-          // 2. Ambient Glow Overlay (to make it distinct from GameScreen)
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withOpacity(
-                0.3,
-              ), // Slightly darker for text readability
-            ),
+            child: Container(color: Colors.black.withValues(alpha: 0.3)),
           ),
-
-          // Background Glow Effect (Original preserved but refined)
           Positioned(
             bottom: -100,
             left: -50,
@@ -69,10 +62,10 @@ class LobbyScreen extends StatelessWidget {
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.1), // Adjusted opacity
+                color: AppColors.primary.withValues(alpha: 0.1),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
+                    color: AppColors.primary.withValues(alpha: 0.2),
                     blurRadius: 150,
                     spreadRadius: 20,
                   ),
@@ -80,7 +73,6 @@ class LobbyScreen extends StatelessWidget {
               ),
             ),
           ),
-
           Column(
             children: [
               const SizedBox(height: 100),
@@ -90,13 +82,13 @@ class LobbyScreen extends StatelessWidget {
                   child: Text(
                     '플레이어 대기 중...',
                     style: GoogleFonts.gowunDodum(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 18,
                       letterSpacing: 4.0,
                       fontWeight: FontWeight.bold,
                       shadows: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 20,
                         ),
                       ],
@@ -105,14 +97,13 @@ class LobbyScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: game.players.length,
+                  itemCount: gameState.players.length,
                   itemBuilder: (context, index) {
-                    final player = game.players[index];
-                    final isMe = player.id == game.socket.id;
+                    final player = gameState.players[index];
+                    final isMe = player.id == myId;
 
                     return FadeInLeft(
                       delay: Duration(milliseconds: 100 * index),
@@ -130,20 +121,20 @@ class LobbyScreen extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isMe
-                                    ? AppColors.primary.withOpacity(0.2)
-                                    : Colors.white.withOpacity(0.05),
+                                    ? AppColors.primary.withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.05),
                                 borderRadius: BorderRadius.circular(15),
                                 border: Border.all(
                                   color: isMe
-                                      ? AppColors.primary.withOpacity(0.6)
-                                      : Colors.white.withOpacity(0.1),
+                                      ? AppColors.primary.withValues(alpha: 0.6)
+                                      : Colors.white.withValues(alpha: 0.1),
                                   width: isMe ? 1.5 : 1.0,
                                 ),
                                 boxShadow: isMe
                                     ? [
                                         BoxShadow(
-                                          color: AppColors.primary.withOpacity(
-                                            0.2,
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.2,
                                           ),
                                           blurRadius: 15,
                                         ),
@@ -199,10 +190,7 @@ class LobbyScreen extends StatelessWidget {
                   },
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // Player count display
               FadeIn(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -212,7 +200,7 @@ class LobbyScreen extends StatelessWidget {
                       const Icon(Icons.people, color: Colors.white54, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '${game.players.length}명 참가 중',
+                        '${gameState.players.length}명 참가 중',
                         style: GoogleFonts.gowunDodum(
                           color: Colors.white54,
                           fontSize: 14,
@@ -222,9 +210,7 @@ class LobbyScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 10),
-
               FadeInUp(
                 child: Padding(
                   padding: const EdgeInsets.all(30.0),
@@ -233,17 +219,22 @@ class LobbyScreen extends StatelessWidget {
                     height: 60,
                     child: Builder(
                       builder: (context) {
-                        if (game.roomId != null) {
-                          if (game.players.any(
-                            (p) => p.id == game.myId && p.isHost,
-                          )) {
+                        if (gameState.roomId != null) {
+                          final isHost = gameState.players.any(
+                            (p) => p.id == myId && p.isHost,
+                          );
+                          if (isHost) {
                             return ElevatedButton(
-                              onPressed: () => game.startGame(),
+                              onPressed: () {
+                                ref.read(actionProvider.notifier).startGame();
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primary,
                                 foregroundColor: Colors.white,
                                 elevation: 8,
-                                shadowColor: AppColors.primary.withOpacity(0.6),
+                                shadowColor: AppColors.primary.withValues(
+                                  alpha: 0.6,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),

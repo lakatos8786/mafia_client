@@ -16,12 +16,14 @@ class AppStrings {
   static const String nightKill = '어젯밤, 누군가 차가운 시체로 발견되었습니다...';
   static const String nightPeace = '평화로운 밤이었습니다.';
   static const String doctorSaved = '당신의 치료가 누군가의 생명을 구했습니다!';
+  static const String doctorHealNone = '아무도 치료하지 않았습니다.';
 
   // Investigation Results
   static String investigationMafia(String nickname) =>
       '[$nickname]의 정체는... 마피아입니다!';
   static String investigationClear(String nickname) =>
       '[$nickname]은(는) 마피아가 아닙니다.';
+  static const String investigationNone = '아무도 조사하지 않아 단서를 얻지 못했습니다.';
 
   // Game Over
   static const String mafiaWin = '마피아가 도시를 장악했습니다!';
@@ -45,4 +47,33 @@ class AppStrings {
   static const String playersWaiting = '플레이어 대기 중...';
   static const String roomCopied = '복사됨';
   static const String chatHint = '대화에 참여하세요...';
+  static const String viewGameLog = '📜 게임 로그 보기';
+
+  // Game Result
+  static const String winMafia = '마피아 승리';
+  static const String winCitizen = '시민 승리';
+  static const String winMafiaDesc = '마피아가 도시를 장악했습니다.';
+  static const String winCitizenDesc = '도시의 평화를 지켜냈습니다.';
+  static const String winnerBadge = 'WINNER';
+
+  // Common Actions
+  static const String confirm = '확인';
+  static const String cancel = '취소';
+  static const String dead = '사망';
+  static const String seconds = '초';
+  static const String pleaseWait = '잠시만 기다려주세요...';
+
+  // Roles (UI Labels)
+  static const String roleMafia = '마피아';
+  static const String roleCitizen = '시민';
+  static const String roleDoctor = '의사';
+  static const String rolePolice = '경찰';
+  static const String roleSystem = '시스템';
+
+  // Game Log Categories
+  static const String logChat = '채팅';
+  static const String logVote = '투표';
+  static const String logHeal = '치료';
+  static const String logInvestigate = '조사';
+  static const String logPhase = '페이즈';
 }
