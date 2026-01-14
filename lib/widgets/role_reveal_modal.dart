@@ -20,129 +20,135 @@ class RoleRevealModal extends StatelessWidget {
     return Material(
       color: AppColors.overlayBlack85,
       child: SafeArea(
-        child: Semantics(
-          label: '당신의 역할은 ${role.label}입니다',
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeInDown(
-                    duration: const Duration(milliseconds: 600),
-                    child: Text(
-                      '당신의 역할',
-                      style: GoogleFonts.gowunDodum(
-                        fontSize: 18,
-                        color: AppColors.overlayWhite70,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  ZoomIn(
-                    duration: const Duration(milliseconds: 800),
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: _getRoleGradient(),
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _getRoleColor().withValues(alpha: 0.5),
-                            blurRadius: 30,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: Center(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isCompact = constraints.maxHeight < 600;
+
+            return Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FadeInDown(
+                        duration: const Duration(milliseconds: 600),
                         child: Text(
-                          _getRoleEmoji(),
-                          style: const TextStyle(fontSize: 70),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  FadeInUp(
-                    delay: const Duration(milliseconds: 400),
-                    child: Text(
-                      role.label,
-                      style: GoogleFonts.gowunDodum(
-                        fontSize: 42,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 8,
-                        shadows: [
-                          Shadow(
-                            color: _getRoleColor().withValues(alpha: 0.8),
-                            blurRadius: 20,
+                          '당신의 역할',
+                          style: GoogleFonts.gowunDodum(
+                            fontSize: isCompact ? 14 : 18,
+                            color: AppColors.overlayWhite70,
+                            letterSpacing: 4,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                      SizedBox(height: isCompact ? 15 : 30),
+                      ZoomIn(
+                        duration: const Duration(milliseconds: 800),
+                        child: Container(
+                          width: isCompact ? 100 : 150,
+                          height: isCompact ? 100 : 150,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: _getRoleGradient(),
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _getRoleColor().withValues(alpha: 0.5),
+                                blurRadius: isCompact ? 20 : 30,
+                                spreadRadius: isCompact ? 3 : 5,
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              _getRoleEmoji(),
+                              style: TextStyle(fontSize: isCompact ? 50 : 70),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isCompact ? 15 : 30),
+                      FadeInUp(
+                        delay: const Duration(milliseconds: 400),
+                        child: Text(
+                          role.label,
+                          style: GoogleFonts.gowunDodum(
+                            fontSize: isCompact ? 32 : 42,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            letterSpacing: 8,
+                            shadows: [
+                              Shadow(
+                                color: _getRoleColor().withValues(alpha: 0.8),
+                                blurRadius: isCompact ? 15 : 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isCompact ? 10 : 20),
+                      FadeInUp(
+                        delay: const Duration(milliseconds: 600),
+                        child: Container(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 16 : 24,
+                            vertical: isCompact ? 12 : 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.overlayWhite10,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.overlayWhite20),
+                          ),
+                          child: Text(
+                            _getRoleDescription(),
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.gowunDodum(
+                              fontSize: isCompact ? 14 : 16,
+                              color: AppColors.overlayWhite90,
+                              height: 1.6,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: isCompact ? 20 : 40),
+                      FadeInUp(
+                        delay: const Duration(milliseconds: 800),
+                        child: ElevatedButton(
+                          onPressed: onDismiss,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _getRoleColor(),
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isCompact ? 36 : 48,
+                              vertical: isCompact ? 12 : 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 8,
+                            shadowColor: _getRoleColor().withValues(alpha: 0.5),
+                          ),
+                          child: Text(
+                            AppStrings.confirm,
+                            style: GoogleFonts.gowunDodum(
+                              fontSize: isCompact ? 16 : 18,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  FadeInUp(
-                    delay: const Duration(milliseconds: 600),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.overlayWhite10,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.overlayWhite20),
-                      ),
-                      child: Text(
-                        _getRoleDescription(),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.gowunDodum(
-                          fontSize: 16,
-                          color: AppColors.overlayWhite90,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  FadeInUp(
-                    delay: const Duration(milliseconds: 800),
-                    child: ElevatedButton(
-                      onPressed: onDismiss,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _getRoleColor(),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 48,
-                          vertical: 16,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 8,
-                        shadowColor: _getRoleColor().withValues(alpha: 0.5),
-                      ),
-                      child: Text(
-                        AppStrings.confirm,
-                        style: GoogleFonts.gowunDodum(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 4,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

@@ -88,14 +88,18 @@ class ErrorDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              Text(
-                message,
-                style: GoogleFonts.gowunDodum(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.7),
-                  height: 1.5,
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Text(
+                    message,
+                    style: GoogleFonts.gowunDodum(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.7),
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               Row(

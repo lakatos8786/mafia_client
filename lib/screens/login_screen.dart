@@ -89,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -161,7 +161,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 Text(
                                   AppStrings.titleMafia,
                                   style: GoogleFonts.gowunDodum(
-                                    fontSize: constraints.maxHeight < 600
+                                    fontSize:
+                                        (constraints.maxHeight < 480 &&
+                                                MediaQuery.of(
+                                                      context,
+                                                    ).orientation ==
+                                                    Orientation.landscape) ||
+                                            constraints.maxHeight < 600
                                         ? 40
                                         : 60,
                                     fontWeight: FontWeight.bold,
@@ -181,7 +187,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 Text(
                                   AppStrings.titleOnline,
                                   style: GoogleFonts.gowunDodum(
-                                    fontSize: constraints.maxHeight < 600
+                                    fontSize:
+                                        (constraints.maxHeight < 480 &&
+                                                MediaQuery.of(
+                                                      context,
+                                                    ).orientation ==
+                                                    Orientation.landscape) ||
+                                            constraints.maxHeight < 600
                                         ? 25
                                         : 40,
                                     fontWeight: FontWeight.bold,
@@ -193,7 +205,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           SizedBox(
-                            height: constraints.maxHeight < 600 ? 20 : 50,
+                            height:
+                                (constraints.maxHeight < 480 &&
+                                        MediaQuery.of(context).orientation ==
+                                            Orientation.landscape) ||
+                                    constraints.maxHeight < 600
+                                ? 20
+                                : 50,
                           ),
 
                           // Glassmorphism Container
@@ -210,7 +228,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: Container(
                                   width: 350,
                                   padding: EdgeInsets.all(
-                                    constraints.maxHeight < 600 ? 20 : 30,
+                                    constraints.maxHeight < 480 &&
+                                                MediaQuery.of(
+                                                      context,
+                                                    ).orientation ==
+                                                    Orientation.landscape ||
+                                            constraints.maxHeight < 600
+                                        ? 20
+                                        : 30,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.05),
@@ -236,7 +261,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ],
                                       ),
                                       SizedBox(
-                                        height: constraints.maxHeight < 600
+                                        height:
+                                            (constraints.maxHeight < 480 &&
+                                                    MediaQuery.of(
+                                                          context,
+                                                        ).orientation ==
+                                                        Orientation
+                                                            .landscape) ||
+                                                constraints.maxHeight < 600
                                             ? 10
                                             : 20,
                                       ),
@@ -252,7 +284,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ],
                                       ),
                                       SizedBox(
-                                        height: constraints.maxHeight < 600
+                                        height:
+                                            (constraints.maxHeight < 480 &&
+                                                    MediaQuery.of(
+                                                          context,
+                                                        ).orientation ==
+                                                        Orientation
+                                                            .landscape) ||
+                                                constraints.maxHeight < 600
                                             ? 20
                                             : 30,
                                       ),
@@ -265,7 +304,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         isLoading: _isLoading,
                                       ),
                                       SizedBox(
-                                        height: constraints.maxHeight < 600
+                                        height:
+                                            (constraints.maxHeight < 480 &&
+                                                    MediaQuery.of(
+                                                          context,
+                                                        ).orientation ==
+                                                        Orientation
+                                                            .landscape) ||
+                                                constraints.maxHeight < 600
                                             ? 10
                                             : 15,
                                       ),

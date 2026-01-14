@@ -13,15 +13,34 @@ class GameHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameStateProvider);
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
+    final roleCountStrings = ref.watch(
+      gameStateProvider.select((s) => s.roleCountDisplayStrings),
+    );
+
     final topPadding = MediaQuery.of(context).padding.top;
 
     return FadeInDown(
       duration: const Duration(milliseconds: 600),
       child: Container(
         padding: EdgeInsets.only(
-          top: (MediaQuery.of(context).size.height < 600 ? 5 : 15) + topPadding,
-          bottom: MediaQuery.of(context).size.height < 600 ? 5 : 15,
+          top:
+              ((MediaQuery.of(context).size.height < 480 &&
+                          MediaQuery.of(context).orientation ==
+                              Orientation.landscape) ||
+                      MediaQuery.of(context).size.height < 600
+                  ? 5
+                  : 15) +
+              topPadding,
+          bottom:
+              (MediaQuery.of(context).size.height < 480 &&
+                      MediaQuery.of(context).orientation ==
+                          Orientation.landscape) ||
+                  MediaQuery.of(context).size.height < 600
+              ? 5
+              : 15,
           left: 20,
           right: 20,
         ),
@@ -47,7 +66,7 @@ class GameHeader extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(30),
                     boxShadow: [
                       BoxShadow(
-                        color: gameState.gamePhase == GamePhase.day
+                        color: gamePhase == GamePhase.day
                             ? Colors.orangeAccent.withValues(alpha: 0.4)
                             : const Color(0xFF6366F1).withValues(alpha: 0.3),
                         blurRadius: 20,
@@ -63,17 +82,17 @@ class GameHeader extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        gameState.gamePhase == GamePhase.day
+                        gamePhase == GamePhase.day
                             ? Icons.wb_sunny
                             : Icons.nightlight_round,
-                        color: gameState.gamePhase == GamePhase.day
+                        color: gamePhase == GamePhase.day
                             ? Colors.orangeAccent
                             : const Color(0xFF818CF8),
                         size: 28,
                       ),
                       const SizedBox(width: 15),
                       Text(
-                        '${gameState.gamePhase.label} ${gameState.dayCount}일차',
+                        '${gamePhase.label} ${dayCount}일차',
                         style: GoogleFonts.gowunDodum(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
@@ -81,7 +100,7 @@ class GameHeader extends ConsumerWidget {
                           letterSpacing: 2.0,
                           shadows: [
                             Shadow(
-                              color: gameState.gamePhase == GamePhase.day
+                              color: gamePhase == GamePhase.day
                                   ? Colors.orangeAccent
                                   : const Color(0xFF6366F1),
                               blurRadius: 15,
@@ -101,12 +120,10 @@ class GameHeader extends ConsumerWidget {
             const SizedBox(height: 8),
 
             // Role Counts
-            if (gameState.roleCountDisplayStrings.isNotEmpty)
+            if (roleCountStrings.isNotEmpty)
               Wrap(
                 spacing: 15,
-                children: gameState.roleCountDisplayStrings.map((
-                  displayString,
-                ) {
+                children: roleCountStrings.map((displayString) {
                   return Text(
                     displayString,
                     style: GoogleFonts.gowunDodum(
@@ -123,25 +140,29 @@ class GameHeader extends ConsumerWidget {
             Container(
               padding: EdgeInsets.symmetric(
                 horizontal: 24,
-                vertical: MediaQuery.of(context).size.height < 600 ? 5 : 10,
+                vertical:
+                    (MediaQuery.of(context).size.height < 480 &&
+                            MediaQuery.of(context).orientation ==
+                                Orientation.landscape) ||
+                        MediaQuery.of(context).size.height < 600
+                    ? 5
+                    : 10,
               ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    _getRoleColor(gameState.myRole).withValues(alpha: 0.3),
+                    _getRoleColor(myRole).withValues(alpha: 0.3),
                     AppColors.surface.withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: _getRoleColor(gameState.myRole).withValues(alpha: 0.5),
+                  color: _getRoleColor(myRole).withValues(alpha: 0.5),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: _getRoleColor(
-                      gameState.myRole,
-                    ).withValues(alpha: 0.3),
+                    color: _getRoleColor(myRole).withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 2),
                   ),
@@ -151,15 +172,15 @@ class GameHeader extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _getRoleEmoji(gameState.myRole),
+                    _getRoleEmoji(myRole),
                     style: TextStyle(
                       fontSize: 22,
-                      color: _getRoleColor(gameState.myRole),
+                      color: _getRoleColor(myRole),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    gameState.myRole?.label ?? AppStrings.unknownRole,
+                    myRole?.label ?? AppStrings.unknownRole,
                     style: GoogleFonts.gowunDodum(
                       color: Colors.white,
                       fontSize: 18,

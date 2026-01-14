@@ -2,12 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/chat_message.dart';
 import '../models/game_enums.dart';
-import '../models/player.dart';
-import '../providers/game_state_provider.dart';
 import '../providers/action_provider.dart';
-import '../providers/connection_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 
@@ -30,7 +26,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   int _unreadCount = 0;
-  int _lastMessageCount = 0;
 
   @override
   void dispose() {
@@ -52,36 +47,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     }
   }
 
-  void _updateUnreadCount(
-    List<ChatMessage> messages,
-    String socketId,
-    List<Player> players,
-  ) {
-    // Only update unread count when chat is collapsed and new messages arrive
-    if (!widget.isExpanded && messages.length > _lastMessageCount) {
-      // Count only messages from others (not from me)
-      int newUnreadCount = 0;
-
-      // Get my nickname for comparison (assuming players list has it)
-      // Note: players is List<Player> usually.
-      // We need to access players from gameState.
-      // But passing players here is cleaner.
-
-      // Check new messages (from _lastMessageCount to current length)
-      for (int i = _lastMessageCount; i < messages.length; i++) {
-        final msg = messages[i];
-        if (!msg.isMine) {
-          newUnreadCount++;
-        }
-      }
-
-      setState(() {
-        _unreadCount += newUnreadCount;
-      });
-    }
-    _lastMessageCount = messages.length;
-  }
-
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
       ref.read(actionProvider.notifier).sendMessage(_msgController.text);
@@ -92,13 +57,25 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = ref.watch(gameStateProvider);
-    final actionState = ref.watch(actionProvider);
-    final socketId = ref.watch(connectionProvider.notifier).socketId ?? '';
+    final messages = ref.watch(actionProvider.select((s) => s.messages));
 
-    // Update unread count based on message changes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateUnreadCount(actionState.messages, socketId, gameState.players);
+    // Use ref.listen to update unread count only when messages change,
+    // instead of every build frame during resize.
+    ref.listen(actionProvider.select((s) => s.messages), (previous, next) {
+      if (!widget.isExpanded) {
+        final newMessagesCount = next.length - (previous?.length ?? 0);
+        if (newMessagesCount > 0) {
+          int addedUnread = 0;
+          for (int i = previous?.length ?? 0; i < next.length; i++) {
+            if (!next[i].isMine) addedUnread++;
+          }
+          if (addedUnread > 0) {
+            setState(() {
+              _unreadCount += addedUnread;
+            });
+          }
+        }
+      }
     });
 
     return Column(
@@ -132,12 +109,11 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                         reverse: true, // Standard Chat Behavior
                         keyboardDismissBehavior:
                             ScrollViewKeyboardDismissBehavior.onDrag,
-                        itemCount: actionState.messages.length,
+                        itemCount: messages.length,
                         itemBuilder: (context, index) {
                           // REVERSED INDEX mapping for standard chat feel
-                          final reversedIndex =
-                              actionState.messages.length - 1 - index;
-                          final msg = actionState.messages[reversedIndex];
+                          final reversedIndex = messages.length - 1 - index;
+                          final msg = messages[reversedIndex];
 
                           final isMe = msg.isMine;
 

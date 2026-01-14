@@ -99,54 +99,61 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
               ),
 
               SafeArea(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20), // Reduced top spacing
-                    // 1. Winner Announcement (Big & Clear)
-                    ZoomIn(
-                      duration: const Duration(milliseconds: 600),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = constraints.maxHeight < 600;
+
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            Icons.emoji_events,
-                            color: mainColor,
-                            size: 80, // Much larger icon
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            isMafiaWin
-                                ? AppStrings.winMafia
-                                : AppStrings.winCitizen,
-                            style: GoogleFonts.gowunDodum(
-                              fontSize: 50, // Massive font
-                              fontWeight: FontWeight.w900,
-                              color: mainColor, // Color the text itself
-                              letterSpacing: 2.0,
-                              shadows: [
-                                Shadow(blurRadius: 15, color: mainColor),
+                          const SizedBox(height: 20), // Reduced top spacing
+                          // 1. Winner Announcement (Big & Clear)
+                          ZoomIn(
+                            duration: const Duration(milliseconds: 600),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.emoji_events,
+                                  color: mainColor,
+                                  size: isCompact ? 50 : 80,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  isMafiaWin
+                                      ? AppStrings.winMafia
+                                      : AppStrings.winCitizen,
+                                  style: GoogleFonts.gowunDodum(
+                                    fontSize: isCompact
+                                        ? 32
+                                        : 50, // Massive font
+                                    fontWeight: FontWeight.w900,
+                                    color: mainColor, // Color the text itself
+                                    letterSpacing: 2.0,
+                                    shadows: [
+                                      Shadow(blurRadius: 15, color: mainColor),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  isMafiaWin
+                                      ? AppStrings.winMafiaDesc
+                                      : AppStrings.winCitizenDesc,
+                                  style: GoogleFonts.gowunDodum(
+                                    fontSize: isCompact ? 14 : 16,
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                          Text(
-                            isMafiaWin
-                                ? AppStrings.winMafiaDesc
-                                : AppStrings.winCitizenDesc,
-                            style: GoogleFonts.gowunDodum(
-                              fontSize: 16,
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    const SizedBox(height: 30), // More spacing
-                    // 2. Results Grid (Highlight Winners)
-                    Expanded(
-                      child: _showCards
-                          ? SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
+                          SizedBox(height: isCompact ? 20 : 30), // More spacing
+                          // 2. Results Grid (Highlight Winners)
+                          if (_showCards)
+                            Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                               ),
@@ -182,84 +189,87 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                   }).toList(),
                                 ),
                               ),
-                            )
-                          : const SizedBox(),
-                    ),
+                            ),
 
-                    const SizedBox(height: 15),
+                          SizedBox(height: isCompact ? 20 : 30),
 
-                    // 3. Action Buttons - Centered
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (!gameState.canReturnToLobby)
-                          Pulse(
-                            infinite: true,
-                            child: const Text(
-                              AppStrings.pleaseWait,
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                          )
-                        else
-                          FadeInUp(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                if (gameState.canReturnToLobby) {
-                                  ref
-                                      .read(gameStateProvider.notifier)
-                                      .returnToLobby();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: mainColor,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 12,
+                          // 3. Action Buttons - Centered
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              if (!gameState.canReturnToLobby)
+                                Pulse(
+                                  infinite: true,
+                                  child: const Text(
+                                    AppStrings.pleaseWait,
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                )
+                              else
+                                FadeInUp(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      if (gameState.canReturnToLobby) {
+                                        ref
+                                            .read(gameStateProvider.notifier)
+                                            .returnToLobby();
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: mainColor,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: isCompact ? 30 : 40,
+                                        vertical: isCompact ? 10 : 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      elevation: 5,
+                                      shadowColor: mainColor.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      AppStrings.returnToLobby,
+                                      style: GoogleFonts.gowunDodum(
+                                        fontSize: isCompact ? 14 : 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(25),
+                              const SizedBox(height: 12),
+                              // Game Log Button
+                              FadeInUp(
+                                delay: const Duration(milliseconds: 200),
+                                child: TextButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _showGameLog = true;
+                                    });
+                                  },
+                                  child: Text(
+                                    AppStrings.viewGameLog,
+                                    style: GoogleFonts.gowunDodum(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
-                                elevation: 5,
-                                shadowColor: mainColor.withValues(alpha: 0.5),
                               ),
-                              child: Text(
-                                AppStrings.returnToLobby,
-                                style: GoogleFonts.gowunDodum(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                            ],
                           ),
-                        const SizedBox(height: 12),
-                        // Game Log Button
-                        FadeInUp(
-                          delay: const Duration(milliseconds: 200),
-                          child: TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _showGameLog = true;
-                              });
-                            },
-                            child: Text(
-                              AppStrings.viewGameLog,
-                              style: GoogleFonts.gowunDodum(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
               // Game Log Overlay

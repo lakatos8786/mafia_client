@@ -11,19 +11,26 @@ class PhaseTimer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameStateProvider);
+    final timerTotal = ref.watch(gameStateProvider.select((s) => s.timerTotal));
+    final timerRemaining = ref.watch(
+      gameStateProvider.select((s) => s.timerRemaining),
+    );
+    final timerProgress = ref.watch(
+      gameStateProvider.select((s) => s.timerProgress),
+    );
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
 
     // Don't show timer if no time is set
-    if (gameState.timerTotal == 0) {
+    if (timerTotal == 0) {
       return const SizedBox.shrink();
     }
 
-    final isNight = gameState.gamePhase == GamePhase.night;
+    final isNight = gamePhase == GamePhase.night;
     final timerColor = isNight ? AppColors.mafiaRed : AppColors.policeBlue;
-    final isLowTime = gameState.timerRemaining <= 10;
+    final isLowTime = timerRemaining <= 10;
 
     return Semantics(
-      label: '남은 시간 ${gameState.timerRemaining}초',
+      label: '남은 시간 ${timerRemaining}초',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
@@ -48,7 +55,7 @@ class PhaseTimer extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildCircularTimer(gameState.timerProgress, timerColor, isLowTime),
+            _buildCircularTimer(timerProgress, timerColor, isLowTime),
             const SizedBox(width: 8),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
@@ -57,7 +64,7 @@ class PhaseTimer extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
                 color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
-              child: Text('${gameState.timerRemaining}'),
+              child: Text('$timerRemaining'),
             ),
             Text(
               '초',

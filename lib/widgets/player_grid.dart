@@ -15,8 +15,16 @@ class PlayerGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameStateProvider);
-    final actionState = ref.watch(actionProvider);
+    final players = ref.watch(gameStateProvider.select((s) => s.players));
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+
+    final votes = ref.watch(actionProvider.select((s) => s.votes));
+    final voters = ref.watch(actionProvider.select((s) => s.voters));
+    final nightSelections = ref.watch(
+      actionProvider.select((s) => s.nightSelections),
+    );
+
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
     // Removed internal SingleChildScrollView to allow parent GameScreen to scroll the entire column
@@ -27,33 +35,31 @@ class PlayerGrid extends ConsumerWidget {
           alignment: WrapAlignment.center,
           spacing: 15,
           runSpacing: 15,
-          children: gameState.players.map((player) {
-            final index = gameState.players.indexOf(player);
+          children: players.map((player) {
+            final index = players.indexOf(player);
             final isMe = player.id == socketId;
-            final voteCount = actionState.votes[player.id] ?? 0;
+            final voteCount = votes[player.id] ?? 0;
 
             // Selection logic
-            final selectionTargetForRole = actionState.nightSelections.entries
+            final selectionTargetForRole = nightSelections.entries
                 .where((entry) => entry.value == player.id)
                 .map((entry) => entry.key)
                 .toList();
 
-            final isMyVoteTarget = actionState.voters[socketId] == player.id;
+            final isMyVoteTarget = voters[socketId] == player.id;
 
             final showMafiaIndicator =
                 player.isAlive &&
-                gameState.myRole == GameRole.mafia &&
+                myRole == GameRole.mafia &&
                 player.role == GameRole.mafia &&
                 player.id != socketId;
 
             String votersList = '';
-            if (gameState.gamePhase == GamePhase.day &&
-                player.isAlive &&
-                voteCount > 0) {
-              votersList = actionState.voters.entries
+            if (gamePhase == GamePhase.day && player.isAlive && voteCount > 0) {
+              votersList = voters.entries
                   .where((e) => e.value == player.id)
                   .map(
-                    (e) => gameState.players
+                    (e) => players
                         .firstWhere(
                           (p) => p.id == e.key,
                           orElse: () =>
@@ -77,14 +83,12 @@ class PlayerGrid extends ConsumerWidget {
                   isMe: isMe,
                   isMyVoteTarget: isMyVoteTarget,
                   selectionTargets: selectionTargetForRole,
-                  voteCount: gameState.gamePhase == GamePhase.day
-                      ? voteCount
-                      : 0,
+                  voteCount: gamePhase == GamePhase.day ? voteCount : 0,
                   votersList: votersList,
                   showMafiaIndicator: showMafiaIndicator,
                   onTap: () {
                     // Check if *I* am alive first
-                    final me = gameState.players.firstWhere(
+                    final me = players.firstWhere(
                       (p) => p.id == socketId,
                       orElse: () =>
                           Player(id: 'unknown', nickname: '?', isAlive: false),
@@ -93,18 +97,18 @@ class PlayerGrid extends ConsumerWidget {
                     if (!player.isAlive) return;
 
                     // Voting/Action Logic
-                    if (gameState.gamePhase == GamePhase.day) {
+                    if (gamePhase == GamePhase.day) {
                       ref.read(actionProvider.notifier).vote(player.id);
-                    } else if (gameState.gamePhase == GamePhase.night) {
+                    } else if (gamePhase == GamePhase.night) {
                       String? action;
                       // Use strict Enums now
-                      if (gameState.myRole == GameRole.mafia) {
+                      if (myRole == GameRole.mafia) {
                         action = NightAction.kill;
                       }
-                      if (gameState.myRole == GameRole.doctor) {
+                      if (myRole == GameRole.doctor) {
                         action = NightAction.heal;
                       }
-                      if (gameState.myRole == GameRole.police) {
+                      if (myRole == GameRole.police) {
                         action = NightAction.investigate;
                       }
                       if (action != null) {

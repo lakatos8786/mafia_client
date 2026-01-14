@@ -25,81 +25,99 @@ class _GameScreenState extends ConsumerState<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = ref.watch(gameStateProvider);
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
-        gameState.myRole != null &&
-        gameState.gamePhase != GamePhase.waiting &&
-        gameState.gamePhase != GamePhase.result &&
+        myRole != null &&
+        gamePhase != GamePhase.waiting &&
+        gamePhase != GamePhase.result &&
         (!_roleRevealed ||
-            _shownRole != gameState.myRole ||
-            _lastDayCount != gameState.dayCount && gameState.dayCount == 1);
+            _shownRole != myRole ||
+            _lastDayCount != dayCount && dayCount == 1);
 
     return Scaffold(
       backgroundColor: Colors.black,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: DayNightBackground(
-        phase: gameState.gamePhase,
+        phase: gamePhase,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Stack(
-              children: [
-                SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: MediaQuery.of(context).size.height,
-                    ),
-                    child: Column(
-                      children: [
-                        // --- Custom Header Area ---
-                        const GameHeader(),
-
-                        // Skip Vote & Role Actions
-                        const ActionButtons(),
-
-                        // Game Area
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).size.height < 600
-                                ? 120
-                                : 200, // Extra padding for chat area
-                          ),
-                          child: const PlayerGrid(),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return Stack(
+                  children: [
+                    SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                        child: Column(
+                          children: [
+                            // --- Custom Header Area ---
+                            const GameHeader(),
 
-                // Expandable Chat Layer
-                // Chat Layer (Non-animated positioning as requested)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: _isChatExpanded
-                      ? (MediaQuery.of(context).size.height < 600
-                            ? MediaQuery.of(context).size.height * 0.85
-                            : MediaQuery.of(context).size.height * 0.7)
-                      : (MediaQuery.of(context).size.height < 600 ? 140 : 160),
-                  child: Container(
-                    padding: const EdgeInsets.only(bottom: 0),
-                    child: ChatWidget(
-                      isExpanded: _isChatExpanded,
-                      onToggleExpand: () {
-                        setState(() {
-                          _isChatExpanded = !_isChatExpanded;
-                        });
-                      },
+                            // Skip Vote & Role Actions
+                            const ActionButtons(),
+
+                            // Game Area
+                            Padding(
+                              padding: EdgeInsets.only(
+                                bottom:
+                                    (constraints.maxHeight < 480 &&
+                                            MediaQuery.of(
+                                                  context,
+                                                ).orientation ==
+                                                Orientation.landscape) ||
+                                        constraints.maxHeight < 600
+                                    ? 120
+                                    : 200, // Extra padding for chat area
+                              ),
+                              child: const PlayerGrid(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+
+                    // Expandable Chat Layer
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: _isChatExpanded
+                          ? ((constraints.maxHeight < 480 &&
+                                        MediaQuery.of(context).orientation ==
+                                            Orientation.landscape) ||
+                                    constraints.maxHeight < 600
+                                ? constraints.maxHeight * 0.85
+                                : constraints.maxHeight * 0.7)
+                          : ((constraints.maxHeight < 480 &&
+                                        MediaQuery.of(context).orientation ==
+                                            Orientation.landscape) ||
+                                    constraints.maxHeight < 600
+                                ? 140
+                                : 160),
+                      child: Container(
+                        padding: const EdgeInsets.all(0),
+                        child: ChatWidget(
+                          isExpanded: _isChatExpanded,
+                          onToggleExpand: () {
+                            setState(() {
+                              _isChatExpanded = !_isChatExpanded;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            if (gameState.gamePhase == GamePhase.result)
-              const GameResultOverlay(),
+            if (gamePhase == GamePhase.result) const GameResultOverlay(),
             // If Overlay expects "GameProvider", I need to migrate Overlay too.
             // Assuming Overlay expects "game" which was "GameProvider".
             // Since I pass "gameState" (type GameState), Overlay will break if not migrated.
@@ -108,12 +126,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             // Role Reveal Modal
             if (shouldShowRoleModal && !_roleRevealed)
               RoleRevealModal(
-                role: gameState.myRole!,
+                role: myRole,
                 onDismiss: () {
                   setState(() {
                     _roleRevealed = true;
-                    _shownRole = gameState.myRole;
-                    _lastDayCount = gameState.dayCount;
+                    _shownRole = myRole;
+                    _lastDayCount = dayCount;
                   });
                 },
               ),
