@@ -6,6 +6,8 @@ import '../../models/event_models.dart';
 import '../../services/error_handler.dart';
 import 'connection_provider.dart';
 
+import '../../models/game_settings.dart';
+
 part 'game_state_provider.g.dart';
 
 class GameState {
@@ -22,6 +24,8 @@ class GameState {
   final List<Player> endGamePlayers;
   final DateTime? gameOverTime;
   final List<Map<String, dynamic>> gameLog;
+  final GameSettings gameSettings;
+  final bool isUnlimited;
 
   const GameState({
     this.players = const [],
@@ -37,6 +41,8 @@ class GameState {
     this.endGamePlayers = const [],
     this.gameOverTime,
     this.gameLog = const [],
+    this.gameSettings = const GameSettings(),
+    this.isUnlimited = false,
   });
 
   // Custom getters
@@ -52,8 +58,25 @@ class GameState {
   List<String> get roleCountDisplayStrings {
     return roleCounts.entries.map((e) {
       final role = GameRole.fromString(e.key);
+      String emoji = '';
+      switch (role) {
+        case GameRole.mafia:
+          emoji = '🕶️ ';
+          break;
+        case GameRole.doctor:
+          emoji = '💉 ';
+          break;
+        case GameRole.police:
+          emoji = '🚨 ';
+          break;
+        case GameRole.citizen:
+          emoji = '👤 ';
+          break;
+        default:
+          break;
+      }
       final label = role?.label ?? e.key;
-      return '$label ${e.value}';
+      return '$emoji$label ${e.value}';
     }).toList();
   }
 
@@ -71,6 +94,8 @@ class GameState {
     List<Player>? endGamePlayers,
     DateTime? gameOverTime,
     List<Map<String, dynamic>>? gameLog,
+    GameSettings? gameSettings,
+    bool? isUnlimited,
   }) {
     return GameState(
       players: players ?? this.players,
@@ -86,6 +111,8 @@ class GameState {
       endGamePlayers: endGamePlayers ?? this.endGamePlayers,
       gameOverTime: gameOverTime ?? this.gameOverTime,
       gameLog: gameLog ?? this.gameLog,
+      gameSettings: gameSettings ?? this.gameSettings,
+      isUnlimited: isUnlimited ?? this.isUnlimited,
     );
   }
 }
@@ -128,6 +155,18 @@ class GameStateNotifier extends _$GameStateNotifier {
       }
     });
 
+    socket.on(SocketEvent.updateSettings, (data) {
+      try {
+        if (data is Map) {
+          state = state.copyWith(
+            gameSettings: GameSettings.fromMap(Map<String, dynamic>.from(data)),
+          );
+        }
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('update_settings', e, stackTrace);
+      }
+    });
+
     socket.on(SocketEvent.roleCounts, (data) {
       try {
         if (data is! Map<String, dynamic>) {
@@ -153,6 +192,7 @@ class GameStateNotifier extends _$GameStateNotifier {
         gameLog: [],
         timerRemaining: 0,
         timerTotal: 0,
+        isUnlimited: false,
       );
     });
 
@@ -173,6 +213,7 @@ class GameStateNotifier extends _$GameStateNotifier {
         state = state.copyWith(
           gamePhase: event.phase,
           dayCount: event.dayCount,
+          isUnlimited: false, // Reset on phase change
         );
       } catch (e, stackTrace) {
         ErrorHandler.logError('phase_change', e, stackTrace);
@@ -205,6 +246,7 @@ class GameStateNotifier extends _$GameStateNotifier {
         state = state.copyWith(
           timerRemaining: event.remaining,
           timerTotal: event.total,
+          isUnlimited: event.isUnlimited,
         );
       } catch (e, stackTrace) {
         ErrorHandler.logError('timer_tick', e, stackTrace);

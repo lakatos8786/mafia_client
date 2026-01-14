@@ -20,8 +20,12 @@ class PhaseTimer extends ConsumerWidget {
     );
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
 
-    // Don't show timer if no time is set
-    if (timerTotal == 0) {
+    final isUnlimited = ref.watch(
+      gameStateProvider.select((s) => s.isUnlimited),
+    );
+
+    // Don't show timer if no time is set and not unlimited
+    if (timerTotal == 0 && !isUnlimited) {
       return const SizedBox.shrink();
     }
 
@@ -30,14 +34,16 @@ class PhaseTimer extends ConsumerWidget {
     final isLowTime = timerRemaining <= 10;
 
     return Semantics(
-      label: '남은 시간 ${timerRemaining}초',
+      label: isUnlimited ? '제한 시간 없음' : '남은 시간 ${timerRemaining}초',
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isLowTime
+            color: isUnlimited
+                ? Colors.white.withValues(alpha: 0.3)
+                : isLowTime
                 ? AppColors.deadRed.withValues(alpha: 0.8)
                 : timerColor.withValues(alpha: 0.5),
             width: 1.5,
@@ -55,7 +61,10 @@ class PhaseTimer extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildCircularTimer(timerProgress, timerColor, isLowTime),
+            if (!isUnlimited)
+              _buildCircularTimer(timerProgress, timerColor, isLowTime)
+            else
+              const Icon(Icons.all_inclusive, color: Colors.white70, size: 18),
             const SizedBox(width: 8),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
@@ -64,15 +73,16 @@ class PhaseTimer extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
                 color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
-              child: Text('$timerRemaining'),
+              child: Text(isUnlimited ? '무제한' : '$timerRemaining'),
             ),
-            Text(
-              '초',
-              style: GoogleFonts.gowunDodum(
-                fontSize: 14,
-                color: Colors.white.withValues(alpha: 0.7),
+            if (!isUnlimited)
+              Text(
+                '초',
+                style: GoogleFonts.gowunDodum(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
               ),
-            ),
           ],
         ),
       ),

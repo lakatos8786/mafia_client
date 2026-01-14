@@ -32,6 +32,7 @@ class SocketEvent {
   static const String chatMessage = 'chat_message';
   static const String gameOver = 'game_over';
   static const String timerTick = 'timer_tick';
+  static const String updateSettings = 'update_settings';
 }
 
 class SystemConstant {
@@ -62,6 +63,12 @@ class ProtocolKey {
   static const String targetNickname = 'targetNickname';
   static const String errorMessage = 'errorMessage';
   static const String phase = 'phase';
+  static const String settings = 'settings';
+  static const String dayDuration = 'dayDuration';
+  static const String nightDuration = 'nightDuration';
+  static const String mafiaCount = 'mafiaCount';
+  static const String policeCount = 'policeCount';
+  static const String doctorCount = 'doctorCount';
 }
 
 enum GameRole {

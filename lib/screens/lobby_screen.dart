@@ -12,6 +12,7 @@ import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../widgets/custom_snackbar.dart';
+import '../models/game_settings.dart';
 
 class LobbyScreen extends ConsumerWidget {
   const LobbyScreen({super.key});
@@ -202,6 +203,8 @@ class LobbyScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  _buildSettingsSection(context, ref, gameState, myId),
+                  const SizedBox(height: 10),
                   FadeIn(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -296,6 +299,534 @@ class LobbyScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(
+    BuildContext context,
+    WidgetRef ref,
+    GameState gameState,
+    String? myId,
+  ) {
+    final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
+    final GameSettings settings = gameState.gameSettings;
+
+    return FadeInUp(
+      delay: const Duration(milliseconds: 400),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.settings, color: AppColors.primary, size: 22),
+                const SizedBox(width: 12),
+                Text(
+                  '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
+                  style: GoogleFonts.gowunDodum(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Time Section
+            _buildSectionHeader('🕒 시간 설정'),
+            const SizedBox(height: 16),
+            _buildSettingRow(
+              '낮 시간',
+              settings.dayDuration == 0 ? '무제한' : '${settings.dayDuration}초',
+              isHost,
+              settings.dayDuration.toDouble(),
+              0,
+              180,
+              settings.dayDuration == 0,
+              (val) {
+                ref
+                    .read(actionProvider.notifier)
+                    .updateSettings(
+                      settings.copyWith(dayDuration: val.toInt()),
+                    );
+              },
+              (unlimited) {
+                ref
+                    .read(actionProvider.notifier)
+                    .updateSettings(
+                      settings.copyWith(dayDuration: unlimited ? 0 : 60),
+                    );
+              },
+              defaultValue: '60초',
+            ),
+            const SizedBox(height: 12),
+            _buildSettingRow(
+              '밤 시간',
+              settings.nightDuration == 0
+                  ? '무제한'
+                  : '${settings.nightDuration}초',
+              isHost,
+              settings.nightDuration.toDouble(),
+              0,
+              120,
+              settings.nightDuration == 0,
+              (val) {
+                ref
+                    .read(actionProvider.notifier)
+                    .updateSettings(
+                      settings.copyWith(nightDuration: val.toInt()),
+                    );
+              },
+              (unlimited) {
+                ref
+                    .read(actionProvider.notifier)
+                    .updateSettings(
+                      settings.copyWith(nightDuration: unlimited ? 0 : 30),
+                    );
+              },
+              defaultValue: '30초',
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Divider(color: Colors.white12, height: 1),
+            ),
+            // Role Section
+            _buildSectionHeader('👥 직업 구성'),
+            const SizedBox(height: 16),
+            Builder(
+              builder: (context) {
+                final playerCount = gameState.players.length;
+                final isAuto = settings.mafiaCount == null;
+
+                // Auto role count prediction (mirroring server index.js)
+                final autoCounts = _getAutoRoleCounts(playerCount);
+
+                final totalManualRoles =
+                    (settings.mafiaCount ?? 0) +
+                    (settings.policeCount ?? 0) +
+                    (settings.doctorCount ?? 0);
+                final canIncrease = totalManualRoles < playerCount;
+
+                return Column(
+                  children: [
+                    if (isHost)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Row(
+                          children: [
+                            const Text(
+                              '자동 직업 배정',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            SizedBox(
+                              height: 24,
+                              width: 40,
+                              child: Transform.scale(
+                                scale: 0.7,
+                                child: Switch(
+                                  value: isAuto,
+                                  onChanged: (val) {
+                                    if (!val && !canIncrease) {
+                                      CustomSnackBar.show(
+                                        context,
+                                        '참여 인원수를 초과할 수 없습니다.',
+                                      );
+                                      return;
+                                    }
+                                    ref
+                                        .read(actionProvider.notifier)
+                                        .updateSettings(
+                                          settings.copyWith(
+                                            mafiaCount: val
+                                                ? null
+                                                : autoCounts['mafia'],
+                                            policeCount: val
+                                                ? null
+                                                : autoCounts['police'],
+                                            doctorCount: val
+                                                ? null
+                                                : autoCounts['doctor'],
+                                            clearMafia: val,
+                                            clearPolice: val,
+                                            clearDoctor: val,
+                                          ),
+                                        );
+                                  },
+                                  activeColor: AppColors.primary,
+                                  activeTrackColor: AppColors.primary
+                                      .withValues(alpha: 0.3),
+                                  inactiveThumbColor: Colors.white38,
+                                  inactiveTrackColor: Colors.white10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildRoleCounter(
+                          context,
+                          '🕶️ 마피아',
+                          settings.mafiaCount,
+                          isHost,
+                          canIncrease,
+                          autoCounts['mafia']!,
+                          isAuto, // Pass isAuto to disable if global auto is on
+                          (val) {
+                            ref
+                                .read(actionProvider.notifier)
+                                .updateSettings(
+                                  settings.copyWith(
+                                    mafiaCount: val,
+                                    clearMafia: val == null,
+                                  ),
+                                );
+                          },
+                        ),
+                        _buildRoleCounter(
+                          context,
+                          '🚨 경찰',
+                          settings.policeCount,
+                          isHost,
+                          canIncrease,
+                          autoCounts['police']!,
+                          isAuto, // Pass isAuto to disable if global auto is on
+                          (val) {
+                            ref
+                                .read(actionProvider.notifier)
+                                .updateSettings(
+                                  settings.copyWith(
+                                    policeCount: val,
+                                    clearPolice: val == null,
+                                  ),
+                                );
+                          },
+                        ),
+                        _buildRoleCounter(
+                          context,
+                          '💉 의사',
+                          settings.doctorCount,
+                          isHost,
+                          canIncrease,
+                          autoCounts['doctor']!,
+                          isAuto, // Pass isAuto to disable if global auto is on
+                          (val) {
+                            ref
+                                .read(actionProvider.notifier)
+                                .updateSettings(
+                                  settings.copyWith(
+                                    doctorCount: val,
+                                    clearDoctor: val == null,
+                                  ),
+                                );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, int> _getAutoRoleCounts(int playerCount) {
+    int mafia = 1;
+    int police = 1;
+    int doctor = 1;
+
+    if (playerCount < 5) {
+      if (playerCount == 1) {
+        mafia = 1;
+        police = 0;
+        doctor = 0;
+      } else if (playerCount == 2) {
+        mafia = 1;
+        police = 0;
+        doctor = 0;
+      } else if (playerCount == 3) {
+        mafia = 1;
+        police = 1;
+        doctor = 0;
+      } else if (playerCount == 4) {
+        mafia = 1;
+        police = 1;
+        doctor = 1;
+      }
+    } else {
+      if (playerCount == 5) {
+        mafia = 1;
+      } else if (playerCount >= 6 && playerCount <= 8) {
+        mafia = 2;
+      } else if (playerCount >= 9 && playerCount <= 12) {
+        mafia = 3;
+      } else if (playerCount >= 13) {
+        // High level balance (following server pattern)
+        mafia = (playerCount / 4).floor();
+      }
+    }
+    return {'mafia': mafia, 'police': police, 'doctor': doctor};
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.gowunDodum(
+        color: Colors.white70,
+        fontSize: 15,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.0,
+      ),
+    );
+  }
+
+  Widget _buildSettingRow(
+    String label,
+    String valueText,
+    bool isHost,
+    double value,
+    double min,
+    double max,
+    bool isUnlimited,
+    ValueChanged<double> onChanged,
+    ValueChanged<bool> onToggleUnlimited, {
+    String? defaultValue,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (defaultValue != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '(기본 $defaultValue)',
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (isHost) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Text(
+                        '무제한',
+                        style: TextStyle(color: Colors.white38, fontSize: 11),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox(
+                        height: 24,
+                        width: 40,
+                        child: Transform.scale(
+                          scale: 0.65,
+                          child: Switch(
+                            value: isUnlimited,
+                            onChanged: onToggleUnlimited,
+                            activeColor: AppColors.primary,
+                            activeTrackColor: AppColors.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                            inactiveThumbColor: Colors.white38,
+                            inactiveTrackColor: Colors.white10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: isUnlimited
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                valueText,
+                style: TextStyle(
+                  color: isUnlimited ? Colors.white38 : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (isHost)
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 2,
+              thumbShape: isUnlimited
+                  ? SliderComponentShape.noThumb
+                  : const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: isUnlimited
+                  ? SliderComponentShape.noOverlay
+                  : const RoundSliderOverlayShape(overlayRadius: 14),
+              activeTrackColor: isUnlimited
+                  ? Colors.white10
+                  : AppColors.primary,
+              inactiveTrackColor: Colors.white10,
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: isUnlimited ? max : value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: max > min ? (max - min) ~/ 10 : null,
+              onChanged: isUnlimited ? null : onChanged,
+            ),
+          )
+        else
+          const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Widget _buildRoleCounter(
+    BuildContext context,
+    String label,
+    int? count,
+    bool isHost,
+    bool canIncrease,
+    int predictedCount,
+    bool isGlobalAuto,
+    ValueChanged<int?> onChanged,
+  ) {
+    final int currentCount = count ?? predictedCount;
+
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (isHost) const SizedBox(height: 12),
+        if (isHost)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildMinibutton(
+                '-',
+                isGlobalAuto
+                    ? null
+                    : () {
+                        if (currentCount > 0) onChanged(currentCount - 1);
+                      },
+              ),
+              Container(
+                width: 36,
+                alignment: Alignment.center,
+                child: Text(
+                  currentCount.toString(),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: isGlobalAuto ? Colors.white38 : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              _buildMinibutton(
+                '+',
+                isGlobalAuto
+                    ? null
+                    : () {
+                        if (!canIncrease) {
+                          CustomSnackBar.show(context, '참여 인원수를 초과할 수 없습니다.');
+                          return;
+                        }
+                        onChanged(currentCount + 1);
+                      },
+              ),
+            ],
+          )
+        else
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isGlobalAuto
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              isGlobalAuto ? '자동 ($currentCount)' : currentCount.toString(),
+              style: TextStyle(
+                color: isGlobalAuto ? Colors.white38 : Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMinibutton(String label, VoidCallback? onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Opacity(
+        opacity: onPressed == null ? 0.3 : 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -8,6 +8,7 @@ import '../../models/chat_message.dart';
 import '../../models/event_models.dart';
 import '../../services/error_handler.dart';
 import '../../theme/app_strings.dart';
+import '../../models/game_settings.dart';
 
 import 'connection_provider.dart';
 import 'game_state_provider.dart';
@@ -341,6 +342,14 @@ class ActionNotifier extends _$ActionNotifier {
         .read(connectionProvider.notifier)
         .socketService
         .emit(SocketEvent.startGame);
+  }
+
+  void updateSettings(GameSettings settings) {
+    developer.log('Emitting update_settings: $settings');
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit(SocketEvent.updateSettings, settings.toMap());
   }
 
   void sendMessage(String message) {

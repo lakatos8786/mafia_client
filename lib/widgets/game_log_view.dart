@@ -32,12 +32,15 @@ class GameLogView extends StatelessWidget {
                     onPressed: onClose,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    '게임 로그',
-                    style: GoogleFonts.gowunDodum(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  Expanded(
+                    child: Text(
+                      '게임 로그',
+                      style: GoogleFonts.gowunDodum(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const Spacer(),

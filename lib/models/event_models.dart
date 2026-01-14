@@ -87,13 +87,19 @@ class VoteUpdateEvent {
 class TimerTickEvent {
   final int remaining;
   final int total;
+  final bool isUnlimited;
 
-  TimerTickEvent({required this.remaining, required this.total});
+  TimerTickEvent({
+    required this.remaining,
+    required this.total,
+    this.isUnlimited = false,
+  });
 
   factory TimerTickEvent.fromJson(Map<String, dynamic> json) {
     return TimerTickEvent(
       remaining: (json['remaining'] as num?)?.toInt() ?? 0,
       total: (json['total'] as num?)?.toInt() ?? 0,
+      isUnlimited: json['isUnlimited'] as bool? ?? false,
     );
   }
 }

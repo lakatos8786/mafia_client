@@ -254,11 +254,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         label: AppStrings.labelNickname,
                                         icon: Icons.person_outline,
                                         maxLength: 10,
+                                        maxLengthEnforcement:
+                                            MaxLengthEnforcement.enforced,
                                         inputFormatters: [
                                           FilteringTextInputFormatter.allow(
                                             RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
                                           ),
+                                          LengthLimitingTextInputFormatter(10),
                                         ],
+                                        onChanged: (value) {
+                                          if (value.length > 10) {
+                                            _nameController.value =
+                                                TextEditingValue(
+                                                  text: value.substring(0, 10),
+                                                  selection:
+                                                      TextSelection.collapsed(
+                                                        offset: 10,
+                                                      ),
+                                                );
+                                          }
+                                        },
                                       ),
                                       SizedBox(
                                         height:
@@ -349,13 +364,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     required IconData icon,
     bool isNumber = false,
     int? maxLength,
+    MaxLengthEnforcement? maxLengthEnforcement,
     List<TextInputFormatter>? inputFormatters,
+    ValueChanged<String>? onChanged,
   }) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       maxLength: maxLength,
+      maxLengthEnforcement: maxLengthEnforcement,
       inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,

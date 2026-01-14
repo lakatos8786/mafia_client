@@ -103,98 +103,119 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                   builder: (context, constraints) {
                     final isCompact = constraints.maxHeight < 600;
 
-                    return SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(height: 20), // Reduced top spacing
-                          // 1. Winner Announcement (Big & Clear)
-                          ZoomIn(
-                            duration: const Duration(milliseconds: 600),
+                    return Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.emoji_events,
-                                  color: mainColor,
-                                  size: isCompact ? 50 : 80,
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  isMafiaWin
-                                      ? AppStrings.winMafia
-                                      : AppStrings.winCitizen,
-                                  style: GoogleFonts.gowunDodum(
-                                    fontSize: isCompact
-                                        ? 32
-                                        : 50, // Massive font
-                                    fontWeight: FontWeight.w900,
-                                    color: mainColor, // Color the text itself
-                                    letterSpacing: 2.0,
-                                    shadows: [
-                                      Shadow(blurRadius: 15, color: mainColor),
+                                const SizedBox(
+                                  height: 20,
+                                ), // Reduced top spacing
+                                // 1. Winner Announcement (Big & Clear)
+                                ZoomIn(
+                                  duration: const Duration(milliseconds: 600),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.emoji_events,
+                                        color: mainColor,
+                                        size: isCompact ? 50 : 80,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        isMafiaWin
+                                            ? AppStrings.winMafia
+                                            : AppStrings.winCitizen,
+                                        style: GoogleFonts.gowunDodum(
+                                          fontSize: isCompact
+                                              ? 32
+                                              : 50, // Massive font
+                                          fontWeight: FontWeight.w900,
+                                          color:
+                                              mainColor, // Color the text itself
+                                          letterSpacing: 2.0,
+                                          shadows: [
+                                            Shadow(
+                                              blurRadius: 15,
+                                              color: mainColor,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        isMafiaWin
+                                            ? AppStrings.winMafiaDesc
+                                            : AppStrings.winCitizenDesc,
+                                        style: GoogleFonts.gowunDodum(
+                                          fontSize: isCompact ? 14 : 16,
+                                          color: Colors.white70,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  isMafiaWin
-                                      ? AppStrings.winMafiaDesc
-                                      : AppStrings.winCitizenDesc,
-                                  style: GoogleFonts.gowunDodum(
-                                    fontSize: isCompact ? 14 : 16,
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.bold,
+
+                                SizedBox(
+                                  height: isCompact ? 10 : 30,
+                                ), // More spacing
+                                // 2. Results Grid (Highlight Winners)
+                                if (_showCards)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    child: Center(
+                                      child: Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 12,
+                                        runSpacing: 12,
+                                        children: gameState.endGamePlayers.map((
+                                          p,
+                                        ) {
+                                          final index = gameState.endGamePlayers
+                                              .indexOf(p);
+
+                                          // Determine if this player won
+                                          bool isPlayerWinner = false;
+                                          final role = p.role;
+                                          if (isMafiaWin) {
+                                            if (role == GameRole.mafia) {
+                                              isPlayerWinner = true;
+                                            }
+                                          } else {
+                                            // Citizen win: All non-mafia win
+                                            if (role != GameRole.mafia) {
+                                              isPlayerWinner = true;
+                                            }
+                                          }
+
+                                          return ResultPlayerCard(
+                                            player: p, // Player object
+                                            index: index,
+                                            isWinner: isPlayerWinner,
+                                            mainColor: mainColor,
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
                                   ),
-                                ),
+
+                                SizedBox(height: isCompact ? 10 : 20),
                               ],
                             ),
                           ),
-
-                          SizedBox(height: isCompact ? 20 : 30), // More spacing
-                          // 2. Results Grid (Highlight Winners)
-                          if (_showCards)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Center(
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: gameState.endGamePlayers.map((p) {
-                                    final index = gameState.endGamePlayers
-                                        .indexOf(p);
-
-                                    // Determine if this player won
-                                    bool isPlayerWinner = false;
-                                    final role = p.role;
-                                    if (isMafiaWin) {
-                                      if (role == GameRole.mafia) {
-                                        isPlayerWinner = true;
-                                      }
-                                    } else {
-                                      // Citizen win: All non-mafia win
-                                      if (role != GameRole.mafia) {
-                                        isPlayerWinner = true;
-                                      }
-                                    }
-
-                                    return ResultPlayerCard(
-                                      player: p, // Player object
-                                      index: index,
-                                      isWinner: isPlayerWinner,
-                                      mainColor: mainColor,
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-
-                          SizedBox(height: isCompact ? 20 : 30),
-
-                          // 3. Action Buttons - Centered
-                          Column(
+                        ),
+                        // 3. Action Buttons - Fixed at Bottom
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: isCompact ? 10 : 20,
+                          ),
+                          child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -244,7 +265,7 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                     ),
                                   ),
                                 ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               // Game Log Button
                               FadeInUp(
                                 delay: const Duration(milliseconds: 200),
@@ -265,9 +286,8 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                        ),
+                      ],
                     );
                   },
                 ),
