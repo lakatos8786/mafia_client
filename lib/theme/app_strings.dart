@@ -11,12 +11,19 @@ class AppStrings {
   // Vote Results
   static const String voteSkipped = '시민들은 아무도 처형하지 않기로 했습니다.';
   static const String voteTie = '투표가 동률입니다. 아무도 처형되지 않았습니다.';
+  static const String voteTimeout = '시간이 종료되었습니다. 아무도 처형되지 않았습니다.';
 
   // Night Results
   static const String nightKill = '어젯밤, 누군가 차가운 시체로 발견되었습니다...';
   static const String nightPeace = '평화로운 밤이었습니다.';
   static const String doctorSaved = '당신의 치료가 누군가의 생명을 구했습니다!';
   static const String doctorHealNone = '아무도 치료하지 않았습니다.';
+
+  // Death Notifications (with player names)
+  static String nightKillPlayer(String nickname) =>
+      '어젯밤, [$nickname]이(가) 차가운 시체로 발견되었습니다...';
+  static String dayExecution(String nickname) => '[$nickname]이(가) 투표로 처형되었습니다.';
+  static String playerDied(String nickname) => '[$nickname]이(가) 사망했습니다.';
 
   // Investigation Results
   static String investigationMafia(String nickname) =>

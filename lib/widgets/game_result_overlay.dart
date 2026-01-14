@@ -8,6 +8,7 @@ import '../models/game_enums.dart';
 import '../providers/game_state_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 import 'game_log_view.dart';
 import 'result_player_card.dart';
 // Note: GameState needs to expose `returnToLobby` via Notifier.
@@ -258,7 +259,10 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                     child: Text(
                                       AppStrings.returnToLobby,
                                       style: GoogleFonts.gowunDodum(
-                                        fontSize: isCompact ? 14 : 16,
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          12,
+                                        ),
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),

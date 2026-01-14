@@ -3,6 +3,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class ResultPlayerCard extends StatelessWidget {
   final dynamic
@@ -44,102 +45,115 @@ class ResultPlayerCard extends StatelessWidget {
     return FadeInLeft(
       delay: Duration(milliseconds: 50 * index),
       duration: const Duration(milliseconds: 400),
-      child: SizedBox(
-        width: 180,
-        height: 85,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: isWinner
-                    ? mainColor.withValues(alpha: 0.1)
-                    : Colors.white.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isWinner ? mainColor : borderColor,
-                  width: borderWidth,
-                ),
-                boxShadow: isWinner
-                    ? [
-                        BoxShadow(
-                          color: mainColor.withValues(alpha: 0.4),
-                          blurRadius: 15,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: roleColor.withValues(alpha: 0.2),
-                      border: Border.all(color: roleColor, width: 2),
+      child: Builder(
+        builder: (context) {
+          return SizedBox(
+            width: ResponsiveUtils.iconSize(context, 160),
+            height: ResponsiveUtils.iconSize(context, 75),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveUtils.padding(context, 8),
+                    vertical: ResponsiveUtils.padding(context, 6),
+                  ),
+                  decoration: BoxDecoration(
+                    color: isWinner
+                        ? mainColor.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isWinner ? mainColor : borderColor,
+                      width: borderWidth,
                     ),
-                    child: Center(
-                      child: Text(
-                        roleEmoji,
-                        style: const TextStyle(fontSize: 20),
+                    boxShadow: isWinner
+                        ? [
+                            BoxShadow(
+                              color: mainColor.withValues(alpha: 0.4),
+                              blurRadius: 15,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: ResponsiveUtils.iconSize(context, 36),
+                        height: ResponsiveUtils.iconSize(context, 36),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: roleColor.withValues(alpha: 0.2),
+                          border: Border.all(color: roleColor, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            roleEmoji,
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.fontSize(context, 18),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              player.nickname,
+                              style: GoogleFonts.gowunDodum(
+                                color: player.isAlive
+                                    ? Colors.white
+                                    : Colors.grey,
+                                fontSize: ResponsiveUtils.fontSize(context, 14),
+                                fontWeight: FontWeight.bold,
+                                decoration: player.isAlive
+                                    ? null
+                                    : TextDecoration.lineThrough,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              player.role?.label ?? '알 수 없음',
+                              style: TextStyle(
+                                color: roleColor,
+                                fontSize: ResponsiveUtils.fontSize(context, 11),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isWinner)
+                  Positioned(
+                    top: ResponsiveUtils.spacing(context, -6),
+                    right: ResponsiveUtils.spacing(context, -6),
+                    child: Container(
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.padding(context, 3),
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppColors.voteGold,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.emoji_events,
+                        size: ResponsiveUtils.iconSize(context, 12),
+                        color: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          player.nickname,
-                          style: GoogleFonts.gowunDodum(
-                            color: player.isAlive ? Colors.white : Colors.grey,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            decoration: player.isAlive
-                                ? null
-                                : TextDecoration.lineThrough,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          player.role?.label ?? '알 수 없음',
-                          style: TextStyle(
-                            color: roleColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-            if (isWinner)
-              Positioned(
-                top: -8,
-                right: -8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.voteGold,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.emoji_events,
-                    size: 14,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

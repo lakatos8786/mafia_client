@@ -13,6 +13,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../widgets/custom_snackbar.dart';
 import '../models/game_settings.dart';
+import '../utils/responsive_utils.dart';
 
 class LobbyScreen extends ConsumerWidget {
   const LobbyScreen({super.key});
@@ -79,16 +80,18 @@ class LobbyScreen extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  const SizedBox(height: 100),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 100)),
                   FadeInDown(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 24),
+                      ),
                       child: Text(
                         '플레이어 대기 중...',
                         style: GoogleFonts.gowunDodum(
                           color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: 18,
-                          letterSpacing: 4.0,
+                          fontSize: ResponsiveUtils.fontSize(context, 16),
+                          letterSpacing: ResponsiveUtils.spacing(context, 4),
                           fontWeight: FontWeight.bold,
                           shadows: [
                             BoxShadow(
@@ -100,7 +103,7 @@ class LobbyScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
                   ConstrainedBox(
                     constraints: BoxConstraints(
                       maxHeight: MediaQuery.of(context).size.height * 0.6,
@@ -108,7 +111,9 @@ class LobbyScreen extends ConsumerWidget {
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 20),
+                      ),
                       itemCount: gameState.players.length,
                       itemBuilder: (context, index) {
                         final player = gameState.players[index];
@@ -117,15 +122,20 @@ class LobbyScreen extends ConsumerWidget {
                         return FadeInLeft(
                           delay: Duration(milliseconds: 100 * index),
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
+                            margin: EdgeInsets.only(
+                              bottom: ResponsiveUtils.spacing(context, 10),
+                            ),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(15),
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: ResponsiveUtils.padding(
+                                      context,
+                                      16,
+                                    ),
                                     vertical: 15,
                                   ),
                                   decoration: BoxDecoration(
@@ -162,12 +172,20 @@ class LobbyScreen extends ConsumerWidget {
                                         foregroundColor: Colors.white,
                                         child: const Icon(Icons.person),
                                       ),
-                                      const SizedBox(width: 15),
+                                      SizedBox(
+                                        width: ResponsiveUtils.spacing(
+                                          context,
+                                          12,
+                                        ),
+                                      ),
                                       Expanded(
                                         child: Text(
                                           player.nickname,
                                           style: GoogleFonts.gowunDodum(
-                                            fontSize: 18,
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              15,
+                                            ),
                                             fontWeight: FontWeight.bold,
                                             color: player.isAlive
                                                 ? Colors.white
@@ -176,20 +194,34 @@ class LobbyScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       if (player.isHost)
-                                        const Tooltip(
+                                        Tooltip(
                                           message: '방장',
                                           child: Text(
                                             '👑',
-                                            style: TextStyle(fontSize: 24),
+                                            style: TextStyle(
+                                              fontSize:
+                                                  ResponsiveUtils.fontSize(
+                                                    context,
+                                                    20,
+                                                  ),
+                                            ),
                                           ),
                                         ),
                                       if (isMe)
-                                        const Padding(
-                                          padding: EdgeInsets.only(left: 10),
+                                        Padding(
+                                          padding: EdgeInsets.only(
+                                            left: ResponsiveUtils.spacing(
+                                              context,
+                                              8,
+                                            ),
+                                          ),
                                           child: Icon(
                                             Icons.star,
                                             color: AppColors.accentYellow,
-                                            size: 20,
+                                            size: ResponsiveUtils.iconSize(
+                                              context,
+                                              18,
+                                            ),
                                           ),
                                         ),
                                     ],
@@ -202,39 +234,43 @@ class LobbyScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   _buildSettingsSection(context, ref, gameState, myId),
-                  const SizedBox(height: 10),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   FadeIn(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 24),
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.people,
                             color: Colors.white54,
-                            size: 20,
+                            size: ResponsiveUtils.iconSize(context, 18),
                           ),
-                          const SizedBox(width: 8),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
                           Text(
                             '${gameState.players.length}명 참가 중',
                             style: GoogleFonts.gowunDodum(
                               color: Colors.white54,
-                              fontSize: 14,
+                              fontSize: ResponsiveUtils.fontSize(context, 12),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
                   FadeInUp(
                     child: Padding(
-                      padding: const EdgeInsets.all(30.0),
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.padding(context, 24),
+                      ),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 60,
+                        height: ResponsiveUtils.iconSize(context, 50),
                         child: Builder(
                           builder: (context) {
                             if (gameState.roomId != null) {
@@ -262,16 +298,24 @@ class LobbyScreen extends ConsumerWidget {
                                   child: Text(
                                     AppStrings.startGame,
                                     style: GoogleFonts.gowunDodum(
-                                      fontSize: 22,
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        18,
+                                      ),
                                       fontWeight: FontWeight.bold,
-                                      letterSpacing: 2.0,
+                                      letterSpacing: ResponsiveUtils.spacing(
+                                        context,
+                                        2,
+                                      ),
                                     ),
                                   ),
                                 );
                               } else {
                                 return Container(
                                   alignment: Alignment.center,
-                                  padding: const EdgeInsets.all(12),
+                                  padding: EdgeInsets.all(
+                                    ResponsiveUtils.padding(context, 10),
+                                  ),
                                   decoration: BoxDecoration(
                                     border: Border.all(color: Colors.white24),
                                     borderRadius: BorderRadius.circular(15),
@@ -280,8 +324,14 @@ class LobbyScreen extends ConsumerWidget {
                                     AppStrings.waitingForHost,
                                     style: GoogleFonts.gowunDodum(
                                       color: Colors.white54,
-                                      fontSize: 16,
-                                      letterSpacing: 1.5,
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        14,
+                                      ),
+                                      letterSpacing: ResponsiveUtils.spacing(
+                                        context,
+                                        1.5,
+                                      ),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -315,8 +365,10 @@ class LobbyScreen extends ConsumerWidget {
     return FadeInUp(
       delay: const Duration(milliseconds: 400),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 24),
-        padding: const EdgeInsets.all(20),
+        margin: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.padding(context, 20),
+        ),
+        padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
@@ -327,19 +379,23 @@ class LobbyScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.settings, color: AppColors.primary, size: 22),
-                const SizedBox(width: 12),
+                Icon(
+                  Icons.settings,
+                  color: AppColors.primary,
+                  size: ResponsiveUtils.iconSize(context, 20),
+                ),
+                SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                 Text(
                   '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
                   style: GoogleFonts.gowunDodum(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             // Time Section
             _buildSectionHeader('🕒 시간 설정'),
             const SizedBox(height: 16),
@@ -586,14 +642,18 @@ class LobbyScreen extends ConsumerWidget {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.gowunDodum(
-        color: Colors.white70,
-        fontSize: 15,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.0,
-      ),
+    return Builder(
+      builder: (context) {
+        return Text(
+          title,
+          style: GoogleFonts.gowunDodum(
+            color: Colors.white70,
+            fontSize: ResponsiveUtils.fontSize(context, 13),
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+          ),
+        );
+      },
     );
   }
 
@@ -609,116 +669,126 @@ class LobbyScreen extends ConsumerWidget {
     ValueChanged<bool> onToggleUnlimited, {
     String? defaultValue,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Builder(
+      builder: (context) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (defaultValue != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '(기본 $defaultValue)',
-                        style: const TextStyle(
-                          color: Colors.white38,
-                          fontSize: 11,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
+                        if (defaultValue != null) ...[
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                          Text(
+                            '(기본 $defaultValue)',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: ResponsiveUtils.fontSize(context, 10),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (isHost) ...[
+                      SizedBox(height: ResponsiveUtils.spacing(context, 3)),
+                      Row(
+                        children: [
+                          Text(
+                            '무제한',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: ResponsiveUtils.fontSize(context, 10),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          SizedBox(
+                            height: 24,
+                            width: 40,
+                            child: Transform.scale(
+                              scale: 0.65,
+                              child: Switch(
+                                value: isUnlimited,
+                                onChanged: onToggleUnlimited,
+                                activeColor: AppColors.primary,
+                                activeTrackColor: AppColors.primary.withValues(
+                                  alpha: 0.3,
+                                ),
+                                inactiveThumbColor: Colors.white38,
+                                inactiveTrackColor: Colors.white10,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
                 ),
-                if (isHost) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Text(
-                        '무제한',
-                        style: TextStyle(color: Colors.white38, fontSize: 11),
-                      ),
-                      const SizedBox(width: 4),
-                      SizedBox(
-                        height: 24,
-                        width: 40,
-                        child: Transform.scale(
-                          scale: 0.65,
-                          child: Switch(
-                            value: isUnlimited,
-                            onChanged: onToggleUnlimited,
-                            activeColor: AppColors.primary,
-                            activeTrackColor: AppColors.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                            inactiveThumbColor: Colors.white38,
-                            inactiveTrackColor: Colors.white10,
-                          ),
-                        ),
-                      ),
-                    ],
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveUtils.padding(context, 8),
+                    vertical: ResponsiveUtils.padding(context, 3),
                   ),
-                ],
+                  decoration: BoxDecoration(
+                    color: isUnlimited
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    valueText,
+                    style: TextStyle(
+                      color: isUnlimited ? Colors.white38 : Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                    ),
+                  ),
+                ),
               ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: isUnlimited
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                valueText,
-                style: TextStyle(
-                  color: isUnlimited ? Colors.white38 : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+            if (isHost)
+              SliderTheme(
+                data: SliderThemeData(
+                  trackHeight: 2,
+                  thumbShape: isUnlimited
+                      ? SliderComponentShape.noThumb
+                      : const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: isUnlimited
+                      ? SliderComponentShape.noOverlay
+                      : const RoundSliderOverlayShape(overlayRadius: 14),
+                  activeTrackColor: isUnlimited
+                      ? Colors.white10
+                      : AppColors.primary,
+                  inactiveTrackColor: Colors.white10,
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withValues(alpha: 0.2),
                 ),
-              ),
-            ),
+                child: Slider(
+                  value: isUnlimited ? max : value.clamp(min, max),
+                  min: min,
+                  max: max,
+                  divisions: max > min ? (max - min) ~/ 10 : null,
+                  onChanged: isUnlimited ? null : onChanged,
+                ),
+              )
+            else
+              const SizedBox(height: 10),
           ],
-        ),
-        if (isHost)
-          SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 2,
-              thumbShape: isUnlimited
-                  ? SliderComponentShape.noThumb
-                  : const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape: isUnlimited
-                  ? SliderComponentShape.noOverlay
-                  : const RoundSliderOverlayShape(overlayRadius: 14),
-              activeTrackColor: isUnlimited
-                  ? Colors.white10
-                  : AppColors.primary,
-              inactiveTrackColor: Colors.white10,
-              thumbColor: AppColors.primary,
-              overlayColor: AppColors.primary.withValues(alpha: 0.2),
-            ),
-            child: Slider(
-              value: isUnlimited ? max : value.clamp(min, max),
-              min: min,
-              max: max,
-              divisions: max > min ? (max - min) ~/ 10 : null,
-              onChanged: isUnlimited ? null : onChanged,
-            ),
-          )
-        else
-          const SizedBox(height: 10),
-      ],
+        );
+      },
     );
   }
 
@@ -738,9 +808,9 @@ class LobbyScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 14,
+            fontSize: ResponsiveUtils.fontSize(context, 12),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -758,7 +828,7 @@ class LobbyScreen extends ConsumerWidget {
                       },
               ),
               Container(
-                width: 36,
+                width: ResponsiveUtils.iconSize(context, 32),
                 alignment: Alignment.center,
                 child: Text(
                   currentCount.toString(),
@@ -766,7 +836,7 @@ class LobbyScreen extends ConsumerWidget {
                   style: TextStyle(
                     color: isGlobalAuto ? Colors.white38 : Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: ResponsiveUtils.fontSize(context, 14),
                   ),
                 ),
               ),
@@ -786,8 +856,11 @@ class LobbyScreen extends ConsumerWidget {
           )
         else
           Container(
-            margin: const EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            margin: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 6)),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.padding(context, 10),
+              vertical: ResponsiveUtils.padding(context, 5),
+            ),
             decoration: BoxDecoration(
               color: isGlobalAuto
                   ? Colors.white.withValues(alpha: 0.05)
@@ -799,7 +872,7 @@ class LobbyScreen extends ConsumerWidget {
               style: TextStyle(
                 color: isGlobalAuto ? Colors.white38 : Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: ResponsiveUtils.fontSize(context, 13),
               ),
             ),
           ),
@@ -808,26 +881,33 @@ class LobbyScreen extends ConsumerWidget {
   }
 
   Widget _buildMinibutton(String label, VoidCallback? onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Opacity(
-        opacity: onPressed == null ? 0.3 : 1.0,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+    return Builder(
+      builder: (context) {
+        return GestureDetector(
+          onTap: onPressed,
+          child: Opacity(
+            opacity: onPressed == null ? 0.3 : 1.0,
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveUtils.padding(context, 6),
+                vertical: ResponsiveUtils.padding(context, 3),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

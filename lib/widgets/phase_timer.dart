@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class PhaseTimer extends ConsumerWidget {
   const PhaseTimer({super.key});
@@ -34,9 +35,12 @@ class PhaseTimer extends ConsumerWidget {
     final isLowTime = timerRemaining <= 10;
 
     return Semantics(
-      label: isUnlimited ? '제한 시간 없음' : '남은 시간 ${timerRemaining}초',
+      label: isUnlimited ? '제한 시간 없음' : '남은 시간 $timerRemaining초',
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.padding(context, 10),
+          vertical: ResponsiveUtils.padding(context, 5),
+        ),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(20),
@@ -62,14 +66,20 @@ class PhaseTimer extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!isUnlimited)
-              _buildCircularTimer(timerProgress, timerColor, isLowTime)
+              _buildCircularTimer(context, timerProgress, timerColor, isLowTime)
             else
-              const Icon(Icons.all_inclusive, color: Colors.white70, size: 18),
-            const SizedBox(width: 8),
+              Icon(
+                Icons.all_inclusive,
+                color: Colors.white70,
+                size: ResponsiveUtils.iconSize(context, 16),
+              ),
+            SizedBox(width: ResponsiveUtils.spacing(context, 6)),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: GoogleFonts.gowunDodum(
-                fontSize: isLowTime ? 20 : 18,
+                fontSize: isLowTime
+                    ? ResponsiveUtils.fontSize(context, 17)
+                    : ResponsiveUtils.fontSize(context, 15),
                 fontWeight: FontWeight.bold,
                 color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
@@ -79,7 +89,7 @@ class PhaseTimer extends ConsumerWidget {
               Text(
                 '초',
                 style: GoogleFonts.gowunDodum(
-                  fontSize: 14,
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),
@@ -89,10 +99,16 @@ class PhaseTimer extends ConsumerWidget {
     );
   }
 
-  Widget _buildCircularTimer(double progress, Color color, bool isLowTime) {
+  Widget _buildCircularTimer(
+    BuildContext context,
+    double progress,
+    Color color,
+    bool isLowTime,
+  ) {
+    final size = ResponsiveUtils.iconSize(context, 20);
     return SizedBox(
-      width: 24,
-      height: 24,
+      width: size,
+      height: size,
       child: CustomPaint(
         painter: _TimerPainter(
           progress: progress,

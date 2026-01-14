@@ -172,3 +172,45 @@ class RoleCountsEvent {
     );
   }
 }
+
+/// Vote result event with type-safe parsing
+class VoteResultEvent {
+  final String? eliminatedId;
+  final String? eliminatedNickname;
+  final String message;
+
+  VoteResultEvent({
+    this.eliminatedId,
+    this.eliminatedNickname,
+    required this.message,
+  });
+
+  factory VoteResultEvent.fromJson(Map<String, dynamic> json) {
+    return VoteResultEvent(
+      eliminatedId: json[ProtocolKey.targetId]?.toString(),
+      eliminatedNickname: json[ProtocolKey.targetNickname]?.toString(),
+      message: json[ProtocolKey.message]?.toString() ?? '',
+    );
+  }
+}
+
+/// Player eliminated event with type-safe parsing
+class PlayerEliminatedEvent {
+  final String playerId;
+  final String playerNickname;
+  final String reason;
+
+  PlayerEliminatedEvent({
+    required this.playerId,
+    required this.playerNickname,
+    required this.reason,
+  });
+
+  factory PlayerEliminatedEvent.fromJson(Map<String, dynamic> json) {
+    return PlayerEliminatedEvent(
+      playerId: json[ProtocolKey.id]?.toString() ?? '',
+      playerNickname: json[ProtocolKey.nickname]?.toString() ?? '',
+      reason: json[ProtocolKey.reason]?.toString() ?? '',
+    );
+  }
+}

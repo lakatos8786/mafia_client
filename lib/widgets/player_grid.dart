@@ -27,102 +27,108 @@ class PlayerGrid extends ConsumerWidget {
 
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
-    // Removed internal SingleChildScrollView to allow parent GameScreen to scroll the entire column
+    // Use Wrap instead of GridView for intrinsic sizing
     return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 15,
-          runSpacing: 15,
-          children: players.map((player) {
-            final index = players.indexOf(player);
-            final isMe = player.id == socketId;
-            final voteCount = votes[player.id] ?? 0;
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate card width for 2 columns
+          final cardWidth = (constraints.maxWidth - 12) / 2; // 12 = spacing
 
-            // Selection logic
-            final selectionTargetForRole = nightSelections.entries
-                .where((entry) => entry.value == player.id)
-                .map((entry) => entry.key)
-                .toList();
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: players.map((player) {
+              final index = players.indexOf(player);
+              final isMe = player.id == socketId;
+              final voteCount = votes[player.id] ?? 0;
 
-            final isMyVoteTarget = voters[socketId] == player.id;
+              // Selection logic
+              final selectionTargetForRole = nightSelections.entries
+                  .where((entry) => entry.value == player.id)
+                  .map((entry) => entry.key)
+                  .toList();
 
-            final showMafiaIndicator =
-                player.isAlive &&
-                myRole == GameRole.mafia &&
-                player.role == GameRole.mafia &&
-                player.id != socketId;
+              final isMyVoteTarget = voters[socketId] == player.id;
 
-            String votersList = '';
-            if (gamePhase == GamePhase.day && player.isAlive && voteCount > 0) {
-              votersList = voters.entries
-                  .where((e) => e.value == player.id)
-                  .map(
-                    (e) => players
-                        .firstWhere(
-                          (p) => p.id == e.key,
-                          orElse: () =>
-                              Player(id: '', nickname: '?', isAlive: true),
-                        )
-                        .nickname,
-                  )
-                  .toList()
-                  .join(', ');
-            }
+              final showMafiaIndicator =
+                  player.isAlive &&
+                  myRole == GameRole.mafia &&
+                  player.role == GameRole.mafia &&
+                  player.id != socketId;
 
-            // Standard Card Size (similar to previous GridView settings)
-            return SizedBox(
-              key: ValueKey(player.id),
-              width: 140,
-              height: 190, // Aspect Ratio ~0.74
-              child: FadeInUp(
-                delay: Duration(milliseconds: 50 * index),
-                child: PlayerCard(
-                  player: player,
-                  isMe: isMe,
-                  isMyVoteTarget: isMyVoteTarget,
-                  selectionTargets: selectionTargetForRole,
-                  voteCount: gamePhase == GamePhase.day ? voteCount : 0,
-                  votersList: votersList,
-                  showMafiaIndicator: showMafiaIndicator,
-                  onTap: () {
-                    // Check if *I* am alive first
-                    final me = players.firstWhere(
-                      (p) => p.id == socketId,
-                      orElse: () =>
-                          Player(id: 'unknown', nickname: '?', isAlive: false),
-                    );
-                    if (!me.isAlive) return;
-                    if (!player.isAlive) return;
+              String votersList = '';
+              if (gamePhase == GamePhase.day &&
+                  player.isAlive &&
+                  voteCount > 0) {
+                votersList = voters.entries
+                    .where((e) => e.value == player.id)
+                    .map(
+                      (e) => players
+                          .firstWhere(
+                            (p) => p.id == e.key,
+                            orElse: () =>
+                                Player(id: '', nickname: '?', isAlive: true),
+                          )
+                          .nickname,
+                    )
+                    .toList()
+                    .join(', ');
+              }
 
-                    // Voting/Action Logic
-                    if (gamePhase == GamePhase.day) {
-                      ref.read(actionProvider.notifier).vote(player.id);
-                    } else if (gamePhase == GamePhase.night) {
-                      String? action;
-                      // Use strict Enums now
-                      if (myRole == GameRole.mafia) {
-                        action = NightAction.kill;
+              return SizedBox(
+                width: cardWidth,
+                child: FadeInUp(
+                  delay: Duration(milliseconds: 50 * index),
+                  child: PlayerCard(
+                    player: player,
+                    isMe: isMe,
+                    isMyVoteTarget: isMyVoteTarget,
+                    selectionTargets: selectionTargetForRole,
+                    voteCount: gamePhase == GamePhase.day ? voteCount : 0,
+                    votersList: votersList,
+                    showMafiaIndicator: showMafiaIndicator,
+                    onTap: () {
+                      // Check if *I* am alive first
+                      final me = players.firstWhere(
+                        (p) => p.id == socketId,
+                        orElse: () => Player(
+                          id: 'unknown',
+                          nickname: '?',
+                          isAlive: false,
+                        ),
+                      );
+                      if (!me.isAlive) return;
+                      if (!player.isAlive) return;
+
+                      // Voting/Action Logic
+                      if (gamePhase == GamePhase.day) {
+                        ref.read(actionProvider.notifier).vote(player.id);
+                      } else if (gamePhase == GamePhase.night) {
+                        String? action;
+                        // Use strict Enums now
+                        if (myRole == GameRole.mafia) {
+                          action = NightAction.kill;
+                        }
+                        if (myRole == GameRole.doctor) {
+                          action = NightAction.heal;
+                        }
+                        if (myRole == GameRole.police) {
+                          action = NightAction.investigate;
+                        }
+                        if (action != null) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .nightAction(action, player.id);
+                        }
                       }
-                      if (myRole == GameRole.doctor) {
-                        action = NightAction.heal;
-                      }
-                      if (myRole == GameRole.police) {
-                        action = NightAction.investigate;
-                      }
-                      if (action != null) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .nightAction(action, player.id);
-                      }
-                    }
-                  },
+                    },
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
-        ),
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }

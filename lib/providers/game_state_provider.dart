@@ -80,6 +80,31 @@ class GameState {
     }).toList();
   }
 
+  // Compact version for single-row header (emoji + number only)
+  List<String> get roleCountCompact {
+    return roleCounts.entries.map((e) {
+      final role = GameRole.fromString(e.key);
+      String emoji = '';
+      switch (role) {
+        case GameRole.mafia:
+          emoji = '🕶️';
+          break;
+        case GameRole.doctor:
+          emoji = '💉';
+          break;
+        case GameRole.police:
+          emoji = '🚨';
+          break;
+        case GameRole.citizen:
+          emoji = '👤';
+          break;
+        default:
+          break;
+      }
+      return '$emoji${e.value}';
+    }).toList();
+  }
+
   GameState copyWith({
     List<Player>? players,
     GamePhase? gamePhase,

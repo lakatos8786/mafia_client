@@ -6,6 +6,7 @@ import '../providers/action_provider.dart';
 import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
+import '../utils/responsive_utils.dart';
 
 class ActionButtons extends ConsumerWidget {
   const ActionButtons({super.key});
@@ -44,7 +45,7 @@ class ActionButtons extends ConsumerWidget {
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: ResponsiveUtils.fontSize(context, 11),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -80,9 +81,9 @@ class ActionButtons extends ConsumerWidget {
                       backgroundColor: Colors.transparent,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 16),
+                        vertical: ResponsiveUtils.padding(context, 10),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
@@ -93,8 +94,8 @@ class ActionButtons extends ConsumerWidget {
                     },
                     child: Text(
                       AppStrings.skipVote,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -144,9 +145,9 @@ class ActionButtons extends ConsumerWidget {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 16),
+                        vertical: ResponsiveUtils.padding(context, 10),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
@@ -159,8 +160,8 @@ class ActionButtons extends ConsumerWidget {
                     },
                     child: Text(
                       mafiaSkipButtonText,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: ResponsiveUtils.fontSize(context, 13),
                         fontWeight: FontWeight.bold,
                       ),
                     ),

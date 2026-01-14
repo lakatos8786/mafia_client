@@ -6,6 +6,7 @@ import '../models/game_enums.dart';
 import '../models/player.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
+import '../utils/responsive_utils.dart';
 
 class PlayerCard extends ConsumerWidget {
   final Player player;
@@ -134,127 +135,138 @@ class PlayerCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Avatar with Halo
-                    Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: player.isAlive
-                            ? const LinearGradient(
-                                colors: [
-                                  AppColors.gradientSky,
-                                  AppColors.gradientIndigo,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
-                        color: player.isAlive ? null : AppColors.grey800,
-                        boxShadow: player.isAlive
-                            ? [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFF38BDF8,
-                                  ).withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.surface,
-                        child: Icon(
-                          player.isAlive ? Icons.person : Icons.close,
-                          color: player.isAlive
-                              ? Colors.white
-                              : AppColors.grey600,
-                          size: 24,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    // Name
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        player.nickname + (isMe ? ' (나)' : ''),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.gowunDodum(
-                          color: player.isAlive
-                              ? Colors.white
-                              : AppColors.grey600,
-                          fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
-                          decoration: player.isAlive
-                              ? null
-                              : TextDecoration.lineThrough,
-                          fontSize: 14,
-                          shadows: isMe
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveUtils.padding(context, 10),
+                    vertical: ResponsiveUtils.padding(context, 8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Avatar with Halo
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: player.isAlive
+                              ? const LinearGradient(
+                                  colors: [
+                                    AppColors.gradientSky,
+                                    AppColors.gradientIndigo,
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          color: player.isAlive ? null : AppColors.grey800,
+                          boxShadow: player.isAlive
                               ? [
                                   BoxShadow(
-                                    color: Colors.blue.withValues(alpha: 0.8),
+                                    color: const Color(
+                                      0xFF38BDF8,
+                                    ).withValues(alpha: 0.4),
                                     blurRadius: 10,
+                                    spreadRadius: 1,
                                   ),
                                 ]
                               : [],
                         ),
-                      ),
-                    ),
-                    // Vote Count Pill
-                    if (player.isAlive && voteCount > 0)
-                      Container(
-                        margin: const EdgeInsets.only(top: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFF43F5E), AppColors.votePillEnd],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFF43F5E,
-                              ).withValues(alpha: 0.5),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          '$voteCount표',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColors.surface,
+                          child: Icon(
+                            player.isAlive ? Icons.person : Icons.close,
+                            color: player.isAlive
+                                ? Colors.white
+                                : AppColors.grey600,
+                            size: 24,
                           ),
                         ),
                       ),
-                    // Voters List
-                    if (player.isAlive &&
-                        voteCount > 0 &&
-                        votersList.isNotEmpty)
+                      const SizedBox(height: 10),
+                      // Name
                       Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(
-                          votersList,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 10,
-                          ),
+                          player.nickname + (isMe ? ' (나)' : ''),
+                          textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.gowunDodum(
+                            color: player.isAlive
+                                ? Colors.white
+                                : AppColors.grey600,
+                            fontWeight: isMe
+                                ? FontWeight.w900
+                                : FontWeight.bold,
+                            decoration: player.isAlive
+                                ? null
+                                : TextDecoration.lineThrough,
+                            fontSize: 14,
+                            shadows: isMe
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.blue.withValues(alpha: 0.8),
+                                      blurRadius: 10,
+                                    ),
+                                  ]
+                                : [],
+                          ),
                         ),
                       ),
-                  ],
+                      // Vote Count Pill
+                      if (player.isAlive && voteCount > 0)
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFF43F5E),
+                                AppColors.votePillEnd,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFF43F5E,
+                                ).withValues(alpha: 0.5),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '$voteCount표',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      // Voters List
+                      if (player.isAlive &&
+                          voteCount > 0 &&
+                          votersList.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            votersList,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 // Dead Overlay with Skull
                 if (!player.isAlive)

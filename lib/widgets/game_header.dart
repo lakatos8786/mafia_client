@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,18 +7,74 @@ import '../models/game_enums.dart';
 import '../providers/game_state_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
+import '../utils/responsive_utils.dart';
 import 'phase_timer.dart';
+import 'role_reveal_modal.dart';
 
-class GameHeader extends ConsumerWidget {
+class GameHeader extends ConsumerStatefulWidget {
   const GameHeader({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GameHeader> createState() => _GameHeaderState();
+}
+
+class _GameHeaderState extends ConsumerState<GameHeader> {
+  bool _isRoleVisible = true;
+  Timer? _hideTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startHideTimer();
+  }
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startHideTimer() {
+    _hideTimer?.cancel();
+    _hideTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isRoleVisible = false;
+        });
+      }
+    });
+  }
+
+  void _onRoleTap() {
+    final myRole = ref.read(gameStateProvider.select((s) => s.myRole));
+
+    // Show role for 5 seconds
+    setState(() {
+      _isRoleVisible = true;
+    });
+    _startHideTimer();
+
+    // Show role reveal modal
+    if (myRole != null) {
+      showDialog(
+        context: context,
+        builder: (context) => RoleRevealModal(
+          role: myRole,
+          onDismiss: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
-    final roleCountStrings = ref.watch(
-      gameStateProvider.select((s) => s.roleCountDisplayStrings),
+    final roleCountCompact = ref.watch(
+      gameStateProvider.select((s) => s.roleCountCompact),
     );
 
     final topPadding = MediaQuery.of(context).padding.top;
@@ -26,23 +83,10 @@ class GameHeader extends ConsumerWidget {
       duration: const Duration(milliseconds: 600),
       child: Container(
         padding: EdgeInsets.only(
-          top:
-              ((MediaQuery.of(context).size.height < 480 &&
-                          MediaQuery.of(context).orientation ==
-                              Orientation.landscape) ||
-                      MediaQuery.of(context).size.height < 600
-                  ? 5
-                  : 15) +
-              topPadding,
-          bottom:
-              (MediaQuery.of(context).size.height < 480 &&
-                      MediaQuery.of(context).orientation ==
-                          Orientation.landscape) ||
-                  MediaQuery.of(context).size.height < 600
-              ? 5
-              : 15,
-          left: 20,
-          right: 20,
+          top: ResponsiveUtils.verticalPadding(context, 10) + topPadding,
+          bottom: ResponsiveUtils.verticalPadding(context, 10),
+          left: ResponsiveUtils.horizontalPadding(context, 16),
+          right: ResponsiveUtils.horizontalPadding(context, 16),
         ),
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.3),
@@ -51,146 +95,184 @@ class GameHeader extends ConsumerWidget {
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Phase label with timer
+            // First row: Phase + Timer and My Role
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: gamePhase == GamePhase.day
-                            ? Colors.orangeAccent.withValues(alpha: 0.4)
-                            : const Color(0xFF6366F1).withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
+                // Left side: Phase + Timer
+                Flexible(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        gamePhase == GamePhase.day
-                            ? Icons.wb_sunny
-                            : Icons.nightlight_round,
-                        color: gamePhase == GamePhase.day
-                            ? Colors.orangeAccent
-                            : const Color(0xFF818CF8),
-                        size: 28,
-                      ),
-                      const SizedBox(width: 15),
-                      Text(
-                        '${gamePhase.label} ${dayCount}일차',
-                        style: GoogleFonts.gowunDodum(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                          letterSpacing: 2.0,
-                          shadows: [
-                            Shadow(
-                              color: gamePhase == GamePhase.day
-                                  ? Colors.orangeAccent
-                                  : const Color(0xFF6366F1),
-                              blurRadius: 15,
+                      Flexible(
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: ResponsiveUtils.padding(context, 12),
+                            vertical: ResponsiveUtils.padding(context, 6),
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
-                          ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                gamePhase == GamePhase.day
+                                    ? Icons.wb_sunny
+                                    : Icons.nightlight_round,
+                                color: gamePhase == GamePhase.day
+                                    ? Colors.orangeAccent
+                                    : const Color(0xFF818CF8),
+                                size: ResponsiveUtils.iconSize(context, 20),
+                              ),
+                              SizedBox(
+                                width: ResponsiveUtils.spacing(context, 6),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  '${gamePhase.label} $dayCount일차',
+                                  style: GoogleFonts.gowunDodum(
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      14,
+                                    ),
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                      SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                      const PhaseTimer(),
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Timer widget
-                const PhaseTimer(),
+
+                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
+
+                // Right side: My Role Badge (compact)
+                GestureDetector(
+                  onTap: _onRoleTap,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      );
+                    },
+                    child: Container(
+                      key: ValueKey(_isRoleVisible),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 12),
+                        vertical: ResponsiveUtils.padding(context, 6),
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _isRoleVisible
+                              ? [
+                                  _getRoleColor(myRole).withValues(alpha: 0.3),
+                                  AppColors.surface.withValues(alpha: 0.8),
+                                ]
+                              : [
+                                  Colors.grey.withValues(alpha: 0.3),
+                                  Colors.grey.withValues(alpha: 0.5),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _isRoleVisible
+                              ? _getRoleColor(myRole).withValues(alpha: 0.5)
+                              : Colors.grey.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _isRoleVisible ? _getRoleEmoji(myRole) : '❓',
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.fontSize(context, 16),
+                              color: _isRoleVisible
+                                  ? _getRoleColor(myRole)
+                                  : Colors.grey,
+                            ),
+                          ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                          Text(
+                            _isRoleVisible
+                                ? (myRole?.label ?? AppStrings.unknownRole)
+                                : '직업 확인',
+                            style: GoogleFonts.gowunDodum(
+                              color: Colors.white,
+                              fontSize: ResponsiveUtils.fontSize(context, 13),
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
 
-            const SizedBox(height: 8),
-
-            // Role Counts
-            if (roleCountStrings.isNotEmpty)
-              Wrap(
-                spacing: 15,
-                children: roleCountStrings.map((displayString) {
-                  return Text(
-                    displayString,
-                    style: GoogleFonts.gowunDodum(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 14,
-                    ),
-                  );
-                }).toList(),
-              ),
-
-            const SizedBox(height: 10),
-
-            // My Role Badge - with role-specific colors
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical:
-                    (MediaQuery.of(context).size.height < 480 &&
-                            MediaQuery.of(context).orientation ==
-                                Orientation.landscape) ||
-                        MediaQuery.of(context).size.height < 600
-                    ? 5
-                    : 10,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    _getRoleColor(myRole).withValues(alpha: 0.3),
-                    AppColors.surface.withValues(alpha: 0.8),
-                  ],
+            // Second row: Role Counts (compact)
+            if (roleCountCompact.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(
+                  top: ResponsiveUtils.spacing(context, 8),
                 ),
-                borderRadius: BorderRadius.circular(25),
-                border: Border.all(
-                  color: _getRoleColor(myRole).withValues(alpha: 0.5),
-                  width: 1.5,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: ResponsiveUtils.padding(context, 8),
+                    vertical: ResponsiveUtils.padding(context, 4),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: roleCountCompact.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final displayString = entry.value;
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            left: index > 0
+                                ? ResponsiveUtils.spacing(context, 6)
+                                : 0,
+                          ),
+                          child: Text(
+                            displayString,
+                            style: GoogleFonts.gowunDodum(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: ResponsiveUtils.fontSize(context, 12),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _getRoleColor(myRole).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _getRoleEmoji(myRole),
-                    style: TextStyle(
-                      fontSize: 22,
-                      color: _getRoleColor(myRole),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    myRole?.label ?? AppStrings.unknownRole,
-                    style: GoogleFonts.gowunDodum(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),

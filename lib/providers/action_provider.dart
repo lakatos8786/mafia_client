@@ -68,9 +68,11 @@ class ActionNotifier extends _$ActionNotifier {
 
         if (phase != GamePhase.waiting) {
           // Special check for Doctor: if night ended and no heal action, show message
+          // But skip this message on the first night (day 1)
           if (phase == GamePhase.day) {
             final myRole = ref.read(gameStateProvider).myRole;
-            if (myRole == GameRole.doctor) {
+            final dayCount = ref.read(gameStateProvider).dayCount;
+            if (myRole == GameRole.doctor && dayCount > 1) {
               final mySelection = state.nightSelections[GameRole.doctor.name];
               // If selection is null or 'skip', validation implies no effective heal
               // But usually 'skip' is explicit. If null, it means timeout/no selection.
@@ -94,6 +96,82 @@ class ActionNotifier extends _$ActionNotifier {
             ? AppStrings.mafiaWin
             : AppStrings.citizenWin;
         _addSystemMessage(winMsg);
+      }
+    });
+
+    socket.on(SocketEvent.voteResult, (data) {
+      try {
+        if (data is! Map<String, dynamic>) {
+          throw FormatException('Invalid vote result data format');
+        }
+        final event = VoteResultEvent.fromJson(data);
+
+        // If someone was eliminated, show specific message
+        if (event.eliminatedNickname != null &&
+            event.eliminatedNickname!.isNotEmpty) {
+          _addSystemMessage(AppStrings.dayExecution(event.eliminatedNickname!));
+        } else if (event.message.isNotEmpty) {
+          // Otherwise show generic message (skip/tie)
+          _addSystemMessage(event.message);
+        }
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('vote_result', e, stackTrace);
+      }
+    });
+
+    socket.on(SocketEvent.playerEliminated, (data) {
+      try {
+        if (data is! Map<String, dynamic>) {
+          throw FormatException('Invalid player eliminated data format');
+        }
+
+        // Debug logging
+        print('🔍 playerEliminated raw data: $data');
+
+        final event = PlayerEliminatedEvent.fromJson(data);
+
+        print('🔍 Parsed event:');
+        print('  - playerId: "${event.playerId}"');
+        print('  - playerNickname: "${event.playerNickname}"');
+        print('  - reason: "${event.reason}"');
+
+        // Get nickname from game state if not provided
+        String nickname = event.playerNickname;
+        if (nickname.isEmpty) {
+          final players = ref.read(gameStateProvider).players;
+          final player = players.firstWhere(
+            (p) => p.id == event.playerId,
+            orElse: () =>
+                Player(id: '', nickname: '알 수 없는 플레이어', isAlive: false),
+          );
+          nickname = player.nickname;
+          print('🔍 Retrieved nickname from game state: "$nickname"');
+        }
+
+        // Normalize reason (support both Korean and English)
+        final normalizedReason = event.reason.toLowerCase().trim();
+
+        // Show death message based on reason
+        if (normalizedReason == 'vote' ||
+            normalizedReason == '투표' ||
+            normalizedReason == 'voted' ||
+            normalizedReason == 'day') {
+          print('✅ Using dayExecution message');
+          _addSystemMessage(AppStrings.dayExecution(nickname));
+        } else if (normalizedReason == 'night' ||
+            normalizedReason == '밤' ||
+            normalizedReason == 'killed' ||
+            normalizedReason == 'mafia') {
+          print('✅ Using nightKillPlayer message');
+          _addSystemMessage(AppStrings.nightKillPlayer(nickname));
+        } else {
+          print(
+            '⚠️ Using generic playerDied message (reason: "${event.reason}")',
+          );
+          _addSystemMessage(AppStrings.playerDied(nickname));
+        }
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('player_eliminated', e, stackTrace);
       }
     });
 

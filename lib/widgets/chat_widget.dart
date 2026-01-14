@@ -6,6 +6,7 @@ import '../models/game_enums.dart';
 import '../providers/action_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
@@ -159,10 +160,14 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                           child: Text(
                                             text,
                                             style: GoogleFonts.gowunDodum(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.95,
+                                              color: Colors.white.withOpacity(
+                                                0.95,
                                               ),
-                                              fontSize: 13,
+                                              fontSize:
+                                                  ResponsiveUtils.fontSize(
+                                                    context,
+                                                    13,
+                                                  ),
                                               fontWeight: FontWeight.w600,
                                             ),
                                             textAlign: TextAlign.center,
@@ -180,10 +185,17 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           Color textColor = msg.textColor;
                           Color nameColor = Colors.white70;
 
+                          // Prioritize message type color (mafia, dead) over own message color
                           if (msg.type == ChatMessageType.dead) {
                             nameColor = Colors.grey;
+                            // Keep original bubble color for dead messages
                           } else if (msg.type == ChatMessageType.mafia) {
                             nameColor = AppColors.primary;
+                            // Keep original bubble color for mafia messages
+                          } else if (isMe) {
+                            // Only apply blue color for own messages if it's a normal message
+                            bubbleColor = AppColors
+                                .primary; // Blue color for own messages
                           }
 
                           return Padding(
@@ -201,9 +213,12 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                     ),
                                     child: Text(
                                       msg.sender,
-                                      style: TextStyle(
+                                      style: GoogleFonts.gowunDodum(
                                         color: nameColor,
-                                        fontSize: 11,
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          11,
+                                        ),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -219,8 +234,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: bubbleColor.withValues(
-                                        alpha: isMe ? 0.9 : 0.8,
+                                      color: bubbleColor.withOpacity(
+                                        isMe ? 0.9 : 0.8,
                                       ),
                                       borderRadius: BorderRadius.only(
                                         topLeft: const Radius.circular(16),
@@ -234,9 +249,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.1,
-                                          ),
+                                          color: Colors.black.withOpacity(0.1),
                                           blurRadius: 4,
                                           offset: const Offset(0, 2),
                                         ),
@@ -244,9 +257,13 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                     ),
                                     child: Text(
                                       msg.message,
-                                      style: TextStyle(
+                                      style: GoogleFonts.gowunDodum(
                                         color: textColor,
-                                        fontSize: 15,
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          15,
+                                        ),
+                                        height: 1.4,
                                       ),
                                     ),
                                   ),
@@ -266,7 +283,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             widget.isExpanded
                                 ? Icons.keyboard_arrow_down
                                 : Icons.keyboard_arrow_up,
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             size: 20,
                           ),
                         ),
@@ -291,7 +308,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Colors.white.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: InkWell(
@@ -325,7 +342,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.mafiaRed.withValues(alpha: 0.5),
+                              color: AppColors.mafiaRed.withOpacity(0.5),
                               blurRadius: 4,
                             ),
                           ],

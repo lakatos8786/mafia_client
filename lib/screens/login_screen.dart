@@ -8,6 +8,7 @@ import '../providers/action_provider.dart';
 import '../widgets/custom_snackbar.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -147,9 +148,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       minHeight: constraints.maxHeight,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32.0,
-                        vertical: 40.0,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 28),
+                        vertical: ResponsiveUtils.padding(context, 32),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -161,18 +162,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 Text(
                                   AppStrings.titleMafia,
                                   style: GoogleFonts.gowunDodum(
-                                    fontSize:
-                                        (constraints.maxHeight < 480 &&
-                                                MediaQuery.of(
-                                                      context,
-                                                    ).orientation ==
-                                                    Orientation.landscape) ||
-                                            constraints.maxHeight < 600
-                                        ? 40
-                                        : 60,
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      48,
+                                    ),
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.mafiaRed,
-                                    letterSpacing: 4.0,
+                                    letterSpacing: ResponsiveUtils.spacing(
+                                      context,
+                                      4,
+                                    ),
                                     shadows: [
                                       Shadow(
                                         color: AppColors.mafiaRed.withValues(
@@ -187,31 +186,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 Text(
                                   AppStrings.titleOnline,
                                   style: GoogleFonts.gowunDodum(
-                                    fontSize:
-                                        (constraints.maxHeight < 480 &&
-                                                MediaQuery.of(
-                                                      context,
-                                                    ).orientation ==
-                                                    Orientation.landscape) ||
-                                            constraints.maxHeight < 600
-                                        ? 25
-                                        : 40,
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      32,
+                                    ),
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
-                                    letterSpacing: 8.0,
+                                    letterSpacing: ResponsiveUtils.spacing(
+                                      context,
+                                      6,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           SizedBox(
-                            height:
-                                (constraints.maxHeight < 480 &&
-                                        MediaQuery.of(context).orientation ==
-                                            Orientation.landscape) ||
-                                    constraints.maxHeight < 600
-                                ? 20
-                                : 50,
+                            height: ResponsiveUtils.spacing(context, 40),
                           ),
 
                           // Glassmorphism Container
@@ -226,16 +217,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   sigmaY: 10,
                                 ),
                                 child: Container(
-                                  width: 350,
+                                  width: ResponsiveUtils.iconSize(context, 320),
                                   padding: EdgeInsets.all(
-                                    constraints.maxHeight < 480 &&
-                                                MediaQuery.of(
-                                                      context,
-                                                    ).orientation ==
-                                                    Orientation.landscape ||
-                                            constraints.maxHeight < 600
-                                        ? 20
-                                        : 30,
+                                    ResponsiveUtils.padding(context, 24),
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.05),
@@ -276,16 +260,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         },
                                       ),
                                       SizedBox(
-                                        height:
-                                            (constraints.maxHeight < 480 &&
-                                                    MediaQuery.of(
-                                                          context,
-                                                        ).orientation ==
-                                                        Orientation
-                                                            .landscape) ||
-                                                constraints.maxHeight < 600
-                                            ? 10
-                                            : 20,
+                                        height: ResponsiveUtils.spacing(
+                                          context,
+                                          16,
+                                        ),
                                       ),
                                       _buildTextField(
                                         controller: _roomCodeController,
@@ -299,16 +277,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         ],
                                       ),
                                       SizedBox(
-                                        height:
-                                            (constraints.maxHeight < 480 &&
-                                                    MediaQuery.of(
-                                                          context,
-                                                        ).orientation ==
-                                                        Orientation
-                                                            .landscape) ||
-                                                constraints.maxHeight < 600
-                                            ? 20
-                                            : 30,
+                                        height: ResponsiveUtils.spacing(
+                                          context,
+                                          24,
+                                        ),
                                       ),
                                       _buildButton(
                                         text: AppStrings.btnCreateRoom,
@@ -319,16 +291,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                         isLoading: _isLoading,
                                       ),
                                       SizedBox(
-                                        height:
-                                            (constraints.maxHeight < 480 &&
-                                                    MediaQuery.of(
-                                                          context,
-                                                        ).orientation ==
-                                                        Orientation
-                                                            .landscape) ||
-                                                constraints.maxHeight < 600
-                                            ? 10
-                                            : 15,
+                                        height: ResponsiveUtils.spacing(
+                                          context,
+                                          12,
+                                        ),
                                       ),
                                       _buildButton(
                                         text: AppStrings.btnJoinRoom,
@@ -381,10 +347,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         counterText: '',
         labelStyle: TextStyle(
           color: Colors.white.withValues(alpha: 0.5),
-          fontSize: 14,
+          fontSize: ResponsiveUtils.fontSize(context, 13),
           fontWeight: FontWeight.bold,
         ),
-        prefixIcon: Icon(icon, color: Colors.white54),
+        prefixIcon: Icon(
+          icon,
+          color: Colors.white54,
+          size: ResponsiveUtils.iconSize(context, 20),
+        ),
         filled: true,
         fillColor: Colors.black26,
         enabledBorder: OutlineInputBorder(
@@ -408,7 +378,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: ResponsiveUtils.iconSize(context, 46),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -437,10 +407,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               )
             : Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 16,
+                style: TextStyle(
+                  fontSize: ResponsiveUtils.fontSize(context, 15),
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+                  letterSpacing: ResponsiveUtils.spacing(context, 1.2),
                 ),
               ),
       ),
