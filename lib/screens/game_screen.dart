@@ -37,7 +37,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             _lastDayCount != gameState.dayCount && gameState.dayCount == 1);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.black,
       resizeToAvoidBottomInset: false,
       body: DayNightBackground(
         phase: gameState.gamePhase,
@@ -46,34 +46,44 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           children: [
             Stack(
               children: [
-                Column(
-                  children: [
-                    // --- Custom Header Area ---
-                    const GameHeader(),
-
-                    // Skip Vote & Role Actions
-                    const ActionButtons(),
-
-                    // Game Area
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 160),
-                        child: PlayerGrid(),
-                      ),
+                SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height,
                     ),
-                  ],
+                    child: Column(
+                      children: [
+                        // --- Custom Header Area ---
+                        const GameHeader(),
+
+                        // Skip Vote & Role Actions
+                        const ActionButtons(),
+
+                        // Game Area
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: MediaQuery.of(context).size.height < 600
+                                ? 120
+                                : 200, // Extra padding for chat area
+                          ),
+                          child: const PlayerGrid(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
                 // Expandable Chat Layer
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.fastOutSlowIn,
+                // Chat Layer (Non-animated positioning as requested)
+                Positioned(
                   left: 0,
                   right: 0,
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  bottom: 0,
                   height: _isChatExpanded
-                      ? MediaQuery.of(context).size.height * 0.7
-                      : 160,
+                      ? (MediaQuery.of(context).size.height < 600
+                            ? MediaQuery.of(context).size.height * 0.85
+                            : MediaQuery.of(context).size.height * 0.7)
+                      : (MediaQuery.of(context).size.height < 600 ? 140 : 160),
                   child: Container(
                     padding: const EdgeInsets.only(bottom: 0),
                     child: ChatWidget(

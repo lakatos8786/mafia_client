@@ -20,8 +20,8 @@ class GameHeader extends ConsumerWidget {
       duration: const Duration(milliseconds: 600),
       child: Container(
         padding: EdgeInsets.only(
-          top: 15 + topPadding, // Add status bar height
-          bottom: 15,
+          top: (MediaQuery.of(context).size.height < 600 ? 5 : 15) + topPadding,
+          bottom: MediaQuery.of(context).size.height < 600 ? 5 : 15,
           left: 20,
           right: 20,
         ),
@@ -121,7 +121,10 @@ class GameHeader extends ConsumerWidget {
 
             // My Role Badge - with role-specific colors
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: MediaQuery.of(context).size.height < 600 ? 5 : 10,
+              ),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [

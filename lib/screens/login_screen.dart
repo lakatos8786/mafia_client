@@ -6,6 +6,8 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
 import '../widgets/custom_snackbar.dart';
+import '../theme/app_strings.dart';
+import '../theme/app_colors.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,15 +31,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _validateNickname() {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      _showError('닉네임을 입력해주세요');
-      return false;
-    }
-    if (name.isEmpty) {
-      _showError('닉네임은 최소 1자 이상이어야 합니다');
+      _showError(AppStrings.enterNickname);
       return false;
     }
     if (name.length > 10) {
-      _showError('닉네임은 최대 10자까지 가능합니다');
+      _showError(AppStrings.nicknameMaxLength);
       return false;
     }
     return true;
@@ -55,17 +53,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       ref.read(actionProvider.notifier).createRoom(_nameController.text.trim());
-      // Navigation is handled by listening to socket events or game state changes elsewhere?
-      // Original code did not await. It just emitted.
-      // We expect the app to navigate when `GamePhase` or joined room state changes.
-      // So we just set loading.
-      // Ideally we should reset loading if it fails, but socket emit is fire-and-forget mostly.
-      // We can listen to errors on ConnectionProvider or something.
-      // For now, keep as is (UI relies on Stream/Listener updates to navigate away).
-      // But we should probably timeout _isLoading?
-      // Original code kept _isLoading = true until navigation replaced the screen.
     } catch (e) {
-      _showError('방 생성 중 오류가 발생했습니다');
+      _showError(AppStrings.errorCreateRoom);
       setState(() => _isLoading = false);
     }
   }
@@ -76,11 +65,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final roomCode = _roomCodeController.text.trim();
     if (roomCode.isEmpty) {
-      _showError('방 코드를 입력해주세요');
+      _showError(AppStrings.enterRoomCode);
       return;
     }
     if (roomCode.length != 6) {
-      _showError('방 코드는 6자리 숫자입니다');
+      _showError(AppStrings.invalidRoomCode);
       return;
     }
 
@@ -91,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           .read(actionProvider.notifier)
           .joinRoom(roomCode.toUpperCase(), _nameController.text.trim());
     } catch (e) {
-      _showError('방 참여 중 오류가 발생했습니다');
+      _showError(AppStrings.errorJoinRoom);
       setState(() => _isLoading = false);
     }
   }
@@ -99,8 +88,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E), // Deep Dark Blue
-      resizeToAvoidBottomInset: true,
+      backgroundColor: AppColors.backgroundDark,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -113,10 +102,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE94560).withValues(alpha: 0.3),
+                color: AppColors.mafiaRed.withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE94560).withValues(alpha: 0.5),
+                    color: AppColors.mafiaRed.withValues(alpha: 0.5),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -132,10 +121,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0F3460).withValues(alpha: 0.3),
+                color: AppColors.loginButtonSecondary.withValues(alpha: 0.3),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF0F3460).withValues(alpha: 0.5),
+                    color: AppColors.loginButtonSecondary.withValues(
+                      alpha: 0.5,
+                    ),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -144,128 +135,161 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
 
-          GestureDetector(
-            onTap: () {
-              FocusScope.of(context).unfocus();
-            },
-            child: Container(
-              color: Colors.transparent,
-              child: Center(
-                child: SingleChildScrollView(
+          // Main UI
+          Container(
+            color: Colors.transparent,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FadeInDown(
-                          duration: const Duration(milliseconds: 1000),
-                          child: Column(
-                            children: [
-                              Text(
-                                '마피아',
-                                style: GoogleFonts.gowunDodum(
-                                  fontSize: 60,
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFE94560),
-                                  letterSpacing: 4.0,
-                                  shadows: [
-                                    Shadow(
-                                      color: const Color(
-                                        0xFFE94560,
-                                      ).withValues(alpha: 0.5),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                '온라인',
-                                style: GoogleFonts.gowunDodum(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 8.0,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 50),
-
-                        // Glassmorphism Container
-                        FadeInUp(
-                          delay: const Duration(milliseconds: 300),
-                          duration: const Duration(milliseconds: 800),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                              child: Container(
-                                width: 350,
-                                padding: const EdgeInsets.all(30),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.1),
-                                    width: 1,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32.0,
+                        vertical: 40.0,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          FadeInDown(
+                            duration: const Duration(milliseconds: 1000),
+                            child: Column(
+                              children: [
+                                Text(
+                                  AppStrings.titleMafia,
+                                  style: GoogleFonts.gowunDodum(
+                                    fontSize: constraints.maxHeight < 600
+                                        ? 40
+                                        : 60,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.mafiaRed,
+                                    letterSpacing: 4.0,
+                                    shadows: [
+                                      Shadow(
+                                        color: AppColors.mafiaRed.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 5),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: Column(
-                                  children: [
-                                    _buildTextField(
-                                      controller: _nameController,
-                                      label: '닉네임 (1-10자)',
-                                      icon: Icons.person_outline,
-                                      maxLength: 10,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.allow(
-                                          RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
-                                        ),
-                                      ],
+                                Text(
+                                  AppStrings.titleOnline,
+                                  style: GoogleFonts.gowunDodum(
+                                    fontSize: constraints.maxHeight < 600
+                                        ? 25
+                                        : 40,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 8.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: constraints.maxHeight < 600 ? 20 : 50,
+                          ),
+
+                          // Glassmorphism Container
+                          FadeInUp(
+                            delay: const Duration(milliseconds: 300),
+                            duration: const Duration(milliseconds: 800),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(
+                                  sigmaX: 10,
+                                  sigmaY: 10,
+                                ),
+                                child: Container(
+                                  width: 350,
+                                  padding: EdgeInsets.all(
+                                    constraints.maxHeight < 600 ? 20 : 30,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.05),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      width: 1,
                                     ),
-                                    const SizedBox(height: 20),
-                                    _buildTextField(
-                                      controller: _roomCodeController,
-                                      label: '방 코드 (6자리)',
-                                      icon: Icons.vpn_key_outlined,
-                                      isNumber: true,
-                                      maxLength: 6,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                    ),
-                                    const SizedBox(height: 30),
-                                    _buildButton(
-                                      text: '방 만들기',
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _createRoom,
-                                      color: const Color(0xFFE94560),
-                                      isLoading: _isLoading,
-                                    ),
-                                    const SizedBox(height: 15),
-                                    _buildButton(
-                                      text: '방 참여하기',
-                                      onPressed: _isLoading ? null : _joinRoom,
-                                      color: const Color(0xFF0F3460),
-                                      isOutlined: true,
-                                      isLoading: _isLoading,
-                                    ),
-                                  ],
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      _buildTextField(
+                                        controller: _nameController,
+                                        label: AppStrings.labelNickname,
+                                        icon: Icons.person_outline,
+                                        maxLength: 10,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                            RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
+                                          ),
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: constraints.maxHeight < 600
+                                            ? 10
+                                            : 20,
+                                      ),
+                                      _buildTextField(
+                                        controller: _roomCodeController,
+                                        label: AppStrings.labelRoomCode,
+                                        icon: Icons.vpn_key_outlined,
+                                        isNumber: true,
+                                        maxLength: 6,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: constraints.maxHeight < 600
+                                            ? 20
+                                            : 30,
+                                      ),
+                                      _buildButton(
+                                        text: AppStrings.btnCreateRoom,
+                                        onPressed: _isLoading
+                                            ? null
+                                            : _createRoom,
+                                        color: AppColors.mafiaRed,
+                                        isLoading: _isLoading,
+                                      ),
+                                      SizedBox(
+                                        height: constraints.maxHeight < 600
+                                            ? 10
+                                            : 15,
+                                      ),
+                                      _buildButton(
+                                        text: AppStrings.btnJoinRoom,
+                                        onPressed: _isLoading
+                                            ? null
+                                            : _joinRoom,
+                                        color: AppColors.loginButtonSecondary,
+                                        isOutlined: true,
+                                        isLoading: _isLoading,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -304,7 +328,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE94560)),
+          borderSide: const BorderSide(color: AppColors.mafiaRed),
         ),
       ),
     );

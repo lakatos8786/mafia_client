@@ -76,4 +76,18 @@ class AppStrings {
   static const String logHeal = '치료';
   static const String logInvestigate = '조사';
   static const String logPhase = '페이즈';
+  // Login Screen
+  static const String enterNickname = '닉네임을 입력해주세요';
+  static const String nicknameMinLength = '닉네임은 최소 1자 이상이어야 합니다';
+  static const String nicknameMaxLength = '닉네임은 최대 10자까지 가능합니다';
+  static const String enterRoomCode = '방 코드를 입력해주세요';
+  static const String invalidRoomCode = '방 코드는 6자리 숫자입니다';
+  static const String errorCreateRoom = '방 생성 중 오류가 발생했습니다';
+  static const String errorJoinRoom = '방 참여 중 오류가 발생했습니다';
+  static const String titleMafia = '마피아';
+  static const String titleOnline = '온라인';
+  static const String labelNickname = '닉네임 (1-10자)';
+  static const String labelRoomCode = '방 코드 (6자리)';
+  static const String btnCreateRoom = '방 만들기';
+  static const String btnJoinRoom = '방 참여하기';
 }

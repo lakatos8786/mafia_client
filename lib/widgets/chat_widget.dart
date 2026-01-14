@@ -86,7 +86,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     if (_msgController.text.isNotEmpty) {
       ref.read(actionProvider.notifier).sendMessage(_msgController.text);
       _msgController.clear();
-      // Keep keyboard open after sending
       _focusNode.requestFocus();
     }
   }
@@ -379,6 +378,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   child: TextField(
                     controller: _msgController,
                     focusNode: _focusNode,
+                    textInputAction: TextInputAction.send,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: AppStrings.chatHint,
@@ -395,16 +395,12 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                       focusedBorder: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
-                    onTapOutside: (event) {
-                      // Do nothing to prevent focus loss on button tap
-                      // focusNode.unfocus() is default, we override it.
-                    },
                   ),
                 ),
               ),
               const SizedBox(width: 10),
               InkWell(
-                onTap: _sendMessage,
+                onTapDown: (_) => _sendMessage(),
                 borderRadius: BorderRadius.circular(30),
                 child: Container(
                   padding: const EdgeInsets.all(12),

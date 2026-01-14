@@ -58,4 +58,5 @@ class AppColors {
   // Greys
   static const Color grey800 = Color(0xFF424242);
   static const Color grey600 = Color(0xFF757575);
+  static const Color loginButtonSecondary = Color(0xFF0F3460);
 }

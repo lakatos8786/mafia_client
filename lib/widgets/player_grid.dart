@@ -19,18 +19,16 @@ class PlayerGrid extends ConsumerWidget {
     final actionState = ref.watch(actionProvider);
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
-    // Using Wrap for natural centered alignment as requested
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    // Removed internal SingleChildScrollView to allow parent GameScreen to scroll the entire column
+    return Padding(
       padding: const EdgeInsets.all(20),
       child: Center(
         child: Wrap(
           alignment: WrapAlignment.center,
-          spacing: 15, // Gap between items horizontally
-          runSpacing: 15, // Gap between lines
+          spacing: 15,
+          runSpacing: 15,
           children: gameState.players.map((player) {
             final index = gameState.players.indexOf(player);
-            // ... (keep existing logic variables)
             final isMe = player.id == socketId;
             final voteCount = actionState.votes[player.id] ?? 0;
 
