@@ -7,6 +7,7 @@ import '../models/player.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../utils/responsive_utils.dart';
+import '../utils/color_utils.dart';
 
 class PlayerCard extends ConsumerWidget {
   final Player player;
@@ -34,6 +35,9 @@ class PlayerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Define Colors based on state
     final isSelected = selectionTargets.isNotEmpty || isMyVoteTarget;
+
+    // Identity Color
+    final identityColor = ColorUtils.getSenderColor(player.nickname);
 
     // Border Color Logic
     Color borderColor = AppColors.overlayWhite12;
@@ -81,10 +85,10 @@ class PlayerCard extends ConsumerWidget {
         ];
       }
     } else if (player.isAlive && !isSelected) {
-      // Idle alive state
+      // Idle alive state: Subtle identity-based background
       gradientColors = [
-        const Color(0xFF1E293B).withValues(alpha: 0.7),
-        const Color(0xFF0F172A).withValues(alpha: 0.7),
+        identityColor.withValues(alpha: 0.15),
+        const Color(0xFF0F172A).withValues(alpha: 0.8),
       ];
     }
 

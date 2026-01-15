@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import '../utils/color_utils.dart';
 
 class ResultPlayerCard extends StatelessWidget {
   final dynamic
@@ -37,9 +38,11 @@ class ResultPlayerCard extends StatelessWidget {
       roleColor = Colors.white70;
     }
 
+    final identityColor = ColorUtils.getSenderColor(player.nickname);
+
     final borderColor = isWinner
         ? AppColors.voteGold
-        : Colors.grey.withValues(alpha: 0.3);
+        : identityColor.withValues(alpha: 0.2);
     final borderWidth = isWinner ? 3.0 : 1.0;
 
     return FadeInLeft(
@@ -61,7 +64,7 @@ class ResultPlayerCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isWinner
                         ? mainColor.withValues(alpha: 0.1)
-                        : Colors.white.withValues(alpha: 0.05),
+                        : identityColor.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isWinner ? mainColor : borderColor,
@@ -106,7 +109,7 @@ class ResultPlayerCard extends StatelessWidget {
                               player.nickname,
                               style: GoogleFonts.gowunDodum(
                                 color: player.isAlive
-                                    ? Colors.white
+                                    ? identityColor
                                     : Colors.grey,
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
                                 fontWeight: FontWeight.bold,
