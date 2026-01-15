@@ -6,6 +6,7 @@ class Player {
   final GameRole? role;
   final bool isAlive;
   final bool isHost;
+  final bool isConnected;
 
   Player({
     required this.id,
@@ -13,6 +14,7 @@ class Player {
     this.role,
     required this.isAlive,
     this.isHost = false,
+    this.isConnected = true,
   });
 
   factory Player.fromMap(Map<String, dynamic> map) {
@@ -22,6 +24,7 @@ class Player {
       role: GameRole.fromString(map['role']?.toString()),
       isAlive: map['isAlive'] ?? false,
       isHost: map['isHost'] ?? false,
+      isConnected: map['isConnected'] ?? true,
     );
   }
 }

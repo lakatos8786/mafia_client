@@ -520,7 +520,7 @@ class LobbyScreen extends ConsumerWidget {
                                           ),
                                         );
                                   },
-                                  activeColor: AppColors.primary,
+                                  activeThumbColor: AppColors.primary,
                                   activeTrackColor: AppColors.primary
                                       .withValues(alpha: 0.3),
                                   inactiveThumbColor: Colors.white38,
@@ -723,7 +723,7 @@ class LobbyScreen extends ConsumerWidget {
                               child: Switch(
                                 value: isUnlimited,
                                 onChanged: onToggleUnlimited,
-                                activeColor: AppColors.primary,
+                                activeThumbColor: AppColors.primary,
                                 activeTrackColor: AppColors.primary.withValues(
                                   alpha: 0.3,
                                 ),

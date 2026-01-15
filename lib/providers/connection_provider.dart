@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../services/socket_service.dart';
 import '../../services/error_handler.dart';
 import '../../config/app_config.dart';
+import '../services/storage_service.dart';
 
 part 'connection_provider.g.dart';
 
@@ -40,11 +41,17 @@ class ConnectionNotifier extends _$ConnectionNotifier {
     return const ConnectionState();
   }
 
-  void _initSocket() {
+  void _initSocket() async {
     developer.log('Initializing socket connection to ${AppConfig.serverUrl}');
-    _socketService.initialize();
-    _setupConnectionListeners();
-    _socketService.connect();
+    try {
+      final uuid = await StorageService.getOrPlayerUuid();
+      _socketService.initialize(uuid);
+      _setupConnectionListeners();
+      _socketService.connect();
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('socket_init', e, stackTrace);
+      state = state.copyWith(status: 'error', error: '초기화 실패');
+    }
   }
 
   void _setupConnectionListeners() {

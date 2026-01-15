@@ -57,12 +57,16 @@ class ChatMessage {
   Color get bubbleColor {
     switch (type) {
       case ChatMessageType.dead:
-        return Colors.grey[800]!;
+        return const Color(0xFF4B5563); // Grey 600 - More visible than Grey 800
       case ChatMessageType.mafia:
-        return const Color(0xFF9F1239);
+        return const Color(
+          0xFFE94560,
+        ); // Use AppColors.mafiaRed - Much brighter
       case ChatMessageType.general:
       default:
-        return const Color(0xFF1E293B);
+        return const Color(
+          0xFF475569,
+        ); // Slate 600 - Better visibility against dark background
     }
   }
 

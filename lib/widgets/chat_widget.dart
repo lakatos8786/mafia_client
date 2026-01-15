@@ -2,11 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/game_enums.dart';
 import '../providers/action_provider.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
+import '../utils/color_utils.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
@@ -183,16 +183,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
 
                           Color bubbleColor = msg.bubbleColor;
                           Color textColor = msg.textColor;
-                          Color nameColor = Colors.white70;
-
                           // Prioritize message type color (mafia, dead) over own message color
-                          if (msg.type == ChatMessageType.dead) {
-                            nameColor = Colors.grey;
-                            // Keep original bubble color for dead messages
-                          } else if (msg.type == ChatMessageType.mafia) {
-                            nameColor = AppColors.primary;
-                            // Keep original bubble color for mafia messages
-                          } else if (isMe) {
+                          if (isMe) {
                             // Only apply blue color for own messages if it's a normal message
                             bubbleColor = AppColors
                                 .primary; // Blue color for own messages
@@ -214,10 +206,14 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                     child: Text(
                                       msg.sender,
                                       style: GoogleFonts.gowunDodum(
-                                        color: nameColor,
+                                        color: isMe
+                                            ? Colors.white70
+                                            : ColorUtils.getSenderColor(
+                                                msg.sender,
+                                              ),
                                         fontSize: ResponsiveUtils.fontSize(
                                           context,
-                                          11,
+                                          13,
                                         ),
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -234,8 +230,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: bubbleColor.withOpacity(
-                                        isMe ? 0.9 : 0.8,
+                                      color: bubbleColor.withValues(
+                                        alpha: isMe ? 0.95 : 0.9,
                                       ),
                                       borderRadius: BorderRadius.only(
                                         topLeft: const Radius.circular(16),
@@ -247,6 +243,14 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                             ? const Radius.circular(2)
                                             : const Radius.circular(16),
                                       ),
+                                      border: !isMe
+                                          ? Border.all(
+                                              color: Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              width: 1,
+                                            )
+                                          : null,
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withOpacity(0.1),

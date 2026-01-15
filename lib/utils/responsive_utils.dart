@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// Responsive utility class for calculating sizes based on screen dimensions
@@ -26,8 +27,11 @@ class ResponsiveUtils {
     final scale = getScaleFactor(context);
     final scaledSize = baseSize * scale;
 
-    // Ensure minimum readability
-    return scaledSize.clamp(baseSize * 0.7, baseSize);
+    final limit1 = baseSize * 0.7;
+    final limit2 = baseSize;
+
+    // Ensure minimum readability and safe clamp
+    return scaledSize.clamp(min(limit1, limit2), max(limit1, limit2));
   }
 
   /// Get responsive icon size
@@ -35,8 +39,11 @@ class ResponsiveUtils {
     final scale = getScaleFactor(context);
     final scaledSize = baseSize * scale;
 
-    // Clamp between 70% and 100% of base size
-    return scaledSize.clamp(baseSize * 0.7, baseSize);
+    final limit1 = baseSize * 0.7;
+    final limit2 = baseSize;
+
+    // Clamp between 70% and 100% of base size safely
+    return scaledSize.clamp(min(limit1, limit2), max(limit1, limit2));
   }
 
   /// Get responsive padding
@@ -44,8 +51,11 @@ class ResponsiveUtils {
     final scale = getScaleFactor(context);
     final scaledPadding = basePadding * scale;
 
-    // Clamp between 60% and 100% of base padding
-    return scaledPadding.clamp(basePadding * 0.6, basePadding);
+    final limit1 = basePadding * 0.6;
+    final limit2 = basePadding;
+
+    // Clamp between 60% and 100% of base padding safely
+    return scaledPadding.clamp(min(limit1, limit2), max(limit1, limit2));
   }
 
   /// Get responsive spacing
@@ -53,8 +63,11 @@ class ResponsiveUtils {
     final scale = getScaleFactor(context);
     final scaledSpacing = baseSpacing * scale;
 
-    // Clamp between 50% and 100% of base spacing
-    return scaledSpacing.clamp(baseSpacing * 0.5, baseSpacing);
+    final limit1 = baseSpacing * 0.5;
+    final limit2 = baseSpacing;
+
+    // Clamp between 50% and 100% of base spacing safely
+    return scaledSpacing.clamp(min(limit1, limit2), max(limit1, limit2));
   }
 
   /// Check if screen is compact (small height or landscape on small device)

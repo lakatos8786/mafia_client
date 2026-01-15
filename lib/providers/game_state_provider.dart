@@ -26,6 +26,8 @@ class GameState {
   final List<Map<String, dynamic>> gameLog;
   final GameSettings gameSettings;
   final bool isUnlimited;
+  final String? errorMessage;
+  final DateTime? lastErrorTime;
 
   const GameState({
     this.players = const [],
@@ -43,6 +45,8 @@ class GameState {
     this.gameLog = const [],
     this.gameSettings = const GameSettings(),
     this.isUnlimited = false,
+    this.errorMessage,
+    this.lastErrorTime,
   });
 
   // Custom getters
@@ -121,6 +125,8 @@ class GameState {
     List<Map<String, dynamic>>? gameLog,
     GameSettings? gameSettings,
     bool? isUnlimited,
+    String? errorMessage,
+    DateTime? lastErrorTime,
   }) {
     return GameState(
       players: players ?? this.players,
@@ -138,6 +144,8 @@ class GameState {
       gameLog: gameLog ?? this.gameLog,
       gameSettings: gameSettings ?? this.gameSettings,
       isUnlimited: isUnlimited ?? this.isUnlimited,
+      errorMessage: errorMessage ?? this.errorMessage,
+      lastErrorTime: lastErrorTime ?? this.lastErrorTime,
     );
   }
 }
@@ -156,11 +164,16 @@ class GameStateNotifier extends _$GameStateNotifier {
 
     // Room events
     socket.on(SocketEvent.roomCreated, (roomId) {
-      state = state.copyWith(roomId: roomId, isAdmin: true);
+      // Reset state to clean values on room creation
+      state = GameState(roomId: roomId?.toString(), isAdmin: true);
     });
 
     socket.on(SocketEvent.joinedRoom, (roomId) {
-      state = state.copyWith(roomId: roomId, isAdmin: false);
+      // Reset state to clean values on join/reconnect to prevent stale data (like settings)
+      state = GameState(
+        roomId: roomId?.toString(),
+        isAdmin: false, // Default to false, server will update if we are host
+      );
     });
 
     socket.on(SocketEvent.playerUpdate, (data) {
@@ -278,6 +291,48 @@ class GameStateNotifier extends _$GameStateNotifier {
       }
     });
 
+    socket.on(SocketEvent.error, (data) {
+      developer.log('Server Error received: $data');
+      state = state.copyWith(
+        errorMessage: data.toString(),
+        lastErrorTime: DateTime.now(),
+      );
+    });
+
+    socket.on(SocketEvent.stateSync, (data) {
+      try {
+        developer.log('STATE_SYNC received: $data');
+        if (data is! Map<String, dynamic>) {
+          throw FormatException('Invalid state sync data format');
+        }
+
+        final playersData = data[ProtocolKey.players] as List;
+        final players = playersData
+            .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+
+        final rawPhase = data[ProtocolKey.phase] as String;
+        final phase = GamePhase.fromString(rawPhase);
+
+        final myRole = GameRole.fromString(data[ProtocolKey.role]?.toString());
+
+        state = state.copyWith(
+          players: players,
+          gamePhase: phase,
+          dayCount: data[ProtocolKey.dayCount] as int? ?? 1,
+          myRole: myRole,
+          gameSettings: GameSettings.fromMap(
+            Map<String, dynamic>.from(data[ProtocolKey.settings] ?? {}),
+          ),
+          timerRemaining: data['timerRemaining'] as int? ?? 0,
+          timerTotal: data['timerTotal'] as int? ?? 0,
+          isUnlimited: data['isUnlimited'] as bool? ?? false,
+        );
+      } catch (e, stackTrace) {
+        ErrorHandler.logError('state_sync', e, stackTrace);
+      }
+    });
+
     ref.onDispose(() {
       // Clean up listeners?
       // Since SocketService doesn't expose clean off(), we assume app lifecycle manages this
@@ -300,17 +355,18 @@ class GameStateNotifier extends _$GameStateNotifier {
   void returnToLobby() {
     developer.log('Returning to lobby (client-side reset)');
 
-    // Preserve connection and room info
+    // Preserve connection, room info, and settings
     final currentRoomId = state.roomId;
     final currentIsAdmin = state.isAdmin;
-    final currentPlayers =
-        state.players; // Keep players list as we are still in the room
+    final currentPlayers = state.players;
+    final currentSettings = state.gameSettings;
 
-    // Reset game-specific state but keep room info
+    // Reset game-specific state but keep room info and settings
     state = GameState(
       roomId: currentRoomId,
       isAdmin: currentIsAdmin,
       players: currentPlayers,
+      gameSettings: currentSettings,
       gamePhase: GamePhase.waiting,
       dayCount: 1,
       // all other fields default to initial values

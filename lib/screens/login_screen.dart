@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
+import '../providers/game_state_provider.dart';
 import '../widgets/custom_snackbar.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
@@ -88,6 +89,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen for server errors to reset loading state
+    ref.listen(gameStateProvider.select((s) => s.lastErrorTime), (
+      previous,
+      next,
+    ) {
+      if (next != null && next != previous) {
+        final errorMsg = ref.read(gameStateProvider).errorMessage;
+        if (errorMsg != null) {
+          setState(() => _isLoading = false);
+          _showError(errorMsg);
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       resizeToAvoidBottomInset: true,
