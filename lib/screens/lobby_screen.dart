@@ -13,6 +13,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../widgets/custom_snackbar.dart';
 import '../models/game_settings.dart';
+import '../models/player.dart';
 import '../utils/responsive_utils.dart';
 
 class LobbyScreen extends ConsumerWidget {
@@ -90,7 +91,10 @@ class LobbyScreen extends ConsumerWidget {
                         '플레이어 대기 중...',
                         style: GoogleFonts.gowunDodum(
                           color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: ResponsiveUtils.fontSize(context, 16),
+                          fontSize: ResponsiveUtils.fontSize(
+                            context,
+                            18,
+                          ), // Increased from 16
                           letterSpacing: ResponsiveUtils.spacing(context, 4),
                           fontWeight: FontWeight.bold,
                           shadows: [
@@ -129,102 +133,161 @@ class LobbyScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(15),
                               child: BackdropFilter(
                                 filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: ResponsiveUtils.padding(
-                                      context,
-                                      16,
+                                child: Opacity(
+                                  opacity: player.atLobby ? 1.0 : 0.5,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: ResponsiveUtils.padding(
+                                        context,
+                                        16,
+                                      ),
+                                      vertical: 15,
                                     ),
-                                    vertical: 15,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isMe
-                                        ? AppColors.primary.withValues(
-                                            alpha: 0.2,
-                                          )
-                                        : Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(15),
-                                    border: Border.all(
+                                    decoration: BoxDecoration(
                                       color: isMe
                                           ? AppColors.primary.withValues(
-                                              alpha: 0.6,
+                                              alpha: 0.2,
                                             )
-                                          : Colors.white.withValues(alpha: 0.1),
-                                      width: isMe ? 1.5 : 1.0,
+                                          : Colors.white.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(
+                                        color: isMe
+                                            ? AppColors.primary.withValues(
+                                                alpha: 0.6,
+                                              )
+                                            : Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                        width: isMe ? 1.5 : 1.0,
+                                      ),
+                                      boxShadow: isMe
+                                          ? [
+                                              BoxShadow(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.2),
+                                                blurRadius: 15,
+                                              ),
+                                            ]
+                                          : [],
                                     ),
-                                    boxShadow: isMe
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.2),
-                                              blurRadius: 15,
-                                            ),
-                                          ]
-                                        : [],
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundColor: isMe
-                                            ? AppColors.primary
-                                            : Colors.white12,
-                                        foregroundColor: Colors.white,
-                                        child: const Icon(Icons.person),
-                                      ),
-                                      SizedBox(
-                                        width: ResponsiveUtils.spacing(
-                                          context,
-                                          12,
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: isMe
+                                              ? AppColors.primary
+                                              : Colors.white12,
+                                          foregroundColor: Colors.white,
+                                          child: const Icon(Icons.person),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          player.nickname,
-                                          style: GoogleFonts.gowunDodum(
-                                            fontSize: ResponsiveUtils.fontSize(
-                                              context,
-                                              15,
-                                            ),
-                                            fontWeight: FontWeight.bold,
-                                            color: player.isAlive
-                                                ? Colors.white
-                                                : Colors.grey,
+                                        SizedBox(
+                                          width: ResponsiveUtils.spacing(
+                                            context,
+                                            12,
                                           ),
                                         ),
-                                      ),
-                                      if (player.isHost)
-                                        Tooltip(
-                                          message: '방장',
+                                        Expanded(
                                           child: Text(
-                                            '👑',
-                                            style: TextStyle(
+                                            player.nickname,
+                                            style: GoogleFonts.gowunDodum(
                                               fontSize:
                                                   ResponsiveUtils.fontSize(
                                                     context,
-                                                    20,
-                                                  ),
+                                                    16,
+                                                  ), // Increased from 15
+                                              fontWeight: FontWeight.bold,
+                                              color: player.isAlive
+                                                  ? Colors.white
+                                                  : Colors.grey,
                                             ),
                                           ),
                                         ),
-                                      if (isMe)
-                                        Padding(
-                                          padding: EdgeInsets.only(
-                                            left: ResponsiveUtils.spacing(
-                                              context,
-                                              8,
+                                        if (!player.atLobby)
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                              left: ResponsiveUtils.spacing(
+                                                context,
+                                                8,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white10,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: Colors.white24,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '결과 확인 중...',
+                                              style: GoogleFonts.gowunDodum(
+                                                fontSize:
+                                                    ResponsiveUtils.fontSize(
+                                                      context,
+                                                      12,
+                                                    ), // Increased from 10
+                                                color: Colors.white54,
+                                              ),
                                             ),
                                           ),
-                                          child: Icon(
-                                            Icons.star,
-                                            color: AppColors.accentYellow,
-                                            size: ResponsiveUtils.iconSize(
-                                              context,
-                                              18,
+                                        if (player.isHost)
+                                          Tooltip(
+                                            message: '방장',
+                                            child: Text(
+                                              '👑',
+                                              style: TextStyle(
+                                                fontSize:
+                                                    ResponsiveUtils.fontSize(
+                                                      context,
+                                                      20,
+                                                    ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                    ],
+                                        if (isMe)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              left: ResponsiveUtils.spacing(
+                                                context,
+                                                8,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              Icons.star,
+                                              color: AppColors.accentYellow,
+                                              size: ResponsiveUtils.iconSize(
+                                                context,
+                                                18,
+                                              ),
+                                            ),
+                                          ),
+                                        if (gameState.isAdmin && !isMe)
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.logout,
+                                              color: AppColors.mafiaRed,
+                                              size: ResponsiveUtils.iconSize(
+                                                context,
+                                                18,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              _showKickConfirmation(
+                                                context,
+                                                ref,
+                                                player,
+                                              );
+                                            },
+                                            tooltip: '강퇴',
+                                          ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -255,7 +318,10 @@ class LobbyScreen extends ConsumerWidget {
                             '${gameState.players.length}명 참가 중',
                             style: GoogleFonts.gowunDodum(
                               color: Colors.white54,
-                              fontSize: ResponsiveUtils.fontSize(context, 12),
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                13,
+                              ), // Increased from 12
                             ),
                           ),
                         ],
@@ -353,6 +419,52 @@ class LobbyScreen extends ConsumerWidget {
     );
   }
 
+  void _showKickConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    Player target,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.backgroundDark,
+          title: Text(
+            '플레이어 강퇴',
+            style: GoogleFonts.gowunDodum(color: Colors.white),
+          ),
+          content: Text(
+            '${target.nickname}님을 강퇴하시겠습니까?',
+            style: GoogleFonts.gowunDodum(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                '취소',
+                style: GoogleFonts.gowunDodum(color: Colors.white38),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(actionProvider.notifier).kickPlayer(target.id);
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                '강퇴',
+                style: GoogleFonts.gowunDodum(color: AppColors.mafiaRed),
+              ),
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: const BorderSide(color: Colors.white10),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSettingsSection(
     BuildContext context,
     WidgetRef ref,
@@ -389,7 +501,10 @@ class LobbyScreen extends ConsumerWidget {
                   '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
                   style: GoogleFonts.gowunDodum(
                     color: Colors.white,
-                    fontSize: ResponsiveUtils.fontSize(context, 16),
+                    fontSize: ResponsiveUtils.fontSize(
+                      context,
+                      19,
+                    ), // Increased from 18
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -648,7 +763,10 @@ class LobbyScreen extends ConsumerWidget {
           title,
           style: GoogleFonts.gowunDodum(
             color: Colors.white70,
-            fontSize: ResponsiveUtils.fontSize(context, 13),
+            fontSize: ResponsiveUtils.fontSize(
+              context,
+              16,
+            ), // Increased from 15
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
           ),
@@ -687,7 +805,7 @@ class LobbyScreen extends ConsumerWidget {
                           label,
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: ResponsiveUtils.fontSize(context, 12),
+                            fontSize: ResponsiveUtils.fontSize(context, 14),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -697,7 +815,7 @@ class LobbyScreen extends ConsumerWidget {
                             '(기본 $defaultValue)',
                             style: TextStyle(
                               color: Colors.white38,
-                              fontSize: ResponsiveUtils.fontSize(context, 10),
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
                             ),
                           ),
                         ],
@@ -711,7 +829,7 @@ class LobbyScreen extends ConsumerWidget {
                             '무제한',
                             style: TextStyle(
                               color: Colors.white38,
-                              fontSize: ResponsiveUtils.fontSize(context, 10),
+                              fontSize: ResponsiveUtils.fontSize(context, 11),
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -719,7 +837,7 @@ class LobbyScreen extends ConsumerWidget {
                             height: 24,
                             width: 40,
                             child: Transform.scale(
-                              scale: 0.65,
+                              scale: 0.8,
                               child: Switch(
                                 value: isUnlimited,
                                 onChanged: onToggleUnlimited,
@@ -753,7 +871,7 @@ class LobbyScreen extends ConsumerWidget {
                     style: TextStyle(
                       color: isUnlimited ? Colors.white38 : Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: ResponsiveUtils.fontSize(context, 13),
+                      fontSize: ResponsiveUtils.fontSize(context, 15),
                     ),
                   ),
                 ),
@@ -810,7 +928,7 @@ class LobbyScreen extends ConsumerWidget {
           label,
           style: TextStyle(
             color: Colors.white,
-            fontSize: ResponsiveUtils.fontSize(context, 12),
+            fontSize: ResponsiveUtils.fontSize(context, 14),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -836,7 +954,7 @@ class LobbyScreen extends ConsumerWidget {
                   style: TextStyle(
                     color: isGlobalAuto ? Colors.white38 : Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: ResponsiveUtils.fontSize(context, 14),
+                    fontSize: ResponsiveUtils.fontSize(context, 16),
                   ),
                 ),
               ),
@@ -872,7 +990,7 @@ class LobbyScreen extends ConsumerWidget {
               style: TextStyle(
                 color: isGlobalAuto ? Colors.white38 : Colors.white,
                 fontWeight: FontWeight.bold,
-                fontSize: ResponsiveUtils.fontSize(context, 13),
+                fontSize: ResponsiveUtils.fontSize(context, 15),
               ),
             ),
           ),
@@ -901,7 +1019,7 @@ class LobbyScreen extends ConsumerWidget {
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  fontSize: ResponsiveUtils.fontSize(context, 14),
                 ),
               ),
             ),

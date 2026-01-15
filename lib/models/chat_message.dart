@@ -9,6 +9,7 @@ class ChatMessage {
   final ChatMessageType type;
   final bool isMine;
   final bool isSystem;
+  final bool isLegacy;
 
   const ChatMessage({
     required this.sender,
@@ -16,6 +17,7 @@ class ChatMessage {
     this.type = ChatMessageType.general,
     this.isSystem = false,
     this.isMine = false,
+    this.isLegacy = false,
   });
 
   factory ChatMessage.fromMap(Map<String, dynamic> map, {bool isMine = false}) {
@@ -31,6 +33,25 @@ class ChatMessage {
       type: _parseType(map[ProtocolKey.type] ?? map['type']),
       isSystem: map[ProtocolKey.isSystem] ?? map['isSystem'] ?? false,
       isMine: isMine,
+      isLegacy: map[ProtocolKey.isLegacy] ?? map['isLegacy'] ?? false,
+    );
+  }
+
+  ChatMessage copyWith({
+    String? sender,
+    String? message,
+    ChatMessageType? type,
+    bool? isMine,
+    bool? isSystem,
+    bool? isLegacy,
+  }) {
+    return ChatMessage(
+      sender: sender ?? this.sender,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      isMine: isMine ?? this.isMine,
+      isSystem: isSystem ?? this.isSystem,
+      isLegacy: isLegacy ?? this.isLegacy,
     );
   }
 

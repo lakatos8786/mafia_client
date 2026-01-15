@@ -34,6 +34,8 @@ class SocketEvent {
   static const String timerTick = 'timer_tick';
   static const String updateSettings = 'update_settings';
   static const String stateSync = 'state_sync';
+  static const String kickPlayer = 'kick_player';
+  static const String kicked = 'kicked';
 }
 
 class SystemConstant {
@@ -71,6 +73,7 @@ class ProtocolKey {
   static const String policeCount = 'policeCount';
   static const String doctorCount = 'doctorCount';
   static const String isConnected = 'isConnected';
+  static const String isLegacy = 'isLegacy';
 }
 
 enum GameRole {

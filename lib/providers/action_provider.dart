@@ -55,17 +55,17 @@ class ActionNotifier extends _$ActionNotifier {
 
     // Listeners
     socket.on(SocketEvent.startGame, (_) {
+      archiveMessages();
       _addSystemMessage(AppStrings.gameStarted);
-      resetAllData();
+    });
+
+    socket.on(SocketEvent.roleAssigned, (_) {
+      // Role assigned is now handled by GameStateProvider and specific ActionState logic
     });
 
     socket.on(SocketEvent.phaseChange, (data) {
       if (data is Map) {
         final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
-        final phaseMsg = phase == GamePhase.day
-            ? AppStrings.dayStarted
-            : AppStrings.nightStarted;
-
         if (phase != GamePhase.waiting) {
           // Special check for Doctor: if night ended and no heal action, show message
           // But skip this message on the first night (day 1)
@@ -83,7 +83,6 @@ class ActionNotifier extends _$ActionNotifier {
             }
           }
 
-          _addSystemMessage(phaseMsg);
           resetTurnData();
         }
       }
@@ -430,6 +429,14 @@ class ActionNotifier extends _$ActionNotifier {
         .emit(SocketEvent.updateSettings, settings.toMap());
   }
 
+  void kickPlayer(String targetId) {
+    developer.log('Emitting kick_player: $targetId');
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit(SocketEvent.kickPlayer, targetId);
+  }
+
   void sendMessage(String message) {
     if (message.trim().isEmpty) return;
     ref
@@ -444,6 +451,40 @@ class ActionNotifier extends _$ActionNotifier {
       voters: {},
       nightSelections: {},
       nightActionActors: {},
+    );
+  }
+
+  void archiveMessages() {
+    // 1. Filter out Mafia and Dead messages to prevent clutter/spoilers
+    // 2. Map remaining to isLegacy = true
+    final legacyMessages = state.messages
+        .where(
+          (m) =>
+              m.type != ChatMessageType.mafia && m.type != ChatMessageType.dead,
+        )
+        .map((m) => m.copyWith(isLegacy: true))
+        .toList();
+
+    // 3. Keep only recent history (last 50) to manage memory
+    final trimmedLegacy = legacyMessages.length > 50
+        ? legacyMessages.sublist(legacyMessages.length - 50)
+        : legacyMessages;
+
+    // 4. Insert "New Game Start" divider
+    final divider = ChatMessage(
+      sender: SystemConstant.sender,
+      message: AppStrings.newGameDivider,
+      type: ChatMessageType.system,
+      isSystem: true,
+      isLegacy: false,
+    );
+
+    state = state.copyWith(
+      messages: [...trimmedLegacy, divider],
+      votes: const {},
+      voters: const {},
+      nightSelections: const {},
+      nightActionActors: const {},
     );
   }
 

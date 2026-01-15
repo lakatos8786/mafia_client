@@ -140,8 +140,8 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                                   style: GoogleFonts.gowunDodum(
                                     fontSize: ResponsiveUtils.fontSize(
                                       context,
-                                      14,
-                                    ),
+                                      16,
+                                    ), // Increased from 14
                                     fontWeight: FontWeight.w900,
                                     color: Colors.white,
                                     letterSpacing: 0.5,
@@ -205,7 +205,10 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                           Text(
                             _isRoleVisible ? _getRoleEmoji(myRole) : '❓',
                             style: TextStyle(
-                              fontSize: ResponsiveUtils.fontSize(context, 16),
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                18,
+                              ), // Increased from 16
                               color: _isRoleVisible
                                   ? _getRoleColor(myRole)
                                   : Colors.grey,
@@ -218,7 +221,10 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                                 : '직업 확인',
                             style: GoogleFonts.gowunDodum(
                               color: Colors.white,
-                              fontSize: ResponsiveUtils.fontSize(context, 13),
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                14,
+                              ), // Increased from 13
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
                             ),
@@ -263,7 +269,10 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                             displayString,
                             style: GoogleFonts.gowunDodum(
                               color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: ResponsiveUtils.fontSize(context, 12),
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                13,
+                              ), // Increased from 12
                               fontWeight: FontWeight.w600,
                             ),
                           ),

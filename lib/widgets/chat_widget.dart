@@ -116,88 +116,75 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           final reversedIndex = messages.length - 1 - index;
                           final msg = messages[reversedIndex];
 
-                          final isMe = msg.isMine;
+                          final bool isLegacy = msg.isLegacy;
+                          final bool isMe = msg.isMine;
 
+                          Widget content;
                           if (msg.isSystem) {
                             final text = msg.message;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Semantics(
-                                label: '시스템 메시지: $text',
-                                child: Center(
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          AppColors.policeBlue.withValues(
-                                            alpha: 0.15,
-                                          ),
-                                          AppColors.accentYellow.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: AppColors.accentYellow
-                                            .withValues(alpha: 0.4),
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          _getSystemMessageIcon(text),
-                                          color: AppColors.accentYellow,
-                                          size: 16,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Flexible(
-                                          child: Text(
-                                            text,
-                                            style: GoogleFonts.gowunDodum(
-                                              color: Colors.white.withOpacity(
-                                                0.95,
-                                              ),
-                                              fontSize:
-                                                  ResponsiveUtils.fontSize(
-                                                    context,
-                                                    13,
-                                                  ),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ],
+                            content = Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.policeBlue.withOpacity(0.15),
+                                      AppColors.accentYellow.withOpacity(0.1),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.accentYellow.withOpacity(
+                                      0.4,
                                     ),
                                   ),
                                 ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getSystemMessageIcon(text),
+                                      color: AppColors.accentYellow,
+                                      size: isLegacy ? 12 : 16,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        text,
+                                        style: GoogleFonts.gowunDodum(
+                                          color: Colors.white.withOpacity(0.95),
+                                          fontSize: ResponsiveUtils.fontSize(
+                                            context,
+                                            isLegacy ? 12 : 14,
+                                          ), // Increased from 11 : 13
+                                          fontWeight: isLegacy
+                                              ? FontWeight.normal
+                                              : FontWeight.w600,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
-                          }
+                          } else {
+                            Color bubbleColor = msg.bubbleColor;
+                            Color textColor = msg.textColor;
 
-                          Color bubbleColor = msg.bubbleColor;
-                          Color textColor = msg.textColor;
-                          // Prioritize message type color (mafia, dead) over own message color
-                          if (isMe) {
-                            // Only apply blue color for own messages if it's a normal message
-                            bubbleColor = AppColors
-                                .primary; // Blue color for own messages
-                          }
+                            if (isMe) {
+                              bubbleColor = AppColors.primary;
+                            }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Column(
+                            content = Column(
                               crossAxisAlignment: isMe
                                   ? CrossAxisAlignment.end
                                   : CrossAxisAlignment.start,
                               children: [
-                                if (!isMe)
+                                if (!isMe && !isLegacy)
                                   Padding(
                                     padding: const EdgeInsets.only(
                                       left: 4,
@@ -206,15 +193,13 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                     child: Text(
                                       msg.sender,
                                       style: GoogleFonts.gowunDodum(
-                                        color: isMe
-                                            ? Colors.white70
-                                            : ColorUtils.getSenderColor(
-                                                msg.sender,
-                                              ),
+                                        color: ColorUtils.getSenderColor(
+                                          msg.sender,
+                                        ),
                                         fontSize: ResponsiveUtils.fontSize(
                                           context,
-                                          13,
-                                        ),
+                                          14,
+                                        ), // Increased from 13
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -230,8 +215,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: bubbleColor.withValues(
-                                        alpha: isMe ? 0.95 : 0.9,
+                                      color: bubbleColor.withOpacity(
+                                        isMe ? 0.95 : 0.9,
                                       ),
                                       borderRadius: BorderRadius.only(
                                         topLeft: const Radius.circular(16),
@@ -244,12 +229,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                             : const Radius.circular(16),
                                       ),
                                       border: !isMe
-                                          ? Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              width: 1,
-                                            )
+                                          ? Border.all(color: Colors.white10)
                                           : null,
                                       boxShadow: [
                                         BoxShadow(
@@ -265,14 +245,24 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                                         color: textColor,
                                         fontSize: ResponsiveUtils.fontSize(
                                           context,
-                                          15,
-                                        ),
+                                          isLegacy ? 13 : 16,
+                                        ), // Increased from 12 : 15
                                         height: 1.4,
                                       ),
                                     ),
                                   ),
                                 ),
                               ],
+                            );
+                          }
+
+                          return Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: isLegacy ? 4 : 8,
+                            ),
+                            child: Opacity(
+                              opacity: isLegacy ? 0.4 : 1.0,
+                              child: content,
                             ),
                           );
                         },

@@ -26,10 +26,14 @@ class SocketService {
       'query': {'uuid': uuid},
     });
 
-    // Apply pending listeners
+    // Apply/Re-apply all registered listeners to the new socket instance
     for (final item in _pendingListeners) {
       final event = item['event'] as String;
       final callback = item['callback'];
+
+      // Clean up any existing listener for this event on the new socket before adding
+      _socket?.off(event);
+
       if (event == 'connect') {
         _socket?.on('connect', (_) => (callback as SocketVoidCallback)());
       } else if (event == 'disconnect') {
@@ -42,7 +46,8 @@ class SocketService {
         _socket?.on(event, callback as SocketDataCallback);
       }
     }
-    _pendingListeners.clear();
+    // We intentionally do NOT clear _pendingListeners here so they
+    // persist across future re-initializations.
   }
 
   /// Connect to the server
@@ -63,47 +68,40 @@ class SocketService {
 
   /// Register event listener
   void on(String event, SocketDataCallback callback) {
-    if (_socket != null) {
-      _socket!.on(event, callback);
-    } else {
-      _pendingListeners.add({'event': event, 'callback': callback});
-    }
+    // Record for re-initialization survival
+    _pendingListeners.removeWhere((item) => item['event'] == event);
+    _pendingListeners.add({'event': event, 'callback': callback});
+
+    // Apply immediate if socket exists
+    _socket?.on(event, callback);
   }
 
   /// Register connection event
   void onConnect(SocketVoidCallback callback) {
-    if (_socket != null) {
-      _socket!.on('connect', (_) => callback());
-    } else {
-      _pendingListeners.add({'event': 'connect', 'callback': callback});
-    }
+    _pendingListeners.removeWhere((item) => item['event'] == 'connect');
+    _pendingListeners.add({'event': 'connect', 'callback': callback});
+    _socket?.on('connect', (_) => callback());
   }
 
   /// Register disconnect event
   void onDisconnect(SocketVoidCallback callback) {
-    if (_socket != null) {
-      _socket!.onDisconnect((_) => callback());
-    } else {
-      _pendingListeners.add({'event': 'disconnect', 'callback': callback});
-    }
+    _pendingListeners.removeWhere((item) => item['event'] == 'disconnect');
+    _pendingListeners.add({'event': 'disconnect', 'callback': callback});
+    _socket?.onDisconnect((_) => callback());
   }
 
   /// Register connection error event
   void onConnectError(SocketDataCallback callback) {
-    if (_socket != null) {
-      _socket!.onConnectError(callback);
-    } else {
-      _pendingListeners.add({'event': 'connect_error', 'callback': callback});
-    }
+    _pendingListeners.removeWhere((item) => item['event'] == 'connect_error');
+    _pendingListeners.add({'event': 'connect_error', 'callback': callback});
+    _socket?.onConnectError(callback);
   }
 
   /// Register general error event
   void onError(SocketDataCallback callback) {
-    if (_socket != null) {
-      _socket!.onError(callback);
-    } else {
-      _pendingListeners.add({'event': 'error', 'callback': callback});
-    }
+    _pendingListeners.removeWhere((item) => item['event'] == 'error');
+    _pendingListeners.add({'event': 'error', 'callback': callback});
+    _socket?.onError(callback);
   }
 
   /// Emit event to server

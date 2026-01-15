@@ -184,9 +184,23 @@ class GameStateNotifier extends _$GameStateNotifier {
               .toList();
 
           final myId = ref.read(connectionProvider.notifier).socketId;
-          final myRole = _deriveMyRole(players, myId);
 
-          state = state.copyWith(players: players, myRole: myRole);
+          // Sanitize players if we are already in waiting phase to prevent stale "dead" status
+          List<Player> sanitizedPlayers = players;
+          if (state.gamePhase == GamePhase.waiting) {
+            sanitizedPlayers = players
+                .map((p) => p.copyWith(isAlive: true, role: null))
+                .toList();
+          }
+
+          final myRole = _deriveMyRole(sanitizedPlayers, myId);
+          final isAdmin = sanitizedPlayers.any((p) => p.id == myId && p.isHost);
+
+          state = state.copyWith(
+            players: sanitizedPlayers,
+            myRole: myRole,
+            isAdmin: isAdmin,
+          );
         }
       } catch (e, stackTrace) {
         ErrorHandler.logError('player_update', e, stackTrace);
@@ -299,6 +313,15 @@ class GameStateNotifier extends _$GameStateNotifier {
       );
     });
 
+    socket.on(SocketEvent.kicked, (data) {
+      developer.log('Kicked from room: $data');
+      // Reset state to initial lobby state (but keep connection)
+      state = GameState(
+        errorMessage: data.toString(), // Store the reason as an error message
+        lastErrorTime: DateTime.now(),
+      );
+    });
+
     socket.on(SocketEvent.stateSync, (data) {
       try {
         developer.log('STATE_SYNC received: $data');
@@ -307,14 +330,25 @@ class GameStateNotifier extends _$GameStateNotifier {
         }
 
         final playersData = data[ProtocolKey.players] as List;
-        final players = playersData
+        List<Player> players = playersData
             .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
             .toList();
 
         final rawPhase = data[ProtocolKey.phase] as String;
         final phase = GamePhase.fromString(rawPhase);
 
-        final myRole = GameRole.fromString(data[ProtocolKey.role]?.toString());
+        // Sanitize if syncing into waiting phase
+        if (phase == GamePhase.waiting) {
+          players = players
+              .map((p) => p.copyWith(isAlive: true, role: null))
+              .toList();
+        }
+
+        final myRole = phase == GamePhase.waiting
+            ? null
+            : GameRole.fromString(data[ProtocolKey.role]?.toString());
+
+        final myId = ref.read(connectionProvider.notifier).socketId;
 
         state = state.copyWith(
           players: players,
@@ -327,6 +361,7 @@ class GameStateNotifier extends _$GameStateNotifier {
           timerRemaining: data['timerRemaining'] as int? ?? 0,
           timerTotal: data['timerTotal'] as int? ?? 0,
           isUnlimited: data['isUnlimited'] as bool? ?? false,
+          isAdmin: players.any((p) => p.id == myId && p.isHost),
         );
       } catch (e, stackTrace) {
         ErrorHandler.logError('state_sync', e, stackTrace);
@@ -355,20 +390,36 @@ class GameStateNotifier extends _$GameStateNotifier {
   void returnToLobby() {
     developer.log('Returning to lobby (client-side reset)');
 
+    // Notify server that we are returning to lobby
+    ref
+        .read(connectionProvider.notifier)
+        .socketService
+        .emit('return_to_lobby', null);
+
     // Preserve connection, room info, and settings
     final currentRoomId = state.roomId;
     final currentIsAdmin = state.isAdmin;
     final currentPlayers = state.players;
     final currentSettings = state.gameSettings;
+    final myId = ref.read(connectionProvider.notifier).socketId;
 
     // Reset game-specific state but keep room info and settings
     state = GameState(
       roomId: currentRoomId,
       isAdmin: currentIsAdmin,
-      players: currentPlayers,
+      players: currentPlayers
+          .map(
+            (p) => p.copyWith(
+              isAlive: true,
+              role: null,
+              atLobby: p.id == myId, // Me is definitely in lobby
+            ),
+          )
+          .toList(),
       gameSettings: currentSettings,
       gamePhase: GamePhase.waiting,
       dayCount: 1,
+      myRole: null, // Clear my role
       // all other fields default to initial values
     );
   }

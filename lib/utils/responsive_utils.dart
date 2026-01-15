@@ -14,11 +14,12 @@ class ResponsiveUtils {
     if (width >= baseWidth) {
       return 1.0;
     } else if (width >= 320) {
-      // Scale between 0.75 and 1.0 for widths 320-400
-      return 0.75 + (width - 320) / (baseWidth - 320) * 0.25;
+      // Scale between 0.85 and 1.0 for widths 320-400
+      // Increased from 0.75 to 0.85 for better visibility
+      return 0.85 + (width - 320) / (baseWidth - 320) * 0.15;
     } else {
       // Minimum scale factor for very small screens
-      return 0.7;
+      return 0.8;
     }
   }
 
@@ -27,7 +28,8 @@ class ResponsiveUtils {
     final scale = getScaleFactor(context);
     final scaledSize = baseSize * scale;
 
-    final limit1 = baseSize * 0.7;
+    // Minimum 85% of base size to protect readability
+    final limit1 = baseSize * 0.85;
     final limit2 = baseSize;
 
     // Ensure minimum readability and safe clamp

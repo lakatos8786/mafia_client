@@ -85,10 +85,10 @@ class PlayerCard extends ConsumerWidget {
         ];
       }
     } else if (player.isAlive && !isSelected) {
-      // Idle alive state: Subtle identity-based background
+      // Idle alive state: Subtle identity-based background with dark base
       gradientColors = [
-        identityColor.withValues(alpha: 0.15),
-        const Color(0xFF0F172A).withValues(alpha: 0.8),
+        identityColor.withValues(alpha: 0.4),
+        const Color(0xFF0F172A).withValues(alpha: 0.85),
       ];
     }
 
@@ -109,7 +109,9 @@ class PlayerCard extends ConsumerWidget {
               ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: borderColor.withValues(alpha: 0.8),
+                color: isSelected
+                    ? borderColor.withValues(alpha: 0.9)
+                    : identityColor.withValues(alpha: 0.45),
                 width: isSelected ? 2.5 : 1.2,
               ),
               boxShadow: isSelected && player.isAlive
@@ -184,10 +186,10 @@ class PlayerCard extends ConsumerWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: player.isAlive
-                                  ? const LinearGradient(
+                                  ? LinearGradient(
                                       colors: [
-                                        AppColors.gradientSky,
-                                        AppColors.gradientIndigo,
+                                        identityColor,
+                                        identityColor.withValues(alpha: 0.5),
                                       ],
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
@@ -197,9 +199,9 @@ class PlayerCard extends ConsumerWidget {
                               boxShadow: player.isAlive
                                   ? [
                                       BoxShadow(
-                                        color: const Color(
-                                          0xFF38BDF8,
-                                        ).withValues(alpha: 0.4),
+                                        color: identityColor.withValues(
+                                          alpha: 0.4,
+                                        ),
                                         blurRadius: 10,
                                         spreadRadius: 1,
                                       ),
@@ -218,7 +220,7 @@ class PlayerCard extends ConsumerWidget {
                                 color: player.isAlive
                                     ? Colors.white
                                     : AppColors.grey600,
-                                size: 24,
+                                size: ResponsiveUtils.iconSize(context, 24),
                               ),
                             ),
                           ),
@@ -244,17 +246,26 @@ class PlayerCard extends ConsumerWidget {
                                     decoration: player.isAlive
                                         ? null
                                         : TextDecoration.lineThrough,
-                                    fontSize: 14,
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      15,
+                                    ), // Increased from 14
                                     shadows: isMe
                                         ? [
                                             BoxShadow(
-                                              color: Colors.blue.withValues(
+                                              color: identityColor.withValues(
                                                 alpha: 0.8,
                                               ),
                                               blurRadius: 10,
                                             ),
                                           ]
-                                        : [],
+                                        : [
+                                            const BoxShadow(
+                                              color: Colors.black45,
+                                              blurRadius: 4,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
                                   ),
                                 ),
                                 if (!player.isConnected && player.isAlive)
@@ -262,7 +273,10 @@ class PlayerCard extends ConsumerWidget {
                                     '연결 끊김',
                                     style: GoogleFonts.gowunDodum(
                                       color: Colors.orangeAccent,
-                                      fontSize: 10,
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        11,
+                                      ), // Increased from 10
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -296,10 +310,13 @@ class PlayerCard extends ConsumerWidget {
                               ),
                               child: Text(
                                 '$voteCount표',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 11,
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    12,
+                                  ), // Increased from 11
                                 ),
                               ),
                             ),
@@ -313,7 +330,10 @@ class PlayerCard extends ConsumerWidget {
                                 votersList,
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.5),
-                                  fontSize: 10,
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    11,
+                                  ), // Increased from 10
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -350,7 +370,10 @@ class PlayerCard extends ConsumerWidget {
                             child: Text(
                               AppStrings.dead,
                               style: GoogleFonts.gowunDodum(
-                                fontSize: 14,
+                                fontSize: ResponsiveUtils.fontSize(
+                                  context,
+                                  15,
+                                ), // Increased from 14
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),

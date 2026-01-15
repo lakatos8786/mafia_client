@@ -55,6 +55,7 @@ class AppStrings {
   static const String roomCopied = '복사됨';
   static const String chatHint = '대화에 참여하세요...';
   static const String viewGameLog = '📜 게임 로그 보기';
+  static const String newGameDivider = '━━━━━━━━ 새 게임 시작 ━━━━━━━━';
 
   // Game Result
   static const String winMafia = '마피아 승리';
