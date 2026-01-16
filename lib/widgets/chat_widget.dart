@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
 import '../theme/app_strings.dart';
-import '../theme/app_colors.dart';
+import '../theme/noir_design.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/color_utils.dart';
+import '../providers/game_state_provider.dart';
+import '../models/game_enums.dart';
+import 'common/noir_bubble.dart';
 
 class ChatWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
@@ -59,25 +61,10 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(actionProvider.select((s) => s.messages));
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final isNight = gamePhase == GamePhase.night;
 
-    // Use ref.listen to update unread count only when messages change,
-    // instead of every build frame during resize.
-    ref.listen(actionProvider.select((s) => s.messages), (previous, next) {
-      if (!widget.isExpanded) {
-        final newMessagesCount = next.length - (previous?.length ?? 0);
-        if (newMessagesCount > 0) {
-          int addedUnread = 0;
-          for (int i = previous?.length ?? 0; i < next.length; i++) {
-            if (!next[i].isMine) addedUnread++;
-          }
-          if (addedUnread > 0) {
-            setState(() {
-              _unreadCount += addedUnread;
-            });
-          }
-        }
-      }
-    });
+    // Use ref.listen...
 
     return Column(
       children: [
@@ -94,13 +81,24 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   margin: const EdgeInsets.symmetric(horizontal: 10),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(
-                      alpha: widget.isExpanded ? 0.7 : 0.4,
-                    ),
+                    color: isNight
+                        ? NoirColors.surface.withValues(
+                            alpha: widget.isExpanded ? 0.95 : 0.8,
+                          )
+                        : Colors.white.withValues(
+                            alpha: widget.isExpanded ? 0.95 : 0.8,
+                          ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.05),
+                      color: isNight ? NoirColors.border : NoirColors.borderDim,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
                   child: Stack(
                     children: [
@@ -121,138 +119,18 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
 
                           Widget content;
                           if (msg.isSystem) {
-                            final text = msg.message;
-                            content = Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.policeBlue.withOpacity(0.15),
-                                      AppColors.accentYellow.withOpacity(0.1),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.accentYellow.withOpacity(
-                                      0.4,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _getSystemMessageIcon(text),
-                                      color: AppColors.accentYellow,
-                                      size: isLegacy ? 12 : 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        text,
-                                        style: GoogleFonts.gowunDodum(
-                                          color: Colors.white.withOpacity(0.95),
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            isLegacy ? 12 : 14,
-                                          ), // Increased from 11 : 13
-                                          fontWeight: isLegacy
-                                              ? FontWeight.normal
-                                              : FontWeight.w600,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            content = NoirBubble(
+                              message: msg.message,
+                              style: NoirBubbleStyle.system,
+                              isLegacy: isLegacy,
                             );
                           } else {
-                            Color bubbleColor = msg.bubbleColor;
-                            Color textColor = msg.textColor;
-
-                            if (isMe) {
-                              bubbleColor = AppColors.primary;
-                            }
-
-                            content = Column(
-                              crossAxisAlignment: isMe
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                if (!isMe && !isLegacy)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 4,
-                                      bottom: 2,
-                                    ),
-                                    child: Text(
-                                      msg.sender,
-                                      style: GoogleFonts.gowunDodum(
-                                        color: ColorUtils.getSenderColor(
-                                          msg.sender,
-                                        ),
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          14,
-                                        ), // Increased from 13
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth:
-                                        MediaQuery.of(context).size.width * 0.7,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: bubbleColor.withOpacity(
-                                        isMe ? 0.95 : 0.9,
-                                      ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(16),
-                                        topRight: const Radius.circular(16),
-                                        bottomLeft: isMe
-                                            ? const Radius.circular(16)
-                                            : const Radius.circular(2),
-                                        bottomRight: isMe
-                                            ? const Radius.circular(2)
-                                            : const Radius.circular(16),
-                                      ),
-                                      border: !isMe
-                                          ? Border.all(color: Colors.white10)
-                                          : null,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      msg.message,
-                                      style: GoogleFonts.gowunDodum(
-                                        color: textColor,
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          isLegacy ? 13 : 16,
-                                        ), // Increased from 12 : 15
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            content = NoirBubble(
+                              message: msg.message,
+                              sender: msg.sender,
+                              isMe: isMe,
+                              isLegacy: isLegacy,
+                              style: NoirBubbleStyle.player,
                             );
                           }
 
@@ -277,7 +155,11 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                             widget.isExpanded
                                 ? Icons.keyboard_arrow_down
                                 : Icons.keyboard_arrow_up,
-                            color: Colors.white.withOpacity(0.2),
+                            color: isNight
+                                ? NoirColors.textTertiary.withValues(alpha: 0.4)
+                                : NoirColors.borderBright.withValues(
+                                    alpha: 0.4,
+                                  ),
                             size: 20,
                           ),
                         ),
@@ -302,7 +184,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: isNight
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.black.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: InkWell(
@@ -315,7 +199,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                         child: CustomPaint(
                           painter: ArrowPainter(
                             isUp: !widget.isExpanded,
-                            color: Colors.white,
+                            color: isNight ? Colors.white : Colors.black,
                           ),
                         ),
                       ),
@@ -332,11 +216,13 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.mafiaRed,
+                          color: isNight
+                              ? NoirColors.textPrimary
+                              : NoirColors.backgroundDeep,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 4,
                             ),
                           ],
@@ -345,8 +231,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                           _unreadCount > 99 ? '99+' : '$_unreadCount',
                           style: GoogleFonts.gowunDodum(
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            color: isNight ? Colors.black : Colors.white,
                           ),
                         ),
                       ),
@@ -356,21 +242,29 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: isNight ? NoirColors.surface : Colors.white,
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: isNight ? NoirColors.border : NoirColors.borderDim,
                     ),
                   ),
                   child: TextField(
                     controller: _msgController,
                     focusNode: _focusNode,
                     textInputAction: TextInputAction.send,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(
+                      color: isNight
+                          ? NoirColors.textPrimary
+                          : NoirColors.backgroundDeep,
+                      fontSize: ResponsiveUtils.fontSize(context, 14),
+                    ),
                     decoration: InputDecoration(
                       hintText: AppStrings.chatHint,
                       hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: isNight
+                            ? Colors.white.withValues(alpha: 0.4)
+                            : Colors.black.withValues(alpha: 0.4),
+                        fontSize: ResponsiveUtils.fontSize(context, 14),
                       ),
                       filled: false, // handled by container
                       contentPadding: const EdgeInsets.symmetric(
@@ -394,21 +288,24 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.votePillEnd],
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white,
+                        Colors.white.withValues(alpha: 0.8),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
+                        color: Colors.white.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
                     ],
                   ),
-                  child: CustomPaint(painter: SendPainter(color: Colors.white)),
+                  child: CustomPaint(painter: SendPainter(color: Colors.black)),
                 ),
               ),
             ],
@@ -418,32 +315,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     );
   }
 
-  IconData _getSystemMessageIcon(String text) {
-    if (text.contains('마피아') && text.contains('승리') || text.contains('장악')) {
-      return Icons.theater_comedy; // Mask icon - represents mafia
-    } else if (text.contains('시민') && text.contains('승리') ||
-        text.contains('처단')) {
-      return Icons.celebration;
-    } else if (text.contains('시체') || text.contains('사망')) {
-      return Icons.warning;
-    } else if (text.contains('밤') || text.contains('어둠')) {
-      return Icons.nightlight_round;
-    } else if (text.contains('낮') ||
-        text.contains('아침') ||
-        text.contains('동이')) {
-      return Icons.wb_sunny;
-    } else if (text.contains('투표') || text.contains('처형')) {
-      return Icons.how_to_vote;
-    } else if (text.contains('치료') || text.contains('생명')) {
-      return Icons.medical_services;
-    } else if (text.contains('조사') || text.contains('정체')) {
-      return Icons.search;
-    } else if (text.contains('역할') || text.contains('부여')) {
-      return Icons.person;
-    } else {
-      return Icons.info_outline;
-    }
-  }
+  // Icon mapping is now handled by AppDesign and MafiaBubble
 }
 
 class ArrowPainter extends CustomPainter {

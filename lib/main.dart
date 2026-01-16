@@ -7,7 +7,9 @@ import 'screens/login_screen.dart';
 import 'screens/lobby_screen.dart';
 import 'screens/game_screen.dart';
 import 'models/game_enums.dart';
-import 'theme/app_colors.dart';
+import 'theme/noir_design.dart';
+import 'theme/app_theme.dart';
+import 'providers/theme_provider.dart';
 import 'theme/app_strings.dart';
 
 import 'package:flutter/services.dart';
@@ -28,41 +30,17 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: '마피아 온라인',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: AppColors.backgroundMain,
-        primaryColor: AppColors.primary,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surface,
-          error: AppColors.deadRed,
-        ),
-        textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
-            .copyWith(
-              displayLarge: GoogleFonts.gowunDodum(
-                color: Colors.white,
-                fontWeight: FontWeight.w900, // Extra Bold
-                letterSpacing: 2.0,
-              ),
-              headlineMedium: GoogleFonts.gowunDodum(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
-              bodyLarge: GoogleFonts.gowunDodum(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ref.watch(themeModeProvider),
       home: const ScreenRouter(),
       scrollBehavior: NeonScrollBehavior(),
     );
@@ -78,7 +56,7 @@ class NeonScrollBehavior extends MaterialScrollBehavior {
   ) {
     return GlowingOverscrollIndicator(
       axisDirection: details.direction,
-      color: AppColors.primary,
+      color: NoirColors.crimson,
       child: child,
     );
   }
@@ -108,7 +86,7 @@ class ScreenRouter extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: AppColors.primary),
+              CircularProgressIndicator(color: NoirColors.crimson),
               SizedBox(height: 20),
               Text(
                 AppStrings.connecting,

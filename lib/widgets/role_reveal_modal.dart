@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import '../models/game_enums.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 
 class RoleRevealModal extends StatelessWidget {
@@ -18,7 +17,7 @@ class RoleRevealModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.overlayBlack85,
+      color: Colors.black.withValues(alpha: 0.95),
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -37,7 +36,7 @@ class RoleRevealModal extends StatelessWidget {
                           '당신의 역할',
                           style: GoogleFonts.gowunDodum(
                             fontSize: isCompact ? 14 : 18,
-                            color: AppColors.overlayWhite70,
+                            color: Colors.white.withValues(alpha: 0.5),
                             letterSpacing: 4,
                           ),
                         ),
@@ -57,9 +56,9 @@ class RoleRevealModal extends StatelessWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: _getRoleColor().withValues(alpha: 0.5),
-                                blurRadius: isCompact ? 20 : 30,
-                                spreadRadius: isCompact ? 3 : 5,
+                                color: Colors.white.withValues(alpha: 0.2),
+                                blurRadius: isCompact ? 30 : 50,
+                                spreadRadius: isCompact ? 1 : 2,
                               ),
                             ],
                           ),
@@ -80,13 +79,7 @@ class RoleRevealModal extends StatelessWidget {
                             fontSize: isCompact ? 32 : 42,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            letterSpacing: 8,
-                            shadows: [
-                              Shadow(
-                                color: _getRoleColor().withValues(alpha: 0.8),
-                                blurRadius: isCompact ? 15 : 20,
-                              ),
-                            ],
+                            letterSpacing: 12,
                           ),
                         ),
                       ),
@@ -100,16 +93,18 @@ class RoleRevealModal extends StatelessWidget {
                             vertical: isCompact ? 12 : 16,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.overlayWhite10,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.overlayWhite20),
+                            color: Colors.white.withValues(alpha: 0.03),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
                           ),
                           child: Text(
                             _getRoleDescription(),
                             textAlign: TextAlign.center,
                             style: GoogleFonts.gowunDodum(
                               fontSize: isCompact ? 14 : 16,
-                              color: AppColors.overlayWhite90,
+                              color: Colors.white.withValues(alpha: 0.9),
                               height: 1.6,
                             ),
                           ),
@@ -121,17 +116,16 @@ class RoleRevealModal extends StatelessWidget {
                         child: ElevatedButton(
                           onPressed: onDismiss,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _getRoleColor(),
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
                             padding: EdgeInsets.symmetric(
                               horizontal: isCompact ? 36 : 48,
                               vertical: isCompact ? 12 : 16,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            elevation: 8,
-                            shadowColor: _getRoleColor().withValues(alpha: 0.5),
+                            elevation: 0,
                           ),
                           child: Text(
                             AppStrings.confirm,
@@ -154,30 +148,11 @@ class RoleRevealModal extends StatelessWidget {
     );
   }
 
-  Color _getRoleColor() {
-    switch (role) {
-      case GameRole.mafia:
-        return AppColors.mafiaRed;
-      case GameRole.doctor:
-        return AppColors.doctorGreen;
-      case GameRole.police:
-        return AppColors.policeBlue;
-      case GameRole.citizen:
-        return AppColors.citizenLink;
-    }
-  }
-
   List<Color> _getRoleGradient() {
-    switch (role) {
-      case GameRole.mafia:
-        return [AppColors.mafiaRed, AppColors.mafiaRedDark];
-      case GameRole.doctor:
-        return [AppColors.doctorGreen, AppColors.doctorGreenDark];
-      case GameRole.police:
-        return [AppColors.policeBlue, AppColors.policeBlueDark];
-      case GameRole.citizen:
-        return [AppColors.citizenLink, AppColors.citizenGradientEnd];
-    }
+    return [
+      Colors.white.withValues(alpha: 0.1),
+      Colors.white.withValues(alpha: 0.05),
+    ];
   }
 
   String _getRoleEmoji() {

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,8 +7,10 @@ import '../providers/action_provider.dart';
 import '../providers/game_state_provider.dart';
 import '../widgets/custom_snackbar.dart';
 import '../theme/app_strings.dart';
-import '../theme/app_colors.dart';
+import '../theme/noir_design.dart';
 import '../utils/responsive_utils.dart';
+import '../widgets/common/noir_button.dart';
+import '../widgets/common/noir_card.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -104,53 +105,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
+      backgroundColor: NoirColors.backgroundBase,
       resizeToAvoidBottomInset: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Elements
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.mafiaRed.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.mafiaRed.withValues(alpha: 0.5),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.loginButtonSecondary.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.loginButtonSecondary.withValues(
-                      alpha: 0.5,
-                    ),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // Main UI
           Container(
             color: Colors.transparent,
@@ -181,19 +140,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       context,
                                       48,
                                     ),
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.mafiaRed,
+                                    fontWeight: FontWeight.w900,
+                                    color: NoirColors.textPrimary,
                                     letterSpacing: ResponsiveUtils.spacing(
                                       context,
                                       4,
                                     ),
                                     shadows: [
                                       Shadow(
-                                        color: AppColors.mafiaRed.withValues(
+                                        color: NoirColors.crimson.withValues(
                                           alpha: 0.5,
                                         ),
                                         blurRadius: 20,
-                                        offset: const Offset(0, 5),
                                       ),
                                     ],
                                   ),
@@ -206,7 +164,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       32,
                                     ),
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: NoirColors.textSecondary,
                                     letterSpacing: ResponsiveUtils.spacing(
                                       context,
                                       6,
@@ -224,104 +182,87 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           FadeInUp(
                             delay: const Duration(milliseconds: 300),
                             duration: const Duration(milliseconds: 800),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 10,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxWidth: ResponsiveUtils.iconSize(
+                                  context,
+                                  340,
                                 ),
-                                child: Container(
-                                  width: ResponsiveUtils.iconSize(context, 320),
-                                  padding: EdgeInsets.all(
-                                    ResponsiveUtils.padding(context, 24),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                      width: 1,
+                              ),
+                              child: NoirCard(
+                                variant: NoirCardVariant.base,
+                                elevation: NoirCardElevation.standard,
+                                padding: ResponsiveUtils.padding(context, 24),
+                                child: Column(
+                                  children: [
+                                    _buildTextField(
+                                      controller: _nameController,
+                                      label: AppStrings.labelNickname,
+                                      icon: Icons.person_outline,
+                                      maxLength: 10,
+                                      maxLengthEnforcement:
+                                          MaxLengthEnforcement.enforced,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(
+                                          RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
+                                        ),
+                                        LengthLimitingTextInputFormatter(10),
+                                      ],
+                                      onChanged: (value) {
+                                        if (value.length > 10) {
+                                          _nameController
+                                              .value = TextEditingValue(
+                                            text: value.substring(0, 10),
+                                            selection: TextSelection.collapsed(
+                                              offset: 10,
+                                            ),
+                                          );
+                                        }
+                                      },
                                     ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      _buildTextField(
-                                        controller: _nameController,
-                                        label: AppStrings.labelNickname,
-                                        icon: Icons.person_outline,
-                                        maxLength: 10,
-                                        maxLengthEnforcement:
-                                            MaxLengthEnforcement.enforced,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                            RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
-                                          ),
-                                          LengthLimitingTextInputFormatter(10),
-                                        ],
-                                        onChanged: (value) {
-                                          if (value.length > 10) {
-                                            _nameController.value =
-                                                TextEditingValue(
-                                                  text: value.substring(0, 10),
-                                                  selection:
-                                                      TextSelection.collapsed(
-                                                        offset: 10,
-                                                      ),
-                                                );
-                                          }
-                                        },
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(
+                                        context,
+                                        16,
                                       ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          16,
-                                        ),
+                                    ),
+                                    _buildTextField(
+                                      controller: _roomCodeController,
+                                      label: AppStrings.labelRoomCode,
+                                      icon: Icons.vpn_key_outlined,
+                                      isNumber: true,
+                                      maxLength: 6,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(
+                                        context,
+                                        24,
                                       ),
-                                      _buildTextField(
-                                        controller: _roomCodeController,
-                                        label: AppStrings.labelRoomCode,
-                                        icon: Icons.vpn_key_outlined,
-                                        isNumber: true,
-                                        maxLength: 6,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                        ],
+                                    ),
+                                    NoirButton(
+                                      text: AppStrings.btnCreateRoom,
+                                      onPressed: () => _createRoom(),
+                                      style: NoirButtonStyle.primary,
+                                      isLoading: _isLoading,
+                                      fullWidth: true,
+                                    ),
+                                    SizedBox(
+                                      height: ResponsiveUtils.spacing(
+                                        context,
+                                        12,
                                       ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          24,
-                                        ),
-                                      ),
-                                      _buildButton(
-                                        text: AppStrings.btnCreateRoom,
-                                        onPressed: _isLoading
-                                            ? null
-                                            : _createRoom,
-                                        color: AppColors.mafiaRed,
-                                        isLoading: _isLoading,
-                                      ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          12,
-                                        ),
-                                      ),
-                                      _buildButton(
-                                        text: AppStrings.btnJoinRoom,
-                                        onPressed: _isLoading
-                                            ? null
-                                            : _joinRoom,
-                                        color: AppColors.loginButtonSecondary,
-                                        isOutlined: true,
-                                        isLoading: _isLoading,
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                    NoirButton(
+                                      text: AppStrings.btnJoinRoom,
+                                      onPressed: () => _joinRoom(),
+                                      style: NoirButtonStyle.secondary,
+                                      isLoading: _isLoading,
+                                      fullWidth: true,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -352,7 +293,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(
+        color: NoirColors.textPrimary,
+        fontWeight: FontWeight.bold,
+      ),
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       maxLength: maxLength,
       maxLengthEnforcement: maxLengthEnforcement,
@@ -361,73 +305,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         labelText: label,
         counterText: '',
         labelStyle: TextStyle(
-          color: Colors.white.withValues(alpha: 0.5),
+          color: NoirColors.textTertiary,
           fontSize: ResponsiveUtils.fontSize(context, 13),
           fontWeight: FontWeight.bold,
         ),
         prefixIcon: Icon(
           icon,
-          color: Colors.white54,
+          color: NoirColors.textSecondary,
           size: ResponsiveUtils.iconSize(context, 20),
         ),
         filled: true,
-        fillColor: Colors.black26,
+        fillColor: NoirColors.surfaceDark,
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(NoirDesign.radiusMedium),
+          borderSide: BorderSide(color: NoirColors.border, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.mafiaRed),
+          borderRadius: BorderRadius.circular(NoirDesign.radiusMedium),
+          borderSide: BorderSide(color: NoirColors.crimson, width: 1.5),
         ),
-      ),
-    );
-  }
-
-  Widget _buildButton({
-    required String text,
-    required VoidCallback? onPressed,
-    required Color color,
-    bool isOutlined = false,
-    bool isLoading = false,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: ResponsiveUtils.iconSize(context, 46),
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isOutlined ? Colors.transparent : color,
-          foregroundColor: Colors.white,
-          elevation: isOutlined ? 0 : 5,
-          shadowColor: isOutlined
-              ? Colors.transparent
-              : color.withValues(alpha: 0.5),
-          side: isOutlined ? BorderSide(color: color, width: 2) : null,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          disabledBackgroundColor: isOutlined
-              ? Colors.transparent
-              : color.withValues(alpha: 0.5),
-        ),
-        child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                text,
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.fontSize(context, 15),
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: ResponsiveUtils.spacing(context, 1.2),
-                ),
-              ),
       ),
     );
   }

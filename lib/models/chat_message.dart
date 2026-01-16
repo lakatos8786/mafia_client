@@ -82,7 +82,7 @@ class ChatMessage {
       case ChatMessageType.mafia:
         return const Color(
           0xFFE94560,
-        ); // Use AppColors.mafiaRed - Much brighter
+        ); // Use NoirColors.crimson for mafia color
       case ChatMessageType.general:
       default:
         return const Color(

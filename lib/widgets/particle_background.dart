@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import '../models/game_enums.dart'; // Import Enums
-import '../theme/app_colors.dart';
+import '../theme/noir_design.dart';
 
 class ParticleBackground extends StatefulWidget {
   final GamePhase phase;
@@ -131,10 +131,10 @@ class ParticlePainter extends CustomPainter {
     for (var particle in particles) {
       final paint = Paint()
         ..color = phase == GamePhase.day
-            ? Colors.white.withValues(alpha: particle.opacity)
-            : AppColors.accentYellow.withValues(
-                alpha: particle.opacity,
-              ); // Star color
+            ? Colors.white.withValues(alpha: particle.opacity * 0.4)
+            : NoirColors.textSecondary.withValues(
+                alpha: particle.opacity * 0.25,
+              );
 
       double cx = particle.x * size.width;
       double cy = particle.y * size.height;
@@ -146,7 +146,7 @@ class ParticlePainter extends CustomPainter {
           DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,
         );
         paint.color = paint.color.withValues(
-          alpha: (0.3 + 0.4 * (twinkle + 1) / 2).clamp(0.0, 1.0),
+          alpha: (0.1 + 0.3 * (twinkle + 1) / 2).clamp(0.0, 1.0),
         );
       }
 
