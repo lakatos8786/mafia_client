@@ -80,7 +80,7 @@ class ErrorDialog extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 title,
-                style: GoogleFonts.gowunDodum(
+                style: GoogleFonts.ibmPlexSansKr(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -92,7 +92,7 @@ class ErrorDialog extends StatelessWidget {
                 child: SingleChildScrollView(
                   child: Text(
                     message,
-                    style: GoogleFonts.gowunDodum(
+                    style: GoogleFonts.ibmPlexSansKr(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.7),
                       height: 1.5,
@@ -148,7 +148,7 @@ class ErrorDialog extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: GoogleFonts.gowunDodum(
+        style: GoogleFonts.ibmPlexSansKr(
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),

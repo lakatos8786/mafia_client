@@ -107,7 +107,7 @@ class ResultPlayerCard extends StatelessWidget {
                           children: [
                             Text(
                               player.nickname,
-                              style: GoogleFonts.gowunDodum(
+                              style: GoogleFonts.ibmPlexSansKr(
                                 color: player.isAlive
                                     ? identityColor
                                     : Colors.grey,

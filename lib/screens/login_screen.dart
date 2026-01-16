@@ -176,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               children: [
                                 Text(
                                   AppStrings.titleMafia,
-                                  style: GoogleFonts.gowunDodum(
+                                  style: GoogleFonts.ibmPlexSansKr(
                                     fontSize: ResponsiveUtils.fontSize(
                                       context,
                                       48,
@@ -200,7 +200,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                                 Text(
                                   AppStrings.titleOnline,
-                                  style: GoogleFonts.gowunDodum(
+                                  style: GoogleFonts.ibmPlexSansKr(
                                     fontSize: ResponsiveUtils.fontSize(
                                       context,
                                       32,

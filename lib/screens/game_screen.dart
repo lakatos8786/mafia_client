@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
+
 import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
 import '../widgets/player_grid.dart';
@@ -36,7 +37,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
         gamePhase != GamePhase.result &&
         (!_roleRevealed ||
             _shownRole != myRole ||
-            _lastDayCount != dayCount && dayCount == 1);
+            (_lastDayCount != dayCount && dayCount == 1));
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -50,35 +51,37 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               builder: (context, constraints) {
                 return Stack(
                   children: [
-                    SingleChildScrollView(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Column(
-                          children: [
-                            // --- Custom Header Area ---
-                            const GameHeader(),
+                    RepaintBoundary(
+                      child: SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Column(
+                            children: [
+                              // --- Custom Header Area ---
+                              const GameHeader(),
 
-                            // Skip Vote & Role Actions
-                            const ActionButtons(),
+                              // Skip Vote & Role Actions
+                              const ActionButtons(),
 
-                            // Game Area
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom:
-                                    (constraints.maxHeight < 480 &&
-                                            MediaQuery.of(
-                                                  context,
-                                                ).orientation ==
-                                                Orientation.landscape) ||
-                                        constraints.maxHeight < 600
-                                    ? 120
-                                    : 200, // Extra padding for chat area
+                              // Game Area
+                              Padding(
+                                padding: EdgeInsets.only(
+                                  bottom:
+                                      (constraints.maxHeight < 480 &&
+                                              MediaQuery.of(
+                                                    context,
+                                                  ).orientation ==
+                                                  Orientation.landscape) ||
+                                          constraints.maxHeight < 600
+                                      ? 120
+                                      : 200, // Extra padding for chat area
+                                ),
+                                child: const PlayerGrid(),
                               ),
-                              child: const PlayerGrid(),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -118,10 +121,6 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               },
             ),
             if (gamePhase == GamePhase.result) const GameResultOverlay(),
-            // If Overlay expects "GameProvider", I need to migrate Overlay too.
-            // Assuming Overlay expects "game" which was "GameProvider".
-            // Since I pass "gameState" (type GameState), Overlay will break if not migrated.
-            // I should migrate Overlay later or remove argument and let it watch.
 
             // Role Reveal Modal
             if (shouldShowRoleModal && !_roleRevealed)

@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:animate_do/animate_do.dart';
 import '../models/game_enums.dart';
 import '../providers/game_state_provider.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_strings.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_styles.dart';
 import '../utils/responsive_utils.dart';
 import 'phase_timer.dart';
 import 'role_reveal_modal.dart';
 
+/// 게임 상태 및 생존 현황을 표시하는 상단 헤더
 class GameHeader extends ConsumerStatefulWidget {
   const GameHeader({super.key});
 
@@ -38,31 +38,22 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
-        setState(() {
-          _isRoleVisible = false;
-        });
+        setState(() => _isRoleVisible = false);
       }
     });
   }
 
   void _onRoleTap() {
     final myRole = ref.read(gameStateProvider.select((s) => s.myRole));
-
-    // Show role for 5 seconds
-    setState(() {
-      _isRoleVisible = true;
-    });
+    setState(() => _isRoleVisible = true);
     _startHideTimer();
 
-    // Show role reveal modal
     if (myRole != null) {
       showDialog(
         context: context,
         builder: (context) => RoleRevealModal(
           role: myRole,
-          onDismiss: () {
-            Navigator.of(context).pop();
-          },
+          onDismiss: () => Navigator.of(context).pop(),
         ),
       );
     }
@@ -73,248 +64,236 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
-    final roleCountCompact = ref.watch(
-      gameStateProvider.select((s) => s.roleCountCompact),
-    );
+    final roleCounts = ref.watch(gameStateProvider.select((s) => s.roleCounts));
+    final theme = Theme.of(context);
+    final gameTheme = theme.extension<GameThemeExtension>()!;
 
-    final topPadding = MediaQuery.of(context).padding.top;
-
-    return FadeInDown(
-      duration: const Duration(milliseconds: 600),
+    return RepaintBoundary(
       child: Container(
         padding: EdgeInsets.only(
-          top: ResponsiveUtils.verticalPadding(context, 10) + topPadding,
-          bottom: ResponsiveUtils.verticalPadding(context, 10),
-          left: ResponsiveUtils.horizontalPadding(context, 16),
-          right: ResponsiveUtils.horizontalPadding(context, 16),
+          left: AppSpacing.paddingM,
+          right: AppSpacing.paddingM,
+          top: MediaQuery.of(context).padding.top + AppSpacing.paddingS,
+          bottom: AppSpacing.paddingS,
         ),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3),
-          borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(20),
+          color: AppColors.overlayBlack50,
+          border: Border(
+            bottom: BorderSide(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // First row: Phase + Timer and My Role
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Left side: Phase + Timer
-                Flexible(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.padding(context, 12),
-                            vertical: ResponsiveUtils.padding(context, 6),
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                gamePhase == GamePhase.day
-                                    ? Icons.wb_sunny
-                                    : Icons.nightlight_round,
-                                color: gamePhase == GamePhase.day
-                                    ? Colors.orangeAccent
-                                    : const Color(0xFF818CF8),
-                                size: ResponsiveUtils.iconSize(context, 20),
-                              ),
-                              SizedBox(
-                                width: ResponsiveUtils.spacing(context, 6),
-                              ),
-                              Flexible(
-                                child: Text(
-                                  '${gamePhase.label} $dayCount일차',
-                                  style: GoogleFonts.gowunDodum(
-                                    fontSize: ResponsiveUtils.fontSize(
-                                      context,
-                                      16,
-                                    ), // Increased from 14
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                      const PhaseTimer(),
-                    ],
+                _PhaseIndicator(gamePhase: gamePhase, dayCount: dayCount),
+                const Spacer(),
+                if (myRole != null)
+                  _MyRoleBadge(
+                    myRole: myRole,
+                    isRoleVisible: _isRoleVisible,
+                    onTap: _onRoleTap,
+                    gameTheme: gameTheme,
                   ),
-                ),
-
-                SizedBox(width: ResponsiveUtils.spacing(context, 12)),
-
-                // Right side: My Role Badge (compact)
-                GestureDetector(
-                  onTap: _onRoleTap,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, animation) {
-                      return FadeTransition(
-                        opacity: animation,
-                        child: ScaleTransition(scale: animation, child: child),
-                      );
-                    },
-                    child: Container(
-                      key: ValueKey(_isRoleVisible),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.padding(context, 12),
-                        vertical: ResponsiveUtils.padding(context, 6),
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: _isRoleVisible
-                              ? [
-                                  _getRoleColor(myRole).withValues(alpha: 0.3),
-                                  AppColors.surface.withValues(alpha: 0.8),
-                                ]
-                              : [
-                                  Colors.grey.withValues(alpha: 0.3),
-                                  Colors.grey.withValues(alpha: 0.5),
-                                ],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _isRoleVisible
-                              ? _getRoleColor(myRole).withValues(alpha: 0.5)
-                              : Colors.grey.withValues(alpha: 0.5),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _isRoleVisible ? _getRoleEmoji(myRole) : '❓',
-                            style: TextStyle(
-                              fontSize: ResponsiveUtils.fontSize(
-                                context,
-                                18,
-                              ), // Increased from 16
-                              color: _isRoleVisible
-                                  ? _getRoleColor(myRole)
-                                  : Colors.grey,
-                            ),
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
-                          Text(
-                            _isRoleVisible
-                                ? (myRole?.label ?? AppStrings.unknownRole)
-                                : '직업 확인',
-                            style: GoogleFonts.gowunDodum(
-                              color: Colors.white,
-                              fontSize: ResponsiveUtils.fontSize(
-                                context,
-                                14,
-                              ), // Increased from 13
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
+            const SizedBox(height: 12),
+            _RoleCounts(roleCounts: roleCounts, gameTheme: gameTheme),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-            // Second row: Role Counts (compact)
-            if (roleCountCompact.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(
-                  top: ResponsiveUtils.spacing(context, 8),
-                ),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.padding(context, 8),
-                    vertical: ResponsiveUtils.padding(context, 4),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: roleCountCompact.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final displayString = entry.value;
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            left: index > 0
-                                ? ResponsiveUtils.spacing(context, 6)
-                                : 0,
-                          ),
-                          child: Text(
-                            displayString,
-                            style: GoogleFonts.gowunDodum(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: ResponsiveUtils.fontSize(
-                                context,
-                                13,
-                              ), // Increased from 12
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+class _PhaseIndicator extends StatelessWidget {
+  final GamePhase gamePhase;
+  final int dayCount;
+
+  const _PhaseIndicator({required this.gamePhase, required this.dayCount});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accentColor = gamePhase == GamePhase.day
+        ? Colors.orangeAccent
+        : AppColors.nightAccent;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: AppDecorations.glass(
+            opacity: 0.1,
+            borderRadius: 20,
+            border: Border.all(color: accentColor, width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                gamePhase == GamePhase.day
+                    ? Icons.wb_sunny
+                    : Icons.nightlight_round,
+                color: accentColor,
+                size: ResponsiveUtils.iconSize(context, 20),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${gamePhase.label} $dayCount일차',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
                 ),
               ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        const PhaseTimer(),
+      ],
+    );
+  }
+}
+
+class _MyRoleBadge extends StatelessWidget {
+  final GameRole myRole;
+  final bool isRoleVisible;
+  final VoidCallback onTap;
+  final GameThemeExtension gameTheme;
+
+  const _MyRoleBadge({
+    required this.myRole,
+    required this.isRoleVisible,
+    required this.onTap,
+    required this.gameTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final roleColor = isRoleVisible
+        ? gameTheme.getRoleColor(myRole)
+        : AppColors.grey600;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: roleColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: roleColor.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              isRoleVisible ? _getRoleEmoji(myRole) : '❓',
+              style: TextStyle(fontSize: ResponsiveUtils.fontSize(context, 16)),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              isRoleVisible ? myRole.label : '직업 확인',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: roleColor,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Color _getRoleColor(GameRole? role) {
+  String _getRoleEmoji(GameRole role) {
     switch (role) {
       case GameRole.mafia:
-        return AppColors.mafiaRed;
+        return '🕶️';
       case GameRole.doctor:
-        return AppColors.doctorGreen;
+        return '💉';
       case GameRole.police:
-        return AppColors.policeBlue;
+        return '🚨';
       case GameRole.citizen:
-        return AppColors.citizenLink;
-      default:
-        return AppColors.primary;
+        return '👤';
     }
   }
+}
 
-  String _getRoleEmoji(GameRole? role) {
-    switch (role) {
-      case GameRole.mafia:
-        return '🕶️'; // Sunglasses - cool and mysterious
-      case GameRole.doctor:
-        return '💉'; // Syringe
-      case GameRole.police:
-        return '🚨'; // Police siren
-      case GameRole.citizen:
-        return '👤'; // Person silhouette
-      default:
-        return '❓'; // Question mark for unknown
-    }
+class _RoleCounts extends StatelessWidget {
+  final Map<String, int> roleCounts;
+  final GameThemeExtension gameTheme;
+
+  const _RoleCounts({required this.roleCounts, required this.gameTheme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _RoleCountItem(
+          label: GameRole.mafia.label,
+          count: roleCounts[GameRole.mafia.name] ?? 0,
+          color: gameTheme.mafiaRef,
+        ),
+        _RoleCountItem(
+          label: GameRole.doctor.label,
+          count: roleCounts[GameRole.doctor.name] ?? 0,
+          color: gameTheme.doctorRef,
+        ),
+        _RoleCountItem(
+          label: GameRole.police.label,
+          count: roleCounts[GameRole.police.name] ?? 0,
+          color: gameTheme.policeRef,
+        ),
+        _RoleCountItem(
+          label: GameRole.citizen.label,
+          count: roleCounts[GameRole.citizen.name] ?? 0,
+          color: gameTheme.citizenRef,
+        ),
+      ],
+    );
+  }
+}
+
+class _RoleCountItem extends StatelessWidget {
+  final String label;
+  final int count;
+  final Color color;
+
+  const _RoleCountItem({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+            fontSize: ResponsiveUtils.fontSize(context, 10),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '$count',
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
   }
 }
