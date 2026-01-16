@@ -9,6 +9,7 @@ import 'screens/game_screen.dart';
 import 'models/game_enums.dart';
 import 'theme/app_colors.dart';
 import 'theme/app_strings.dart';
+import 'theme/app_theme.dart';
 
 import 'package:flutter/services.dart';
 
@@ -36,33 +37,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '마피아 온라인',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: AppColors.backgroundMain,
-        primaryColor: AppColors.primary,
-        colorScheme: const ColorScheme.dark(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surface,
-          error: AppColors.deadRed,
-        ),
-        textTheme: GoogleFonts.gowunDodumTextTheme(ThemeData.dark().textTheme)
-            .copyWith(
-              displayLarge: GoogleFonts.gowunDodum(
-                color: Colors.white,
-                fontWeight: FontWeight.w900, // Extra Bold
-                letterSpacing: 2.0,
-              ),
-              headlineMedium: GoogleFonts.gowunDodum(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
-              bodyLarge: GoogleFonts.gowunDodum(
-                color: Colors.white.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-      ),
+      theme: AppTheme.darkTheme,
       home: const ScreenRouter(),
       scrollBehavior: NeonScrollBehavior(),
     );

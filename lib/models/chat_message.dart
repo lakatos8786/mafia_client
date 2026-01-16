@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'game_enums.dart';
+import '../theme/app_colors.dart';
 
 /// Type-safe chat message model
 /// Replaces `Map<String, dynamic>` for better code quality
@@ -78,25 +79,21 @@ class ChatMessage {
   Color get bubbleColor {
     switch (type) {
       case ChatMessageType.dead:
-        return const Color(0xFF4B5563); // Grey 600 - More visible than Grey 800
+        return AppColors.grey700;
       case ChatMessageType.mafia:
-        return const Color(
-          0xFFE94560,
-        ); // Use AppColors.mafiaRed - Much brighter
+        return AppColors.mafia;
       case ChatMessageType.general:
       default:
-        return const Color(
-          0xFF475569,
-        ); // Slate 600 - Better visibility against dark background
+        return AppColors.backgroundLighter;
     }
   }
 
   Color get textColor {
     switch (type) {
       case ChatMessageType.dead:
-        return Colors.grey[400]!;
+        return AppColors.textMuted;
       default:
-        return Colors.white;
+        return AppColors.textPrimary;
     }
   }
 }

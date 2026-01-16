@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/game_enums.dart'; // Import GameEnum
+import '../models/game_enums.dart';
 import 'particle_background.dart';
 import '../theme/app_colors.dart';
 
@@ -25,9 +25,9 @@ class DayNightBackground extends StatelessWidget {
           center: Alignment(-0.3, -0.5),
           radius: 1.5,
           colors: [
-            AppColors.policeBlue, // Light Blue
-            Color(0xFF0284C7), // Darker Blue
-            AppColors.backgroundMain, // Dark Fade
+            AppColors.backgroundDayStart,
+            AppColors.backgroundDayEnd,
+            AppColors.backgroundMain,
           ],
           stops: [0.0, 0.6, 1.0],
         ),
@@ -39,9 +39,9 @@ class DayNightBackground extends StatelessWidget {
           center: Alignment(0.5, -0.3),
           radius: 1.3,
           colors: [
-            Color(0xFF312E81), // Indigo
-            Color(0xFF1E1B4B), // Deep Indigo
-            Colors.black, // Pure Black
+            AppColors.backgroundNightStart,
+            AppColors.backgroundNightEnd,
+            Colors.black,
           ],
           stops: [0.0, 0.5, 1.0],
         ),
@@ -54,7 +54,7 @@ class DayNightBackground extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Subtle noise/grain effect simulation (optional, or just vignetting)
+          // Vignette effect
           Container(
             decoration: BoxDecoration(
               gradient: RadialGradient(
@@ -62,7 +62,7 @@ class DayNightBackground extends StatelessWidget {
                 radius: 1.2,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.6), // Heavier vignette
+                  AppColors.overlayBlack50.withValues(alpha: 0.6),
                 ],
                 stops: const [0.6, 1.0],
               ),

@@ -1,13 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
+import '../models/chat_message.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_styles.dart';
 import '../utils/responsive_utils.dart';
 import '../utils/color_utils.dart';
 
+/// 채팅 기능을 관리하는 위젯
 class ChatWidget extends ConsumerStatefulWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpand;
@@ -39,12 +41,8 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   @override
   void didUpdateWidget(ChatWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Reset unread count when chat is expanded
     if (widget.isExpanded && !oldWidget.isExpanded) {
-      setState(() {
-        _unreadCount = 0;
-      });
+      setState(() => _unreadCount = 0);
     }
   }
 
@@ -60,8 +58,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   Widget build(BuildContext context) {
     final messages = ref.watch(actionProvider.select((s) => s.messages));
 
-    // Use ref.listen to update unread count only when messages change,
-    // instead of every build frame during resize.
+    // 메시지 수신 시 읽지 않은 메시지 카운트 업데이트
     ref.listen(actionProvider.select((s) => s.messages), (previous, next) {
       if (!widget.isExpanded) {
         final newMessagesCount = next.length - (previous?.length ?? 0);
@@ -71,9 +68,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
             if (!next[i].isMine) addedUnread++;
           }
           if (addedUnread > 0) {
-            setState(() {
-              _unreadCount += addedUnread;
-            });
+            setState(() => _unreadCount += addedUnread);
           }
         }
       }
@@ -81,440 +76,405 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
 
     return Column(
       children: [
-        // Chat Area with Glassmorphism
+        // 채팅 리스트 영역
         Expanded(
-          flex: 1,
-          child: GestureDetector(
-            onTap: widget.onToggleExpand, // Tap background to toggle
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(
-                      alpha: widget.isExpanded ? 0.7 : 0.4,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.05),
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        controller: _scrollController,
-                        reverse: true, // Standard Chat Behavior
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          // REVERSED INDEX mapping for standard chat feel
-                          final reversedIndex = messages.length - 1 - index;
-                          final msg = messages[reversedIndex];
-
-                          final bool isLegacy = msg.isLegacy;
-                          final bool isMe = msg.isMine;
-
-                          Widget content;
-                          if (msg.isSystem) {
-                            final text = msg.message;
-                            content = Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      AppColors.policeBlue.withOpacity(0.15),
-                                      AppColors.accentYellow.withOpacity(0.1),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: AppColors.accentYellow.withOpacity(
-                                      0.4,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      _getSystemMessageIcon(text),
-                                      color: AppColors.accentYellow,
-                                      size: isLegacy ? 12 : 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        text,
-                                        style: GoogleFonts.gowunDodum(
-                                          color: Colors.white.withOpacity(0.95),
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            isLegacy ? 12 : 14,
-                                          ), // Increased from 11 : 13
-                                          fontWeight: isLegacy
-                                              ? FontWeight.normal
-                                              : FontWeight.w600,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          } else {
-                            Color bubbleColor = msg.bubbleColor;
-                            Color textColor = msg.textColor;
-
-                            if (isMe) {
-                              bubbleColor = AppColors.primary;
-                            }
-
-                            content = Column(
-                              crossAxisAlignment: isMe
-                                  ? CrossAxisAlignment.end
-                                  : CrossAxisAlignment.start,
-                              children: [
-                                if (!isMe && !isLegacy)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      left: 4,
-                                      bottom: 2,
-                                    ),
-                                    child: Text(
-                                      msg.sender,
-                                      style: GoogleFonts.gowunDodum(
-                                        color: ColorUtils.getSenderColor(
-                                          msg.sender,
-                                        ),
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          14,
-                                        ), // Increased from 13
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxWidth:
-                                        MediaQuery.of(context).size.width * 0.7,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: bubbleColor.withOpacity(
-                                        isMe ? 0.95 : 0.9,
-                                      ),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: const Radius.circular(16),
-                                        topRight: const Radius.circular(16),
-                                        bottomLeft: isMe
-                                            ? const Radius.circular(16)
-                                            : const Radius.circular(2),
-                                        bottomRight: isMe
-                                            ? const Radius.circular(2)
-                                            : const Radius.circular(16),
-                                      ),
-                                      border: !isMe
-                                          ? Border.all(color: Colors.white10)
-                                          : null,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.1),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Text(
-                                      msg.message,
-                                      style: GoogleFonts.gowunDodum(
-                                        color: textColor,
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          isLegacy ? 13 : 16,
-                                        ), // Increased from 12 : 15
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-
-                          return Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: isLegacy ? 4 : 8,
-                            ),
-                            child: Opacity(
-                              opacity: isLegacy ? 0.4 : 1.0,
-                              child: content,
-                            ),
-                          );
-                        },
-                      ),
-
-                      // Expand/Collapse Icon Overlay
-                      Positioned(
-                        top: 5,
-                        right: 20,
-                        child: IgnorePointer(
-                          child: Icon(
-                            widget.isExpanded
-                                ? Icons.keyboard_arrow_down
-                                : Icons.keyboard_arrow_up,
-                            color: Colors.white.withOpacity(0.2),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          child: RepaintBoundary(
+            child: _ChatListArea(
+              isExpanded: widget.isExpanded,
+              onToggleExpand: widget.onToggleExpand,
+              messages: messages,
+              scrollController: _scrollController,
             ),
           ),
         ),
-
-        // Input Area
-        Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Row(
-            children: [
-              // Expand Toggle Button with unread badge
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: InkWell(
-                      onTap: widget.onToggleExpand,
-                      customBorder: const CircleBorder(),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        width: 48,
-                        height: 48,
-                        child: CustomPaint(
-                          painter: ArrowPainter(
-                            isUp: !widget.isExpanded,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Unread badge
-                  if (_unreadCount > 0 && !widget.isExpanded)
-                    Positioned(
-                      top: -4,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.mafiaRed,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.mafiaRed.withOpacity(0.5),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          _unreadCount > 99 ? '99+' : '$_unreadCount',
-                          style: GoogleFonts.gowunDodum(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _msgController,
-                    focusNode: _focusNode,
-                    textInputAction: TextInputAction.send,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: AppStrings.chatHint,
-                      hintStyle: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                      ),
-                      filled: false, // handled by container
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 15,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              InkWell(
-                onTapDown: (_) => _sendMessage(),
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primary, AppColors.votePillEnd],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: CustomPaint(painter: SendPainter(color: Colors.white)),
-                ),
-              ),
-            ],
+        // 입력 영역
+        RepaintBoundary(
+          child: _ChatInputArea(
+            controller: _msgController,
+            focusNode: _focusNode,
+            isExpanded: widget.isExpanded,
+            unreadCount: _unreadCount,
+            onToggleExpand: widget.onToggleExpand,
+            onSendMessage: _sendMessage,
           ),
         ),
       ],
     );
   }
+}
 
-  IconData _getSystemMessageIcon(String text) {
-    if (text.contains('마피아') && text.contains('승리') || text.contains('장악')) {
-      return Icons.theater_comedy; // Mask icon - represents mafia
-    } else if (text.contains('시민') && text.contains('승리') ||
-        text.contains('처단')) {
-      return Icons.celebration;
-    } else if (text.contains('시체') || text.contains('사망')) {
-      return Icons.warning;
-    } else if (text.contains('밤') || text.contains('어둠')) {
-      return Icons.nightlight_round;
-    } else if (text.contains('낮') ||
-        text.contains('아침') ||
-        text.contains('동이')) {
-      return Icons.wb_sunny;
-    } else if (text.contains('투표') || text.contains('처형')) {
-      return Icons.how_to_vote;
-    } else if (text.contains('치료') || text.contains('생명')) {
-      return Icons.medical_services;
-    } else if (text.contains('조사') || text.contains('정체')) {
-      return Icons.search;
-    } else if (text.contains('역할') || text.contains('부여')) {
-      return Icons.person;
-    } else {
-      return Icons.info_outline;
-    }
+class _ChatListArea extends StatelessWidget {
+  final bool isExpanded;
+  final VoidCallback onToggleExpand;
+  final List<ChatMessage> messages;
+  final ScrollController scrollController;
+
+  const _ChatListArea({
+    required this.isExpanded,
+    required this.onToggleExpand,
+    required this.messages,
+    required this.scrollController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTap: onToggleExpand,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.overlayBlack50.withValues(
+                alpha: isExpanded ? 0.7 : 0.4,
+              ),
+              borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+              border: Border.all(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Stack(
+              children: [
+                ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  controller: scrollController,
+                  reverse: true,
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final reversedIndex = messages.length - 1 - index;
+                    return _ChatMessageItem(message: messages[reversedIndex]);
+                  },
+                ),
+                Positioned(
+                  top: 5,
+                  right: 20,
+                  child: Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
-class ArrowPainter extends CustomPainter {
-  final bool isUp;
-  final Color color;
-
-  ArrowPainter({required this.isUp, required this.color});
+class _ChatMessageItem extends StatelessWidget {
+  final ChatMessage message;
+  const _ChatMessageItem({required this.message});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+  Widget build(BuildContext context) {
+    final isLegacy = message.isLegacy;
 
-    final path = Path();
-    if (isUp) {
-      // Chevron Up
-      path.moveTo(size.width * 0.2, size.height * 0.65);
-      path.lineTo(size.width * 0.5, size.height * 0.35);
-      path.lineTo(size.width * 0.8, size.height * 0.65);
-    } else {
-      // Chevron Down
-      path.moveTo(size.width * 0.2, size.height * 0.35);
-      path.lineTo(size.width * 0.5, size.height * 0.65);
-      path.lineTo(size.width * 0.8, size.height * 0.35);
-    }
-
-    canvas.drawPath(path, paint);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isLegacy ? 4 : 8),
+      child: Opacity(
+        opacity: isLegacy ? 0.4 : 1.0,
+        child: message.isSystem
+            ? _SystemMessage(text: message.message, isLegacy: isLegacy)
+            : _UserMessage(message: message),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant ArrowPainter oldDelegate) =>
-      oldDelegate.isUp != isUp || oldDelegate.color != color;
 }
 
-class SendPainter extends CustomPainter {
-  final Color color;
-
-  SendPainter({required this.color});
+class _SystemMessage extends StatelessWidget {
+  final String text;
+  final bool isLegacy;
+  const _SystemMessage({required this.text, required this.isLegacy});
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth =
-          3 // Matching ArrowPainter
-      ..style = PaintingStyle
-          .stroke // Matching ArrowPainter
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    double w = size.width;
-    double h = size.height;
-
-    // Chevron Right (>)
-    // 1. Top Leftish
-    path.moveTo(w * 0.35, h * 0.25);
-    // 2. Right Middle (Tip)
-    path.lineTo(w * 0.75, h * 0.5);
-    // 3. Bottom Leftish
-    path.lineTo(w * 0.35, h * 0.75);
-
-    // Do not close path for chevron
-    canvas.drawPath(path, paint);
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.policeBlue.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.accentYellow.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getIcon(text),
+              color: AppColors.accentYellow,
+              size: isLegacy ? 12 : 16,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                  fontSize: ResponsiveUtils.fontSize(
+                    context,
+                    isLegacy ? 12 : 14,
+                  ),
+                  fontWeight: isLegacy ? FontWeight.normal : FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
+  IconData _getIcon(String text) {
+    if (text.contains('마피아')) return Icons.theater_comedy;
+    if (text.contains('시민')) return Icons.celebration;
+    if (text.contains('사망') || text.contains('시체')) return Icons.warning;
+    if (text.contains('밤')) return Icons.nightlight_round;
+    if (text.contains('낮') || text.contains('동이')) return Icons.wb_sunny;
+    if (text.contains('투표')) return Icons.how_to_vote;
+    if (text.contains('치료')) return Icons.medical_services;
+    if (text.contains('조사')) return Icons.search;
+    return Icons.info_outline;
+  }
+}
+
+class _UserMessage extends StatelessWidget {
+  final ChatMessage message;
+  const _UserMessage({required this.message});
+
   @override
-  bool shouldRepaint(covariant SendPainter oldDelegate) =>
-      oldDelegate.color != color;
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isMe = message.isMine;
+    final isLegacy = message.isLegacy;
+
+    return Column(
+      crossAxisAlignment: isMe
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        if (!isMe && !isLegacy)
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 2),
+            child: Text(
+              message.sender,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: ColorUtils.getSenderColor(message.sender),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.7,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: message.bubbleColor.withValues(alpha: isMe ? 0.95 : 0.9),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: isMe
+                    ? const Radius.circular(16)
+                    : const Radius.circular(2),
+                bottomRight: isMe
+                    ? const Radius.circular(2)
+                    : const Radius.circular(16),
+              ),
+              border: !isMe
+                  ? Border.all(
+                      color: theme.colorScheme.onSurface.withValues(
+                        alpha: 0.05,
+                      ),
+                    )
+                  : null,
+              boxShadow: isMe
+                  ? AppDecorations.neonGlow(
+                      message.bubbleColor.withValues(alpha: 0.3),
+                    )
+                  : [],
+            ),
+            child: Text(
+              message.message,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: message.textColor,
+                fontSize: ResponsiveUtils.fontSize(context, isLegacy ? 13 : 15),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ChatInputArea extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool isExpanded;
+  final int unreadCount;
+  final VoidCallback onToggleExpand;
+  final VoidCallback onSendMessage;
+
+  const _ChatInputArea({
+    required this.controller,
+    required this.focusNode,
+    required this.isExpanded,
+    required this.unreadCount,
+    required this.onToggleExpand,
+    required this.onSendMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Row(
+        children: [
+          _ExpandToggleButton(
+            isExpanded: isExpanded,
+            unreadCount: unreadCount,
+            onTap: onToggleExpand,
+          ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.overlayBlack50,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                textInputAction: TextInputAction.send,
+                style: theme.textTheme.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: AppStrings.chatHint,
+                  hintStyle: TextStyle(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 15,
+                  ),
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (_) => onSendMessage(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          _SendButton(onTap: onSendMessage),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpandToggleButton extends StatelessWidget {
+  final bool isExpanded;
+  final int unreadCount;
+  final VoidCallback onTap;
+
+  const _ExpandToggleButton({
+    required this.isExpanded,
+    required this.unreadCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: InkWell(
+            onTap: onTap,
+            customBorder: const CircleBorder(),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Icon(
+                isExpanded ? Icons.expand_more : Icons.expand_less,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+        if (unreadCount > 0 && !isExpanded)
+          Positioned(
+            top: -4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.error,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: AppDecorations.neonGlow(
+                  theme.colorScheme.error.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SendButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SendButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, AppColors.votePillEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+          boxShadow: AppDecorations.neonGlow(
+            AppColors.primary.withValues(alpha: 0.4),
+          ),
+        ),
+        child: const Icon(Icons.send, color: Colors.white, size: 24),
+      ),
+    );
+  }
 }
