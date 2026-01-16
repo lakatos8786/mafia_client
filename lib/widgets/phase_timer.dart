@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
-import '../theme/noir_design.dart';
+import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
 
 class PhaseTimer extends ConsumerWidget {
@@ -31,7 +31,7 @@ class PhaseTimer extends ConsumerWidget {
     }
 
     final isNight = gamePhase == GamePhase.night;
-    final timerColor = isNight ? NoirColors.crimson : NoirColors.textPrimary;
+    final timerColor = isNight ? AppColors.mafiaRed : AppColors.policeBlue;
     final isLowTime = timerRemaining <= 10;
 
     return Semantics(
@@ -48,14 +48,14 @@ class PhaseTimer extends ConsumerWidget {
             color: isUnlimited
                 ? Colors.white.withValues(alpha: 0.3)
                 : isLowTime
-                ? NoirColors.crimson.withValues(alpha: 0.8)
+                ? AppColors.deadRed.withValues(alpha: 0.8)
                 : timerColor.withValues(alpha: 0.5),
             width: 1.5,
           ),
           boxShadow: isLowTime
               ? [
                   BoxShadow(
-                    color: NoirColors.crimson.withValues(alpha: 0.4),
+                    color: AppColors.deadRed.withValues(alpha: 0.4),
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -81,7 +81,7 @@ class PhaseTimer extends ConsumerWidget {
                     ? ResponsiveUtils.fontSize(context, 17)
                     : ResponsiveUtils.fontSize(context, 15),
                 fontWeight: FontWeight.bold,
-                color: isLowTime ? NoirColors.crimson : Colors.white,
+                color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
               child: Text(isUnlimited ? '무제한' : '$timerRemaining'),
             ),
@@ -112,7 +112,7 @@ class PhaseTimer extends ConsumerWidget {
       child: CustomPaint(
         painter: _TimerPainter(
           progress: progress,
-          color: isLowTime ? NoirColors.crimson : color,
+          color: isLowTime ? AppColors.deadRed : color,
           backgroundColor: Colors.white.withValues(alpha: 0.2),
         ),
       ),

@@ -9,7 +9,6 @@ import '../widgets/chat_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
-import '../theme/noir_design.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -40,7 +39,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             _lastDayCount != dayCount && dayCount == 1);
 
     return Scaffold(
-      backgroundColor: NoirColors.backgroundDeep,
+      backgroundColor: Colors.black,
       resizeToAvoidBottomInset: true,
       body: DayNightBackground(
         phase: gamePhase,

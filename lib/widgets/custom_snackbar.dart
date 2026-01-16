@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/noir_design.dart';
 
 class CustomSnackBar {
   static void show(
@@ -18,13 +17,10 @@ class CustomSnackBar {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: NoirColors.surface,
+        backgroundColor: Colors.grey[800],
         duration: Duration(seconds: durationSeconds),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(NoirDesign.radiusLarge),
-          side: BorderSide(color: NoirColors.border),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

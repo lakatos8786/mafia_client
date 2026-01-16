@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import '../models/game_enums.dart';
 import '../providers/game_state_provider.dart';
-import '../theme/noir_design.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../utils/responsive_utils.dart';
 import 'phase_timer.dart';
@@ -77,7 +77,6 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
       gameStateProvider.select((s) => s.roleCountCompact),
     );
 
-    final isNight = gamePhase == GamePhase.night;
     final topPadding = MediaQuery.of(context).padding.top;
 
     return FadeInDown(
@@ -90,9 +89,7 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
           right: ResponsiveUtils.horizontalPadding(context, 16),
         ),
         decoration: BoxDecoration(
-          color: isNight
-              ? Colors.black.withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.3),
+          color: Colors.black.withValues(alpha: 0.3),
           borderRadius: const BorderRadius.vertical(
             bottom: Radius.circular(20),
           ),
@@ -116,16 +113,10 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                             vertical: ResponsiveUtils.padding(context, 6),
                           ),
                           decoration: BoxDecoration(
-                            color: isNight
-                                ? NoirColors.surface.withValues(alpha: 0.8)
-                                : NoirColors.surfaceLight.withValues(
-                                    alpha: 0.6,
-                                  ),
-                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.black.withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isNight
-                                  ? NoirColors.border
-                                  : NoirColors.borderDim,
+                              color: Colors.white.withValues(alpha: 0.1),
                             ),
                           ),
                           child: Row(
@@ -135,9 +126,9 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                                 gamePhase == GamePhase.day
                                     ? Icons.wb_sunny
                                     : Icons.nightlight_round,
-                                color: isNight
-                                    ? NoirColors.textSecondary
-                                    : NoirColors.backgroundDeep,
+                                color: gamePhase == GamePhase.day
+                                    ? Colors.orangeAccent
+                                    : const Color(0xFF818CF8),
                                 size: ResponsiveUtils.iconSize(context, 20),
                               ),
                               SizedBox(
@@ -152,9 +143,7 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                                       16,
                                     ), // Increased from 14
                                     fontWeight: FontWeight.w900,
-                                    color: isNight
-                                        ? NoirColors.textPrimary
-                                        : NoirColors.backgroundDeep,
+                                    color: Colors.white,
                                     letterSpacing: 0.5,
                                   ),
                                   overflow: TextOverflow.ellipsis,
@@ -174,82 +163,73 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                 SizedBox(width: ResponsiveUtils.spacing(context, 12)),
 
                 // Right side: My Role Badge (compact)
-                Flexible(
-                  child: GestureDetector(
-                    onTap: _onRoleTap,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: animation,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Container(
-                        key: ValueKey(_isRoleVisible),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: ResponsiveUtils.padding(context, 12),
-                          vertical: ResponsiveUtils.padding(context, 6),
+                GestureDetector(
+                  onTap: _onRoleTap,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      );
+                    },
+                    child: Container(
+                      key: ValueKey(_isRoleVisible),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 12),
+                        vertical: ResponsiveUtils.padding(context, 6),
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _isRoleVisible
+                              ? [
+                                  _getRoleColor(myRole).withValues(alpha: 0.3),
+                                  AppColors.surface.withValues(alpha: 0.8),
+                                ]
+                              : [
+                                  Colors.grey.withValues(alpha: 0.3),
+                                  Colors.grey.withValues(alpha: 0.5),
+                                ],
                         ),
-                        decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
                           color: _isRoleVisible
-                              ? _getRoleColor(myRole).withValues(alpha: 0.2)
-                              : (isNight
-                                    ? NoirColors.surface.withValues(alpha: 0.8)
-                                    : NoirColors.surfaceLight.withValues(
-                                        alpha: 0.6,
-                                      )),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: _isRoleVisible
-                                ? _getRoleColor(myRole).withValues(alpha: 0.4)
-                                : (isNight
-                                      ? NoirColors.border
-                                      : NoirColors.borderDim),
-                            width: 1.0,
+                              ? _getRoleColor(myRole).withValues(alpha: 0.5)
+                              : Colors.grey.withValues(alpha: 0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _isRoleVisible ? _getRoleEmoji(myRole) : '❓',
+                            style: TextStyle(
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                18,
+                              ), // Increased from 16
+                              color: _isRoleVisible
+                                  ? _getRoleColor(myRole)
+                                  : Colors.grey,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _isRoleVisible ? _getRoleEmoji(myRole) : '❓',
-                              style: TextStyle(
-                                fontSize: ResponsiveUtils.fontSize(context, 14),
-                                fontWeight: FontWeight.w900,
-                                color: isNight
-                                    ? NoirColors.textPrimary
-                                    : NoirColors.backgroundDeep,
-                              ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                          Text(
+                            _isRoleVisible
+                                ? (myRole?.label ?? AppStrings.unknownRole)
+                                : '직업 확인',
+                            style: GoogleFonts.gowunDodum(
+                              color: Colors.white,
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                14,
+                              ), // Increased from 13
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
                             ),
-                            SizedBox(
-                              width: ResponsiveUtils.spacing(context, 6),
-                            ),
-                            Flexible(
-                              child: Text(
-                                _isRoleVisible
-                                    ? (myRole?.label ?? AppStrings.unknownRole)
-                                    : '직업 확인',
-                                style: GoogleFonts.gowunDodum(
-                                  color: isNight
-                                      ? NoirColors.textPrimary
-                                      : NoirColors.backgroundDeep,
-                                  fontSize: ResponsiveUtils.fontSize(
-                                    context,
-                                    14,
-                                  ), // Increased from 13
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -269,14 +249,8 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                     vertical: ResponsiveUtils.padding(context, 4),
                   ),
                   decoration: BoxDecoration(
-                    color: isNight
-                        ? NoirColors.surface.withValues(alpha: 0.8)
-                        : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isNight ? NoirColors.border : NoirColors.borderDim,
-                      width: 1.0,
-                    ),
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -285,7 +259,6 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                       children: roleCountCompact.asMap().entries.map((entry) {
                         final index = entry.key;
                         final displayString = entry.value;
-
                         return Padding(
                           padding: EdgeInsets.only(
                             left: index > 0
@@ -295,13 +268,7 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                           child: Text(
                             displayString,
                             style: GoogleFonts.gowunDodum(
-                              color: isNight
-                                  ? NoirColors.textSecondary.withValues(
-                                      alpha: 0.8,
-                                    )
-                                  : NoirColors.borderBright.withValues(
-                                      alpha: 0.9,
-                                    ),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontSize: ResponsiveUtils.fontSize(
                                 context,
                                 13,
@@ -324,9 +291,15 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
   Color _getRoleColor(GameRole? role) {
     switch (role) {
       case GameRole.mafia:
-        return NoirColors.crimson;
+        return AppColors.mafiaRed;
+      case GameRole.doctor:
+        return AppColors.doctorGreen;
+      case GameRole.police:
+        return AppColors.policeBlue;
+      case GameRole.citizen:
+        return AppColors.citizenLink;
       default:
-        return NoirColors.textSecondary;
+        return AppColors.primary;
     }
   }
 

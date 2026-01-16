@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,15 +9,12 @@ import '../widgets/particle_background.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/action_provider.dart';
 import '../providers/connection_provider.dart';
-import '../theme/noir_design.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../widgets/custom_snackbar.dart';
 import '../models/game_settings.dart';
 import '../models/player.dart';
 import '../utils/responsive_utils.dart';
-import '../widgets/common/noir_button.dart';
-import '../widgets/common/noir_card.dart';
-import '../widgets/common/noir_badge.dart';
 
 class LobbyScreen extends ConsumerWidget {
   const LobbyScreen({super.key});
@@ -27,7 +25,7 @@ class LobbyScreen extends ConsumerWidget {
     final myId = ref.watch(connectionProvider.notifier).socketId;
 
     return Scaffold(
-      backgroundColor: NoirColors.backgroundBase,
+      backgroundColor: AppColors.backgroundDark,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
@@ -35,7 +33,6 @@ class LobbyScreen extends ConsumerWidget {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             letterSpacing: 2.0,
-            color: NoirColors.textPrimary,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -43,7 +40,7 @@ class LobbyScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.copy, color: NoirColors.textSecondary),
+            icon: const Icon(Icons.copy, color: AppColors.mafiaRed),
             onPressed: () {
               if (gameState.roomId != null) {
                 Clipboard.setData(ClipboardData(text: gameState.roomId!));
@@ -60,6 +57,25 @@ class LobbyScreen extends ConsumerWidget {
           Positioned.fill(
             child: Container(color: Colors.black.withValues(alpha: 0.3)),
           ),
+          Positioned(
+            bottom: -100,
+            left: -50,
+            child: Container(
+              width: 400,
+              height: 400,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withValues(alpha: 0.1),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.2),
+                    blurRadius: 150,
+                    spreadRadius: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -74,10 +90,19 @@ class LobbyScreen extends ConsumerWidget {
                       child: Text(
                         '플레이어 대기 중...',
                         style: GoogleFonts.gowunDodum(
-                          color: NoirColors.textPrimary,
-                          fontSize: ResponsiveUtils.fontSize(context, 18),
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: ResponsiveUtils.fontSize(
+                            context,
+                            18,
+                          ), // Increased from 16
                           letterSpacing: ResponsiveUtils.spacing(context, 4),
                           fontWeight: FontWeight.bold,
+                          shadows: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.5),
+                              blurRadius: 20,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -100,58 +125,171 @@ class LobbyScreen extends ConsumerWidget {
 
                         return FadeInLeft(
                           delay: Duration(milliseconds: 100 * index),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              bottom: ResponsiveUtils.spacing(context, 12),
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              bottom: ResponsiveUtils.spacing(context, 10),
                             ),
-                            child: NoirCard(
-                              variant: isMe
-                                  ? NoirCardVariant.light
-                                  : NoirCardVariant.base,
-                              elevation: NoirCardElevation.subtle,
-                              hasCrimsonGlow: isMe,
-                              hasCrimsonBorder: isMe,
-                              padding: ResponsiveUtils.padding(context, 16),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      isMe
-                                          ? '${player.nickname} (나)'
-                                          : player.nickname,
-                                      style: GoogleFonts.gowunDodum(
-                                        color: NoirColors.textPrimary,
-                                        fontSize: ResponsiveUtils.fontSize(
-                                          context,
-                                          16,
-                                        ),
-                                        fontWeight: FontWeight.bold,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(15),
+                              child: BackdropFilter(
+                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                                child: Opacity(
+                                  opacity: player.atLobby ? 1.0 : 0.5,
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: ResponsiveUtils.padding(
+                                        context,
+                                        16,
                                       ),
+                                      vertical: 15,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isMe
+                                          ? AppColors.primary.withValues(
+                                              alpha: 0.2,
+                                            )
+                                          : Colors.white.withValues(
+                                              alpha: 0.05,
+                                            ),
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(
+                                        color: isMe
+                                            ? AppColors.primary.withValues(
+                                                alpha: 0.6,
+                                              )
+                                            : Colors.white.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                        width: isMe ? 1.5 : 1.0,
+                                      ),
+                                      boxShadow: isMe
+                                          ? [
+                                              BoxShadow(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.2),
+                                                blurRadius: 15,
+                                              ),
+                                            ]
+                                          : [],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: isMe
+                                              ? AppColors.primary
+                                              : Colors.white12,
+                                          foregroundColor: Colors.white,
+                                          child: const Icon(Icons.person),
+                                        ),
+                                        SizedBox(
+                                          width: ResponsiveUtils.spacing(
+                                            context,
+                                            12,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            player.nickname,
+                                            style: GoogleFonts.gowunDodum(
+                                              fontSize:
+                                                  ResponsiveUtils.fontSize(
+                                                    context,
+                                                    16,
+                                                  ), // Increased from 15
+                                              fontWeight: FontWeight.bold,
+                                              color: player.isAlive
+                                                  ? Colors.white
+                                                  : Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                        if (!player.atLobby)
+                                          Container(
+                                            margin: EdgeInsets.only(
+                                              left: ResponsiveUtils.spacing(
+                                                context,
+                                                8,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white10,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: Colors.white24,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '결과 확인 중...',
+                                              style: GoogleFonts.gowunDodum(
+                                                fontSize:
+                                                    ResponsiveUtils.fontSize(
+                                                      context,
+                                                      12,
+                                                    ), // Increased from 10
+                                                color: Colors.white54,
+                                              ),
+                                            ),
+                                          ),
+                                        if (player.isHost)
+                                          Tooltip(
+                                            message: '방장',
+                                            child: Text(
+                                              '👑',
+                                              style: TextStyle(
+                                                fontSize:
+                                                    ResponsiveUtils.fontSize(
+                                                      context,
+                                                      20,
+                                                    ),
+                                              ),
+                                            ),
+                                          ),
+                                        if (isMe)
+                                          Padding(
+                                            padding: EdgeInsets.only(
+                                              left: ResponsiveUtils.spacing(
+                                                context,
+                                                8,
+                                              ),
+                                            ),
+                                            child: Icon(
+                                              Icons.star,
+                                              color: AppColors.accentYellow,
+                                              size: ResponsiveUtils.iconSize(
+                                                context,
+                                                18,
+                                              ),
+                                            ),
+                                          ),
+                                        if (gameState.isAdmin && !isMe)
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.logout,
+                                              color: AppColors.mafiaRed,
+                                              size: ResponsiveUtils.iconSize(
+                                                context,
+                                                18,
+                                              ),
+                                            ),
+                                            onPressed: () {
+                                              _showKickConfirmation(
+                                                context,
+                                                ref,
+                                                player,
+                                              );
+                                            },
+                                            tooltip: '강퇴',
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                  if (player.isHost)
-                                    NoirBadge(
-                                      text: '방장',
-                                      type: NoirBadgeType.crimson,
-                                      icon: Icons.stars,
-                                    ),
-                                  if (gameState.isAdmin && !isMe)
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.close,
-                                        color: NoirColors.crimson,
-                                        size: ResponsiveUtils.iconSize(
-                                          context,
-                                          20,
-                                        ),
-                                      ),
-                                      onPressed: () => _showKickConfirmation(
-                                        context,
-                                        ref,
-                                        player,
-                                      ),
-                                    ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
@@ -161,39 +299,117 @@ class LobbyScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 16)),
                   _buildSettingsSection(context, ref, gameState, myId),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 32)),
-                  // Start Button
-                  if (gameState.roomId != null)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Builder(
-                        builder: (context) {
-                          final isHost = gameState.players.any(
-                            (p) => p.id == myId && p.isHost,
-                          );
-                          if (isHost) {
-                            return Center(
-                              child: NoirButton(
-                                text: AppStrings.startGame,
-                                onPressed: () {
-                                  ref.read(actionProvider.notifier).startGame();
-                                },
-                                style: NoirButtonStyle.primary,
-                                fullWidth: true,
-                              ),
-                            );
-                          } else {
-                            return Center(
-                              child: NoirBadge(
-                                text: AppStrings.waitingForHost,
-                                type: NoirBadgeType.info,
-                              ),
-                            );
-                          }
-                        },
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  FadeIn(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 24),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.people,
+                            color: Colors.white54,
+                            size: ResponsiveUtils.iconSize(context, 18),
+                          ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                          Text(
+                            '${gameState.players.length}명 참가 중',
+                            style: GoogleFonts.gowunDodum(
+                              color: Colors.white54,
+                              fontSize: ResponsiveUtils.fontSize(
+                                context,
+                                13,
+                              ), // Increased from 12
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 40)),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+                  FadeInUp(
+                    child: Padding(
+                      padding: EdgeInsets.all(
+                        ResponsiveUtils.padding(context, 24),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: ResponsiveUtils.iconSize(context, 50),
+                        child: Builder(
+                          builder: (context) {
+                            if (gameState.roomId != null) {
+                              final isHost = gameState.players.any(
+                                (p) => p.id == myId && p.isHost,
+                              );
+                              if (isHost) {
+                                return ElevatedButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(actionProvider.notifier)
+                                        .startGame();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    elevation: 8,
+                                    shadowColor: AppColors.primary.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(15),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    AppStrings.startGame,
+                                    style: GoogleFonts.gowunDodum(
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        18,
+                                      ),
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: ResponsiveUtils.spacing(
+                                        context,
+                                        2,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                return Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.all(
+                                    ResponsiveUtils.padding(context, 10),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.white24),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Text(
+                                    AppStrings.waitingForHost,
+                                    style: GoogleFonts.gowunDodum(
+                                      color: Colors.white54,
+                                      fontSize: ResponsiveUtils.fontSize(
+                                        context,
+                                        14,
+                                      ),
+                                      letterSpacing: ResponsiveUtils.spacing(
+                                        context,
+                                        1.5,
+                                      ),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                            return Container();
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -212,21 +428,21 @@ class LobbyScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: NoirColors.backgroundRaised,
+          backgroundColor: AppColors.backgroundDark,
           title: Text(
             '플레이어 강퇴',
-            style: GoogleFonts.gowunDodum(color: NoirColors.textPrimary),
+            style: GoogleFonts.gowunDodum(color: Colors.white),
           ),
           content: Text(
             '${target.nickname}님을 강퇴하시겠습니까?',
-            style: GoogleFonts.gowunDodum(color: NoirColors.textSecondary),
+            style: GoogleFonts.gowunDodum(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 '취소',
-                style: GoogleFonts.gowunDodum(color: NoirColors.textTertiary),
+                style: GoogleFonts.gowunDodum(color: Colors.white38),
               ),
             ),
             TextButton(
@@ -236,16 +452,13 @@ class LobbyScreen extends ConsumerWidget {
               },
               child: Text(
                 '강퇴',
-                style: GoogleFonts.gowunDodum(
-                  color: NoirColors.crimson,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: GoogleFonts.gowunDodum(color: AppColors.mafiaRed),
               ),
             ),
           ],
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(NoirDesign.radiusLarge),
-            side: BorderSide(color: NoirColors.border),
+            borderRadius: BorderRadius.circular(15),
+            side: const BorderSide(color: Colors.white10),
           ),
         );
       },
@@ -269,10 +482,9 @@ class LobbyScreen extends ConsumerWidget {
         ),
         padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
         decoration: BoxDecoration(
-          color: NoirColors.surface,
-          borderRadius: BorderRadius.circular(NoirDesign.radiusLarge),
-          border: Border.all(color: NoirColors.border),
-          boxShadow: NoirShadows.subtle,
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,14 +493,14 @@ class LobbyScreen extends ConsumerWidget {
               children: [
                 Icon(
                   Icons.settings,
-                  color: NoirColors.textSecondary,
+                  color: AppColors.primary,
                   size: ResponsiveUtils.iconSize(context, 20),
                 ),
                 SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                 Text(
                   '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
                   style: GoogleFonts.gowunDodum(
-                    color: NoirColors.textPrimary,
+                    color: Colors.white,
                     fontSize: ResponsiveUtils.fontSize(
                       context,
                       19,
@@ -384,7 +596,7 @@ class LobbyScreen extends ConsumerWidget {
                             const Text(
                               '자동 직업 배정',
                               style: TextStyle(
-                                color: NoirColors.textTertiary,
+                                color: Colors.white70,
                                 fontSize: 13,
                               ),
                             ),
@@ -423,21 +635,19 @@ class LobbyScreen extends ConsumerWidget {
                                           ),
                                         );
                                   },
-                                  activeThumbColor: NoirColors.crimson,
-                                  activeTrackColor: NoirColors.crimson
+                                  activeThumbColor: AppColors.primary,
+                                  activeTrackColor: AppColors.primary
                                       .withValues(alpha: 0.3),
-                                  inactiveThumbColor: NoirColors.textSecondary,
-                                  inactiveTrackColor: NoirColors.border,
+                                  inactiveThumbColor: Colors.white38,
+                                  inactiveTrackColor: Colors.white10,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: ResponsiveUtils.spacing(context, 8),
-                      runSpacing: ResponsiveUtils.spacing(context, 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildRoleCounter(
                           context,
@@ -631,12 +841,12 @@ class LobbyScreen extends ConsumerWidget {
                               child: Switch(
                                 value: isUnlimited,
                                 onChanged: onToggleUnlimited,
-                                activeThumbColor: NoirColors.crimson,
-                                activeTrackColor: NoirColors.crimson.withValues(
+                                activeThumbColor: AppColors.primary,
+                                activeTrackColor: AppColors.primary.withValues(
                                   alpha: 0.3,
                                 ),
-                                inactiveThumbColor: NoirColors.textTertiary,
-                                inactiveTrackColor: NoirColors.borderDim,
+                                inactiveThumbColor: Colors.white38,
+                                inactiveTrackColor: Colors.white10,
                               ),
                             ),
                           ),
@@ -678,11 +888,11 @@ class LobbyScreen extends ConsumerWidget {
                       ? SliderComponentShape.noOverlay
                       : const RoundSliderOverlayShape(overlayRadius: 14),
                   activeTrackColor: isUnlimited
-                      ? NoirColors.borderDim
-                      : NoirColors.crimson,
-                  inactiveTrackColor: NoirColors.borderDim,
-                  thumbColor: NoirColors.crimson,
-                  overlayColor: NoirColors.crimson.withValues(alpha: 0.2),
+                      ? Colors.white10
+                      : AppColors.primary,
+                  inactiveTrackColor: Colors.white10,
+                  thumbColor: AppColors.primary,
+                  overlayColor: AppColors.primary.withValues(alpha: 0.2),
                 ),
                 child: Slider(
                   value: isUnlimited ? max : value.clamp(min, max),

@@ -7,9 +7,8 @@ import '../models/game_enums.dart';
 
 import '../providers/game_state_provider.dart';
 import '../theme/app_strings.dart';
-import '../theme/noir_design.dart';
+import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
-import '../widgets/common/noir_button.dart';
 import 'game_log_view.dart';
 import 'result_player_card.dart';
 // Note: GameState needs to expose `returnToLobby` via Notifier.
@@ -69,13 +68,13 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
     final isMafiaWin = winnerRole == GameRole.mafia;
 
     // Theme colors based on winner
-    final mainColor = isMafiaWin ? NoirColors.crimson : NoirColors.textPrimary;
+    final mainColor = isMafiaWin ? AppColors.mafiaRed : AppColors.doctorGreen;
 
     return Positioned.fill(
       child: FadeIn(
         duration: const Duration(milliseconds: 500),
         child: Container(
-          color: NoirColors.backgroundDeep.withValues(alpha: 0.98),
+          color: Colors.black.withValues(alpha: 0.9), // Darkened background
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -88,10 +87,10 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                   height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: mainColor.withValues(alpha: 0.15),
+                    color: mainColor.withValues(alpha: 0.2),
                     boxShadow: [
                       BoxShadow(
-                        color: mainColor.withValues(alpha: 0.2),
+                        color: mainColor.withValues(alpha: 0.3),
                         blurRadius: 150,
                         spreadRadius: 20,
                       ),
@@ -103,6 +102,8 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
               SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    final isCompact = constraints.maxHeight < 600;
+
                     return Column(
                       children: [
                         Expanded(
@@ -122,10 +123,7 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                       Icon(
                                         Icons.emoji_events,
                                         color: mainColor,
-                                        size: ResponsiveUtils.iconSize(
-                                          context,
-                                          80,
-                                        ),
+                                        size: isCompact ? 50 : 80,
                                       ),
                                       const SizedBox(height: 10),
                                       Text(
@@ -133,20 +131,17 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                             ? AppStrings.winMafia
                                             : AppStrings.winCitizen,
                                         style: GoogleFonts.gowunDodum(
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            50,
-                                          ), // Massive font
+                                          fontSize: isCompact
+                                              ? 32
+                                              : 50, // Massive font
                                           fontWeight: FontWeight.w900,
                                           color:
                                               mainColor, // Color the text itself
                                           letterSpacing: 2.0,
                                           shadows: [
                                             Shadow(
-                                              blurRadius: 20,
-                                              color: mainColor.withValues(
-                                                alpha: 0.3,
-                                              ),
+                                              blurRadius: 15,
+                                              color: mainColor,
                                             ),
                                           ],
                                         ),
@@ -156,11 +151,8 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                             ? AppStrings.winMafiaDesc
                                             : AppStrings.winCitizenDesc,
                                         style: GoogleFonts.gowunDodum(
-                                          fontSize: ResponsiveUtils.fontSize(
-                                            context,
-                                            16,
-                                          ),
-                                          color: NoirColors.textTertiary,
+                                          fontSize: isCompact ? 14 : 16,
+                                          color: Colors.white70,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -169,29 +161,19 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                 ),
 
                                 SizedBox(
-                                  height: ResponsiveUtils.spacing(context, 30),
+                                  height: isCompact ? 10 : 30,
                                 ), // More spacing
                                 // 2. Results Grid (Highlight Winners)
                                 if (_showCards)
                                   Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal:
-                                          ResponsiveUtils.horizontalPadding(
-                                            context,
-                                            16,
-                                          ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
                                     ),
                                     child: Center(
                                       child: Wrap(
                                         alignment: WrapAlignment.center,
-                                        spacing: ResponsiveUtils.spacing(
-                                          context,
-                                          12,
-                                        ),
-                                        runSpacing: ResponsiveUtils.spacing(
-                                          context,
-                                          12,
-                                        ),
+                                        spacing: 12,
+                                        runSpacing: 12,
                                         children: gameState.endGamePlayers.map((
                                           p,
                                         ) {
@@ -223,9 +205,7 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                     ),
                                   ),
 
-                                SizedBox(
-                                  height: ResponsiveUtils.spacing(context, 20),
-                                ),
+                                SizedBox(height: isCompact ? 10 : 20),
                               ],
                             ),
                           ),
@@ -233,14 +213,8 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                         // 3. Action Buttons - Fixed at Bottom
                         Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: ResponsiveUtils.horizontalPadding(
-                              context,
-                              20,
-                            ),
-                            vertical: ResponsiveUtils.verticalPadding(
-                              context,
-                              20,
-                            ),
+                            horizontal: 20,
+                            vertical: isCompact ? 10 : 20,
                           ),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -249,22 +223,18 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                               if (!gameState.canReturnToLobby)
                                 Pulse(
                                   infinite: true,
-                                  child: Text(
+                                  child: const Text(
                                     AppStrings.pleaseWait,
                                     style: TextStyle(
-                                      color: NoirColors.textTertiary,
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        14,
-                                      ),
+                                      color: Colors.grey,
+                                      fontSize: 12,
                                       letterSpacing: 1.2,
                                     ),
                                   ),
                                 )
                               else
                                 FadeInUp(
-                                  child: NoirButton(
-                                    text: AppStrings.returnToLobby,
+                                  child: ElevatedButton(
                                     onPressed: () {
                                       if (gameState.canReturnToLobby) {
                                         ref
@@ -272,10 +242,31 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                             .returnToLobby();
                                       }
                                     },
-                                    style: isMafiaWin
-                                        ? NoirButtonStyle.primary
-                                        : NoirButtonStyle.secondary,
-                                    fullWidth: false,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: mainColor,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: isCompact ? 30 : 40,
+                                        vertical: isCompact ? 10 : 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      elevation: 5,
+                                      shadowColor: mainColor.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      AppStrings.returnToLobby,
+                                      style: GoogleFonts.gowunDodum(
+                                        fontSize: ResponsiveUtils.fontSize(
+                                          context,
+                                          12,
+                                        ),
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               const SizedBox(height: 8),
@@ -288,22 +279,11 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                       _showGameLog = true;
                                     });
                                   },
-                                  style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 16,
-                                    ),
-                                  ),
                                   child: Text(
                                     AppStrings.viewGameLog,
                                     style: GoogleFonts.gowunDodum(
-                                      color: NoirColors.textSecondary
-                                          .withValues(alpha: 0.7),
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        15,
-                                      ),
-                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white70,
+                                      fontSize: 14,
                                     ),
                                   ),
                                 ),
