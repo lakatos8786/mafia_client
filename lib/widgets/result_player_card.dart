@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
-import '../theme/app_colors.dart';
+import '../theme/noir_design.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/color_utils.dart';
 
 class ResultPlayerCard extends StatelessWidget {
   final dynamic
@@ -23,26 +22,32 @@ class ResultPlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color roleColor = Colors.grey;
+    Color roleIndicatorColor = NoirColors.textSecondary;
     String roleEmoji = '👤';
     if (player.role == GameRole.mafia) {
-      roleColor = AppColors.mafiaRed;
+      roleIndicatorColor = NoirColors.crimson;
       roleEmoji = '🕶️';
     } else if (player.role == GameRole.doctor) {
-      roleColor = AppColors.doctorGreen;
+      roleIndicatorColor = NoirColors.textPrimary;
       roleEmoji = '💉';
     } else if (player.role == GameRole.police) {
-      roleColor = AppColors.policeBlue;
+      roleIndicatorColor = NoirColors.textPrimary;
       roleEmoji = '🚨';
     } else {
-      roleColor = Colors.white70;
+      roleIndicatorColor = NoirColors.textTertiary;
     }
 
-    final identityColor = ColorUtils.getSenderColor(player.nickname);
+    final Color cardBgColor = isWinner
+        ? NoirColors.surface.withValues(alpha: 0.3)
+        : (player.isAlive
+              ? NoirColors.surfaceDark.withValues(alpha: 0.8)
+              : Colors.black.withValues(alpha: 0.8));
 
     final borderColor = isWinner
-        ? AppColors.voteGold
-        : identityColor.withValues(alpha: 0.2);
+        ? (mainColor == NoirColors.crimson
+              ? NoirColors.crimson
+              : NoirColors.textPrimary)
+        : NoirColors.border;
     final borderWidth = isWinner ? 3.0 : 1.0;
 
     return FadeInLeft(
@@ -62,18 +67,13 @@ class ResultPlayerCard extends StatelessWidget {
                     vertical: ResponsiveUtils.padding(context, 6),
                   ),
                   decoration: BoxDecoration(
-                    color: isWinner
-                        ? mainColor.withValues(alpha: 0.1)
-                        : identityColor.withValues(alpha: 0.08),
+                    color: cardBgColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isWinner ? mainColor : borderColor,
-                      width: borderWidth,
-                    ),
+                    border: Border.all(color: borderColor, width: borderWidth),
                     boxShadow: isWinner
                         ? [
                             BoxShadow(
-                              color: mainColor.withValues(alpha: 0.4),
+                              color: mainColor.withValues(alpha: 0.2),
                               blurRadius: 15,
                               spreadRadius: 1,
                             ),
@@ -87,8 +87,11 @@ class ResultPlayerCard extends StatelessWidget {
                         height: ResponsiveUtils.iconSize(context, 36),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: roleColor.withValues(alpha: 0.2),
-                          border: Border.all(color: roleColor, width: 2),
+                          color: NoirColors.surfaceDark,
+                          border: Border.all(
+                            color: roleIndicatorColor,
+                            width: 2,
+                          ),
                         ),
                         child: Center(
                           child: Text(
@@ -109,10 +112,10 @@ class ResultPlayerCard extends StatelessWidget {
                               player.nickname,
                               style: GoogleFonts.gowunDodum(
                                 color: player.isAlive
-                                    ? identityColor
-                                    : Colors.grey,
+                                    ? NoirColors.textPrimary
+                                    : NoirColors.textSecondary,
                                 fontSize: ResponsiveUtils.fontSize(context, 14),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w900,
                                 decoration: player.isAlive
                                     ? null
                                     : TextDecoration.lineThrough,
@@ -123,9 +126,9 @@ class ResultPlayerCard extends StatelessWidget {
                             Text(
                               player.role?.label ?? '알 수 없음',
                               style: TextStyle(
-                                color: roleColor,
+                                color: NoirColors.textTertiary,
                                 fontSize: ResponsiveUtils.fontSize(context, 11),
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -142,15 +145,47 @@ class ResultPlayerCard extends StatelessWidget {
                       padding: EdgeInsets.all(
                         ResponsiveUtils.padding(context, 3),
                       ),
-                      decoration: const BoxDecoration(
-                        color: AppColors.voteGold,
+                      decoration: BoxDecoration(
+                        color: mainColor == NoirColors.crimson
+                            ? NoirColors.crimson
+                            : NoirColors.textPrimary,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.emoji_events,
                         size: ResponsiveUtils.iconSize(context, 12),
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
+                    ),
+                  ),
+                if (!player.isAlive)
+                  Positioned(
+                    top: ResponsiveUtils.spacing(context, 6),
+                    right: ResponsiveUtils.spacing(context, 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('💀', style: TextStyle(fontSize: 16)),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.6),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '사망',
+                            style: GoogleFonts.gowunDodum(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],

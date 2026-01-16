@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/app_colors.dart';
+import '../theme/noir_design.dart';
 
 class GameLogView extends StatelessWidget {
   final List<Map<String, dynamic>> gameLog;
@@ -156,19 +156,19 @@ class GameLogView extends StatelessWidget {
   Color _getTypeColor(String type) {
     switch (type) {
       case 'system':
-        return AppColors.policeBlue;
+        return NoirColors.textPrimary;
       case 'chat':
-        return AppColors.citizenLink;
+        return NoirColors.textSecondary;
       case 'vote':
-        return AppColors.voteGold;
+        return NoirColors.crimson;
       case 'kill':
-        return AppColors.mafiaRed;
+        return NoirColors.crimson;
       case 'heal':
-        return AppColors.doctorGreen;
+        return NoirColors.textPrimary;
       case 'investigate':
-        return AppColors.policeBlue;
+        return NoirColors.textSecondary;
       case 'phase':
-        return AppColors.accentYellow;
+        return NoirColors.textPrimary;
       default:
         return Colors.white;
     }
