@@ -89,7 +89,7 @@ class LobbyScreen extends ConsumerWidget {
                       ),
                       child: Text(
                         '플레이어 대기 중...',
-                        style: GoogleFonts.gowunDodum(
+                        style: GoogleFonts.ibmPlexSansKr(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: ResponsiveUtils.fontSize(
                             context,
@@ -191,7 +191,7 @@ class LobbyScreen extends ConsumerWidget {
                                         Expanded(
                                           child: Text(
                                             player.nickname,
-                                            style: GoogleFonts.gowunDodum(
+                                            style: GoogleFonts.ibmPlexSansKr(
                                               fontSize:
                                                   ResponsiveUtils.fontSize(
                                                     context,
@@ -226,7 +226,7 @@ class LobbyScreen extends ConsumerWidget {
                                             ),
                                             child: Text(
                                               '결과 확인 중...',
-                                              style: GoogleFonts.gowunDodum(
+                                              style: GoogleFonts.ibmPlexSansKr(
                                                 fontSize:
                                                     ResponsiveUtils.fontSize(
                                                       context,
@@ -316,7 +316,7 @@ class LobbyScreen extends ConsumerWidget {
                           SizedBox(width: ResponsiveUtils.spacing(context, 6)),
                           Text(
                             '${gameState.players.length}명 참가 중',
-                            style: GoogleFonts.gowunDodum(
+                            style: GoogleFonts.ibmPlexSansKr(
                               color: Colors.white54,
                               fontSize: ResponsiveUtils.fontSize(
                                 context,
@@ -363,7 +363,7 @@ class LobbyScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     AppStrings.startGame,
-                                    style: GoogleFonts.gowunDodum(
+                                    style: GoogleFonts.ibmPlexSansKr(
                                       fontSize: ResponsiveUtils.fontSize(
                                         context,
                                         18,
@@ -388,7 +388,7 @@ class LobbyScreen extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     AppStrings.waitingForHost,
-                                    style: GoogleFonts.gowunDodum(
+                                    style: GoogleFonts.ibmPlexSansKr(
                                       color: Colors.white54,
                                       fontSize: ResponsiveUtils.fontSize(
                                         context,
@@ -431,18 +431,18 @@ class LobbyScreen extends ConsumerWidget {
           backgroundColor: AppColors.backgroundDark,
           title: Text(
             '플레이어 강퇴',
-            style: GoogleFonts.gowunDodum(color: Colors.white),
+            style: GoogleFonts.ibmPlexSansKr(color: Colors.white),
           ),
           content: Text(
             '${target.nickname}님을 강퇴하시겠습니까?',
-            style: GoogleFonts.gowunDodum(color: Colors.white70),
+            style: GoogleFonts.ibmPlexSansKr(color: Colors.white70),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 '취소',
-                style: GoogleFonts.gowunDodum(color: Colors.white38),
+                style: GoogleFonts.ibmPlexSansKr(color: Colors.white38),
               ),
             ),
             TextButton(
@@ -452,7 +452,7 @@ class LobbyScreen extends ConsumerWidget {
               },
               child: Text(
                 '강퇴',
-                style: GoogleFonts.gowunDodum(color: AppColors.mafiaRed),
+                style: GoogleFonts.ibmPlexSansKr(color: AppColors.mafiaRed),
               ),
             ),
           ],
@@ -499,7 +499,7 @@ class LobbyScreen extends ConsumerWidget {
                 SizedBox(width: ResponsiveUtils.spacing(context, 10)),
                 Text(
                   '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
-                  style: GoogleFonts.gowunDodum(
+                  style: GoogleFonts.ibmPlexSansKr(
                     color: Colors.white,
                     fontSize: ResponsiveUtils.fontSize(
                       context,
@@ -761,7 +761,7 @@ class LobbyScreen extends ConsumerWidget {
       builder: (context) {
         return Text(
           title,
-          style: GoogleFonts.gowunDodum(
+          style: GoogleFonts.ibmPlexSansKr(
             color: Colors.white70,
             fontSize: ResponsiveUtils.fontSize(
               context,

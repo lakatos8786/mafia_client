@@ -24,7 +24,7 @@ void main() async {
   );
 
   // Preload Google Fonts to prevent text rendering issues
-  await GoogleFonts.pendingFonts([GoogleFonts.gowunDodum()]);
+  await GoogleFonts.pendingFonts([GoogleFonts.ibmPlexSansKr()]);
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -87,7 +87,7 @@ class ScreenRouter extends ConsumerWidget {
               SizedBox(height: 20),
               Text(
                 AppStrings.connecting,
-                style: GoogleFonts.gowunDodum(
+                style: GoogleFonts.ibmPlexSansKr(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -96,7 +96,10 @@ class ScreenRouter extends ConsumerWidget {
               Text(
                 AppStrings.connectionColdStart,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.gowunDodum(fontSize: 14, color: Colors.grey),
+                style: GoogleFonts.ibmPlexSansKr(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
               ),
             ],
           ),

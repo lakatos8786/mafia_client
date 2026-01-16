@@ -12,7 +12,7 @@ class CustomSnackBar {
       SnackBar(
         content: Text(
           message,
-          style: GoogleFonts.gowunDodum(
+          style: GoogleFonts.ibmPlexSansKr(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),

@@ -35,7 +35,7 @@ class GameLogView extends StatelessWidget {
                   Expanded(
                     child: Text(
                       '게임 로그',
-                      style: GoogleFonts.gowunDodum(
+                      style: GoogleFonts.ibmPlexSansKr(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -46,7 +46,7 @@ class GameLogView extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '총 ${gameLog.length}개',
-                    style: GoogleFonts.gowunDodum(
+                    style: GoogleFonts.ibmPlexSansKr(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.6),
                     ),
@@ -60,7 +60,7 @@ class GameLogView extends StatelessWidget {
                   ? Center(
                       child: Text(
                         '게임 로그가 없습니다.',
-                        style: GoogleFonts.gowunDodum(
+                        style: GoogleFonts.ibmPlexSansKr(
                           fontSize: 16,
                           color: Colors.white.withValues(alpha: 0.5),
                         ),
@@ -119,7 +119,7 @@ class GameLogView extends StatelessWidget {
                   children: [
                     Text(
                       _getTypeLabel(type),
-                      style: GoogleFonts.gowunDodum(
+                      style: GoogleFonts.ibmPlexSansKr(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: _getTypeColor(type),
@@ -129,7 +129,7 @@ class GameLogView extends StatelessWidget {
                       const Spacer(),
                       Text(
                         _formatTimestamp(timestamp),
-                        style: GoogleFonts.gowunDodum(
+                        style: GoogleFonts.ibmPlexSansKr(
                           fontSize: 10,
                           color: Colors.white.withValues(alpha: 0.4),
                         ),
@@ -140,7 +140,7 @@ class GameLogView extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   _formatLogMessage(type, data),
-                  style: GoogleFonts.gowunDodum(
+                  style: GoogleFonts.ibmPlexSansKr(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),

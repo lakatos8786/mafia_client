@@ -76,7 +76,7 @@ class PhaseTimer extends ConsumerWidget {
             SizedBox(width: ResponsiveUtils.spacing(context, 6)),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
-              style: GoogleFonts.gowunDodum(
+              style: GoogleFonts.ibmPlexSansKr(
                 fontSize: isLowTime
                     ? ResponsiveUtils.fontSize(context, 17)
                     : ResponsiveUtils.fontSize(context, 15),
@@ -88,7 +88,7 @@ class PhaseTimer extends ConsumerWidget {
             if (!isUnlimited)
               Text(
                 '초',
-                style: GoogleFonts.gowunDodum(
+                style: GoogleFonts.ibmPlexSansKr(
                   fontSize: ResponsiveUtils.fontSize(context, 12),
                   color: Colors.white.withValues(alpha: 0.7),
                 ),

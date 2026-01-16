@@ -16,14 +16,16 @@ class AppTheme {
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.error,
-        onPrimary: Colors.white,
+        onPrimary: AppColors.backgroundMain, // High contrast for neon buttons
         onSecondary: Colors.white,
-        onSurface: Colors.white,
+        onSurface: AppColors.textPrimary,
         onError: Colors.white,
       ),
-      textTheme: GoogleFonts.gowunDodumTextTheme(
-        ThemeData.dark().textTheme,
-      ).apply(bodyColor: Colors.white, displayColor: Colors.white),
+      textTheme: GoogleFonts.ibmPlexSansKrTextTheme(ThemeData.dark().textTheme)
+          .apply(
+            bodyColor: AppColors.textPrimary,
+            displayColor: AppColors.textPrimary,
+          ),
       extensions: [
         const GameThemeExtension(
           mafiaRef: AppColors.mafia,

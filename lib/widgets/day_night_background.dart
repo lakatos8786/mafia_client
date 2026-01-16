@@ -19,13 +19,13 @@ class DayNightBackground extends StatelessWidget {
     Decoration mainDecoration;
 
     if (phase == GamePhase.day) {
-      // Day: Cyber Blue Sky with bright center
+      // Day: Slightly lighter midnight purple with cyan ambient glow
       mainDecoration = const BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(-0.3, -0.5),
           radius: 1.5,
           colors: [
-            AppColors.backgroundDayStart,
+            AppColors.backgroundLighter,
             AppColors.backgroundDayEnd,
             AppColors.backgroundMain,
           ],
@@ -33,7 +33,7 @@ class DayNightBackground extends StatelessWidget {
         ),
       );
     } else {
-      // Night: Deep Noir with Purple haze
+      // Night: Deeper midnight purple with magenta/crimson haze
       mainDecoration = const BoxDecoration(
         gradient: RadialGradient(
           center: Alignment(0.5, -0.3),
@@ -41,7 +41,7 @@ class DayNightBackground extends StatelessWidget {
           colors: [
             AppColors.backgroundNightStart,
             AppColors.backgroundNightEnd,
-            Colors.black,
+            AppColors.backgroundDark,
           ],
           stops: [0.0, 0.5, 1.0],
         ),

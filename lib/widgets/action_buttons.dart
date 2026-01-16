@@ -7,7 +7,6 @@ import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
-import '../theme/app_styles.dart';
 import '../utils/responsive_utils.dart';
 
 /// 게임 중 액션 버튼(투표 건너뛰기 등)을 관리하는 위젯
@@ -131,23 +130,28 @@ class _ActionButton extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isHighlighted
-              ? [highlightColor, AppColors.votePillEnd]
-              : [normalColor, theme.colorScheme.surface],
-        ),
+        color: isHighlighted ? highlightColor : Colors.transparent,
         borderRadius: BorderRadius.circular(25),
-        boxShadow: isHighlighted ? AppDecorations.neonGlow(highlightColor) : [],
+        boxShadow: isHighlighted
+            ? [
+                BoxShadow(
+                  color: highlightColor.withValues(alpha: 0.6),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ]
+            : [],
         border: Border.all(
-          color: theme.colorScheme.onSurface.withValues(
-            alpha: isHighlighted ? 0.5 : 0.1,
-          ),
+          color: highlightColor.withValues(alpha: 0.8),
+          width: 2,
         ),
       ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
-          foregroundColor: theme.colorScheme.onPrimary,
+          foregroundColor: isHighlighted
+              ? theme.colorScheme.onPrimary
+              : highlightColor,
           elevation: 0,
           shadowColor: Colors.transparent,
           padding: EdgeInsets.symmetric(

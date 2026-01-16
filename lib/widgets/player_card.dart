@@ -117,10 +117,12 @@ class PlayerCard extends ConsumerWidget {
     if (!isSelected) return theme.colorScheme.onSurface.withValues(alpha: 0.12);
 
     if (isMyVoteTarget) return gameTheme.voteRef;
-    if (selectionTargets.contains(GameRole.mafia.name))
+    if (selectionTargets.contains(GameRole.mafia.name)) {
       return gameTheme.mafiaRef;
-    if (selectionTargets.contains(GameRole.doctor.name))
+    }
+    if (selectionTargets.contains(GameRole.doctor.name)) {
       return gameTheme.doctorRef;
+    }
 
     return theme.colorScheme.secondary;
   }
@@ -131,11 +133,12 @@ class PlayerCard extends ConsumerWidget {
     bool isSelected,
     Color identityColor,
   ) {
-    if (!player.isAlive)
+    if (!player.isAlive) {
       return [
         theme.colorScheme.surface.withValues(alpha: 0.8),
         theme.colorScheme.surface.withValues(alpha: 0.8),
       ];
+    }
 
     if (isSelected) {
       Color startColor;
@@ -152,8 +155,8 @@ class PlayerCard extends ConsumerWidget {
     }
 
     return [
-      identityColor.withValues(alpha: 0.4),
-      theme.colorScheme.surface.withValues(alpha: 0.85),
+      identityColor.withValues(alpha: 0.15),
+      theme.colorScheme.surface.withValues(alpha: 0.95),
     ];
   }
 }
@@ -307,20 +310,21 @@ class _PlayerNickname extends StatelessWidget {
               decoration: player.isAlive ? null : TextDecoration.lineThrough,
               color: player.isAlive
                   ? theme.colorScheme.onSurface
-                  : AppColors.grey600,
+                  : AppColors.textMuted,
               fontSize: ResponsiveUtils.fontSize(context, 15),
               shadows: isMe
                   ? [
                       BoxShadow(
                         color: identityColor.withValues(alpha: 0.8),
-                        blurRadius: 10,
+                        blurRadius: 12,
+                        spreadRadius: 2,
                       ),
                     ]
                   : [
-                      const BoxShadow(
-                        color: Colors.black45,
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
                         blurRadius: 4,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
             ),
@@ -356,13 +360,14 @@ class _VoteBadge extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.votePillEnd],
+              colors: [AppColors.accentMagenta, AppColors.votePillEnd],
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                blurRadius: 8,
+                color: AppColors.accentMagenta.withValues(alpha: 0.6),
+                blurRadius: 12,
+                spreadRadius: 1,
               ),
             ],
           ),
