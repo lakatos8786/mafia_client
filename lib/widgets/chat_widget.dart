@@ -49,7 +49,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     if (_msgController.text.isNotEmpty) {
       ref.read(actionProvider.notifier).sendMessage(_msgController.text);
       _msgController.clear();
-      _focusNode.requestFocus();
     }
   }
 
@@ -143,6 +142,8 @@ class _ChatListArea extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   controller: scrollController,
                   reverse: true,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final reversedIndex = messages.length - 1 - index;
@@ -375,19 +376,22 @@ class _ChatInputArea extends StatelessWidget {
                   ),
                   border: InputBorder.none,
                 ),
-                onSubmitted: (_) => onSendMessage(),
+                onEditingComplete: onSendMessage,
               ),
             ),
           ),
           const SizedBox(width: 10),
-          _SendButton(onTap: onSendMessage),
+          _SendButton(
+            onTap: onSendMessage,
+            onTapDown: () => focusNode.requestFocus(),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ExpandToggleButton extends StatelessWidget {
+class _ExpandToggleButton extends StatefulWidget {
   final bool isExpanded;
   final int unreadCount;
   final VoidCallback onTap;
@@ -399,80 +403,113 @@ class _ExpandToggleButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          margin: const EdgeInsets.only(right: 8),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: InkWell(
-            onTap: onTap,
-            customBorder: const CircleBorder(),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Icon(
-                isExpanded ? Icons.expand_more : Icons.expand_less,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ),
-        ),
-        if (unreadCount > 0 && !isExpanded)
-          Positioned(
-            top: -4,
-            right: 4,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.error,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: AppDecorations.neonGlow(
-                  theme.colorScheme.error.withValues(alpha: 0.5),
-                ),
-              ),
-              child: Text(
-                unreadCount > 99 ? '99+' : '$unreadCount',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  State<_ExpandToggleButton> createState() => _ExpandToggleButtonState();
 }
 
-class _SendButton extends StatelessWidget {
-  final VoidCallback onTap;
-  const _SendButton({required this.onTap});
+class _ExpandToggleButtonState extends State<_ExpandToggleButton> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.votePillEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return AnimatedScale(
+      scale: _isPressed ? 0.9 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: GestureDetector(
+              onTapDown: (_) => setState(() => _isPressed = true),
+              onTapUp: (_) => setState(() => _isPressed = false),
+              onTapCancel: () => setState(() => _isPressed = false),
+              onTap: widget.onTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  widget.isExpanded ? Icons.expand_more : Icons.expand_less,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
           ),
-          shape: BoxShape.circle,
-          boxShadow: AppDecorations.neonGlow(
-            AppColors.primary.withValues(alpha: 0.4),
+          if (widget.unreadCount > 0 && !widget.isExpanded)
+            Positioned(
+              top: -4,
+              right: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.error,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: AppDecorations.neonGlow(
+                    theme.colorScheme.error.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Text(
+                  widget.unreadCount > 99 ? '99+' : '${widget.unreadCount}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SendButton extends StatefulWidget {
+  final VoidCallback onTap;
+  final VoidCallback? onTapDown;
+
+  const _SendButton({required this.onTap, this.onTapDown});
+
+  @override
+  State<_SendButton> createState() => _SendButtonState();
+}
+
+class _SendButtonState extends State<_SendButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedScale(
+      scale: _isPressed ? 0.9 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() => _isPressed = true);
+          widget.onTapDown?.call();
+        },
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: widget.onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primary, AppColors.votePillEnd],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            boxShadow: AppDecorations.neonGlow(
+              AppColors.primary.withValues(alpha: 0.4),
+            ),
           ),
+          child: const Icon(Icons.send, color: Colors.white, size: 24),
         ),
-        child: const Icon(Icons.send, color: Colors.white, size: 24),
       ),
     );
   }

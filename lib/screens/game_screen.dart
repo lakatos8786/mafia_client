@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/game_state_provider.dart';
 import '../models/game_enums.dart';
+import '../utils/responsive_utils.dart';
 
 import '../widgets/day_night_background.dart';
 import '../widgets/game_header.dart';
@@ -29,6 +30,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
+    final isCompact = ResponsiveUtils.isCompactScreen(context);
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     // Show role modal when game starts or role changes
     final shouldShowRoleModal =
@@ -49,76 +52,53 @@ class _GameScreenState extends ConsumerState<GameScreen> {
           children: [
             LayoutBuilder(
               builder: (context, constraints) {
-                return Stack(
-                  children: [
-                    RepaintBoundary(
-                      child: SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: constraints.maxHeight,
-                          ),
-                          child: Column(
-                            children: [
-                              // --- Custom Header Area ---
-                              const GameHeader(),
+                return RepaintBoundary(
+                  child: SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: Column(
+                        children: [
+                          // --- Custom Header Area ---
+                          const GameHeader(),
 
-                              // Skip Vote & Role Actions
-                              const ActionButtons(),
+                          // Skip Vote & Role Actions
+                          const ActionButtons(),
 
-                              // Game Area
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  bottom:
-                                      (constraints.maxHeight < 480 &&
-                                              MediaQuery.of(
-                                                    context,
-                                                  ).orientation ==
-                                                  Orientation.landscape) ||
-                                          constraints.maxHeight < 600
-                                      ? 120
-                                      : 200, // Extra padding for chat area
-                                ),
-                                child: const PlayerGrid(),
-                              ),
-                            ],
+                          // Game Area
+                          Padding(
+                            padding: EdgeInsets.only(
+                              bottom: (isCompact
+                                  ? 120
+                                  : 200), // Extra padding for chat area
+                            ),
+                            child: const PlayerGrid(),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-
-                    // Expandable Chat Layer
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: _isChatExpanded
-                          ? ((constraints.maxHeight < 480 &&
-                                        MediaQuery.of(context).orientation ==
-                                            Orientation.landscape) ||
-                                    constraints.maxHeight < 600
-                                ? constraints.maxHeight * 0.85
-                                : constraints.maxHeight * 0.7)
-                          : ((constraints.maxHeight < 480 &&
-                                        MediaQuery.of(context).orientation ==
-                                            Orientation.landscape) ||
-                                    constraints.maxHeight < 600
-                                ? 140
-                                : 160),
-                      child: Container(
-                        padding: const EdgeInsets.all(0),
-                        child: ChatWidget(
-                          isExpanded: _isChatExpanded,
-                          onToggleExpand: () {
-                            setState(() {
-                              _isChatExpanded = !_isChatExpanded;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 );
               },
+            ),
+
+            // Expandable Chat Layer (Isolated from LayoutBuilder to prevent focus-losing rebuilds)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: _isChatExpanded
+                  ? (isCompact ? screenHeight * 0.85 : screenHeight * 0.7)
+                  : (isCompact ? 140 : 160),
+              child: ChatWidget(
+                isExpanded: _isChatExpanded,
+                onToggleExpand: () {
+                  setState(() {
+                    _isChatExpanded = !_isChatExpanded;
+                  });
+                },
+              ),
             ),
             if (gamePhase == GamePhase.result) const GameResultOverlay(),
 
