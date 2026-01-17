@@ -52,6 +52,14 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     }
   }
 
+  void _handleToggleExpand() {
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+      return;
+    }
+    widget.onToggleExpand();
+  }
+
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(actionProvider.select((s) => s.messages));
@@ -79,7 +87,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
           child: RepaintBoundary(
             child: _ChatListArea(
               isExpanded: widget.isExpanded,
-              onToggleExpand: widget.onToggleExpand,
+              onToggleExpand: _handleToggleExpand,
               messages: messages,
               scrollController: _scrollController,
             ),
@@ -92,7 +100,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
             focusNode: _focusNode,
             isExpanded: widget.isExpanded,
             unreadCount: _unreadCount,
-            onToggleExpand: widget.onToggleExpand,
+            onToggleExpand: _handleToggleExpand,
             onSendMessage: _sendMessage,
           ),
         ),
