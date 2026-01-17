@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/game_enums.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/color_utils.dart';
 
 class ResultPlayerCard extends StatelessWidget {
   final dynamic
@@ -38,7 +37,7 @@ class ResultPlayerCard extends StatelessWidget {
       roleColor = Colors.white70;
     }
 
-    final identityColor = ColorUtils.getSenderColor(player.nickname);
+    final identityColor = AppColors.getIdentityColor(player.nickname);
 
     final borderColor = isWinner
         ? AppColors.voteGold

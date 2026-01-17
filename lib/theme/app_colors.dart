@@ -5,16 +5,14 @@ class AppColors {
   // --- Core Backgrounds ---
   static const Color backgroundMain = Color(0xFF120E24); // Deep Midnight
   static const Color backgroundDark = Color(0xFF0B0818); // Darker shade
-  static const Color surface = Color(
-    0xFF1F1A3D,
-  ); // Panel/Card background (merged)
+  static const Color surface = Color(0xFF1F1A3D); // Panel/Card background
 
   // --- Core Neon Accents ---
-  static const Color accentCyan = Color(
-    0xFF00D4FF,
-  ); // Action/Info (Police, Doctor)
-  static const Color accentMagenta = Color(0xFFFF007F); // Mafia/Danger/Error
-  static const Color accentYellow = Colors.yellowAccent; // Highlight/Warning
+  static const Color accentCyan = Color(0xFF00FBFF); // Neon Cyan
+  static const Color accentMagenta = Color(
+    0xFFFF0055,
+  ); // Sharp Neon Red-Pink (Less purple)
+  static const Color accentYellow = Color(0xFFFFFF00); // Neon Yellow
 
   // --- Theme Mappings ---
   static const Color primary = accentCyan;
@@ -30,11 +28,11 @@ class AppColors {
   // --- Status & Roles ---
   static const Color mafia = accentMagenta;
   static const Color mafiaDark = Color(0xFF800040);
-  static const Color doctor = accentCyan;
+  static const Color doctor = Color(0xFF00FF9F); // Fresh Greenish Neon
   static const Color police = accentCyan;
   static const Color citizen = textSecondary;
-  static const Color dead = accentMagenta;
-  static const Color voteGold = Color(0xFFF59E0B);
+  static const Color dead = Color(0xFFFF3131); // Bright Neon Red
+  static const Color voteGold = Color(0xFFFFAC1C); // Neon Orange/Gold
 
   // --- Greys (Simplified) ---
   static const Color greyDark = Color(0xFF1E293B);
@@ -46,7 +44,43 @@ class AppColors {
   static const Color overlayWhite10 = Color(0x1AFFFFFF);
   static const Color glassBorder = Color(0x33FFFFFF);
 
-  // --- Compatibility Aliases (Avoid breaking existing code) ---
+  // --- Identity Neon Palette (For Nicknames & Player Cards) ---
+  static const List<Color> _neonIdentityColors = [
+    Color(0xFF00FBFF), // Cyan
+    Color(0xFFFF00FF), // Magenta
+    Color(0xFF00FF9F), // Spring Green
+    Color(0xFFFFFF00), // Yellow
+    Color(0xFFFF3131), // Red
+    Color(0xFF8A2BE2), // Blue Violet
+    Color(0xFF00E5FF), // Electric Blue
+    Color(0xFF39FF14), // Alien Green
+    Color(0xFFFF6EC7), // Neon Pink
+    Color(0xFFFFD700), // Neon Gold
+    Color(0xFFE0B0FF), // Mauve
+    Color(0xFFCCFF00), // Lime
+    Color(0xFF7DF9FF), // Electric Blue
+    Color(0xFFFF4901), // Neon Orange
+    Color(0xFFF0F8FF), // Alice Blue
+  ];
+
+  /// Generates a deterministic neon color based on the input string (nickname)
+  static Color getIdentityColor(String name) {
+    if (name.isEmpty) return Colors.white70;
+
+    int hash = 0;
+    for (int i = 0; i < name.length; i++) {
+      hash = (hash * 31) + name.codeUnitAt(i);
+    }
+
+    // Scramble to reduce collisions
+    hash = (hash ^ (hash >> 16)) * 0x45d9f3b;
+    hash = (hash ^ (hash >> 16)) * 0x45d9f3b;
+    hash = hash ^ (hash >> 16);
+
+    return _neonIdentityColors[hash.abs() % _neonIdentityColors.length];
+  }
+
+  // --- Compatibility Aliases ---
   static const Color backgroundLighter = surface;
   static const Color backgroundDayStart = surface;
   static const Color backgroundDayEnd = backgroundMain;
@@ -54,8 +88,8 @@ class AppColors {
   static const Color backgroundNightEnd = backgroundDark;
   static const Color loginButtonSecondary = surface;
   static const Color votePillEnd = accentMagenta;
-  static const Color doctorDark = Color(0xFF0056B3);
-  static const Color policeDark = Color(0xFF0056B3);
+  static const Color doctorDark = Color(0xFF008F5B);
+  static const Color policeDark = Color(0xFF008BBB);
   static const Color citizenDark = textMuted;
   static const Color mafiaRed = mafia;
   static const Color doctorGreen = doctor;

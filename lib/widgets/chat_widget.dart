@@ -7,7 +7,6 @@ import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_styles.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/color_utils.dart';
 
 /// 채팅 기능을 관리하는 위젯
 class ChatWidget extends ConsumerStatefulWidget {
@@ -271,7 +270,7 @@ class _UserMessage extends StatelessWidget {
             child: Text(
               message.sender,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: ColorUtils.getSenderColor(message.sender),
+                color: AppColors.getIdentityColor(message.sender),
                 fontWeight: FontWeight.bold,
               ),
             ),

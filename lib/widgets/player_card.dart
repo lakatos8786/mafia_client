@@ -8,7 +8,6 @@ import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_styles.dart';
 import '../utils/responsive_utils.dart';
-import '../utils/color_utils.dart';
 
 /// 플레이어 개별 정보를 표시하는 카드 위젯
 /// 성능 최적화를 위해 RepaintBoundary와 const 서브 위젯을 사용합니다.
@@ -39,7 +38,7 @@ class PlayerCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
     final isSelected = selectionTargets.isNotEmpty || isMyVoteTarget;
-    final identityColor = ColorUtils.getSenderColor(player.nickname);
+    final identityColor = AppColors.getIdentityColor(player.nickname);
 
     // Border 및 Gradient 설정을 위한 헬퍼 변수
     final borderColor = _getBorderColor(theme, gameTheme, isSelected);
@@ -69,12 +68,16 @@ class PlayerCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
                 border: Border.all(
                   color: isSelected
-                      ? borderColor.withValues(alpha: 0.9)
-                      : identityColor.withValues(alpha: 0.45),
-                  width: isSelected ? 2.5 : 1.2,
+                      ? borderColor.withValues(alpha: 1.0)
+                      : identityColor.withValues(alpha: 0.6),
+                  width: isSelected ? 3.0 : 1.5,
                 ),
-                boxShadow: isSelected && player.isAlive
-                    ? AppDecorations.neonGlow(borderColor)
+                boxShadow: player.isAlive
+                    ? AppDecorations.neonGlow(
+                        isSelected
+                            ? borderColor
+                            : identityColor.withValues(alpha: 0.4),
+                      )
                     : [],
               ),
               child: Stack(
@@ -155,8 +158,8 @@ class PlayerCard extends ConsumerWidget {
     }
 
     return [
-      identityColor.withValues(alpha: 0.15),
-      theme.colorScheme.surface.withValues(alpha: 0.95),
+      identityColor.withValues(alpha: 0.25),
+      theme.colorScheme.surface.withValues(alpha: 0.85),
     ];
   }
 }
@@ -308,25 +311,23 @@ class _PlayerNickname extends StatelessWidget {
             style: theme.textTheme.bodyLarge?.copyWith(
               fontWeight: isMe ? FontWeight.w900 : FontWeight.bold,
               decoration: player.isAlive ? null : TextDecoration.lineThrough,
-              color: player.isAlive
-                  ? theme.colorScheme.onSurface
-                  : AppColors.textMuted,
-              fontSize: ResponsiveUtils.fontSize(context, 15),
-              shadows: isMe
-                  ? [
-                      BoxShadow(
-                        color: identityColor.withValues(alpha: 0.8),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+              color: player.isAlive ? identityColor : AppColors.textMuted,
+              fontSize: ResponsiveUtils.fontSize(context, 16),
+              letterSpacing: 0.5,
+              shadows: [
+                Shadow(
+                  color: player.isAlive
+                      ? identityColor.withValues(alpha: 0.8)
+                      : Colors.black,
+                  blurRadius: player.isAlive ? 8 : 2,
+                  offset: const Offset(0, 0),
+                ),
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.9),
+                  blurRadius: 4,
+                  offset: const Offset(1, 1),
+                ),
+              ],
             ),
           ),
           if (!player.isConnected && player.isAlive)

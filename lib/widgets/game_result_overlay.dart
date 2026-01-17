@@ -54,8 +54,8 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
     // 승자에 따른 메인 컬러 결정
     final mainColor = isMafiaWin ? gameTheme.mafiaRef : gameTheme.doctorRef;
 
-    return RepaintBoundary(
-      child: Positioned.fill(
+    return Positioned.fill(
+      child: RepaintBoundary(
         child: FadeIn(
           duration: const Duration(milliseconds: 500),
           child: Container(
