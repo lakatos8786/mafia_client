@@ -16,7 +16,7 @@ class SocketEvent {
   static const String joinRoom = 'join_room';
   static const String joinedRoom = 'joined_room';
   static const String playerUpdate = 'player_update';
-  static const String error = 'error';
+  static const String error = 'api_error';
   static const String startGame = 'start_game';
   static const String roleAssigned = 'role_assigned';
   static const String roleCounts = 'role_counts';
@@ -36,6 +36,16 @@ class SocketEvent {
   static const String stateSync = 'state_sync';
   static const String kickPlayer = 'kick_player';
   static const String kicked = 'kicked';
+}
+
+class ErrorCode {
+  static const String roomNotFound = 'ROOM_NOT_FOUND';
+  static const String nicknameTaken = 'NICKNAME_TAKEN';
+  static const String gameStarted = 'GAME_STARTED';
+  static const String roomFull = 'ROOM_FULL';
+  static const String notHost = 'NOT_HOST';
+  static const String kicked = 'KICKED';
+  static const String invalidParams = 'INVALID_PARAMS';
 }
 
 class SystemConstant {

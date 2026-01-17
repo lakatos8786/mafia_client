@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/game_enums.dart';
 import '../providers/game_state_provider.dart';
@@ -91,14 +92,20 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _PhaseIndicator(gamePhase: gamePhase, dayCount: dayCount),
-                const Spacer(),
+                Flexible(
+                  child: _PhaseIndicator(
+                    gamePhase: gamePhase,
+                    dayCount: dayCount,
+                  ),
+                ),
                 if (myRole != null)
-                  _MyRoleBadge(
-                    myRole: myRole,
-                    isRoleVisible: _isRoleVisible,
-                    onTap: _onRoleTap,
-                    gameTheme: gameTheme,
+                  Flexible(
+                    child: _MyRoleBadge(
+                      myRole: myRole,
+                      isRoleVisible: _isRoleVisible,
+                      onTap: _onRoleTap,
+                      gameTheme: gameTheme,
+                    ),
                   ),
               ],
             ),
@@ -146,6 +153,8 @@ class _PhaseIndicator extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '${gamePhase.label} $dayCount일차',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2,
@@ -200,6 +209,8 @@ class _MyRoleBadge extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               isRoleVisible ? myRole.label : '직업 확인',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: roleColor,
                 fontWeight: FontWeight.w900,
@@ -233,8 +244,10 @@ class _RoleCounts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Wrap(
+      spacing: 16,
+      runSpacing: 8,
+      alignment: WrapAlignment.spaceEvenly,
       children: [
         _RoleCountItem(
           label: GameRole.mafia.label,
@@ -294,6 +307,66 @@ class _RoleCountItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RoomCodeBadge extends StatelessWidget {
+  final String roomId;
+  const _RoomCodeBadge({required this.roomId});
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 400;
+
+    return GestureDetector(
+      onTap: () {
+        Clipboard.setData(ClipboardData(text: roomId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('복사됨: $roomId'),
+            behavior: SnackBarBehavior.floating,
+            width: 200,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: AppDecorations.glass(
+          opacity: 0.1,
+          borderRadius: 8,
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '🔑',
+              style: TextStyle(fontSize: ResponsiveUtils.fontSize(context, 16)),
+            ),
+            if (!isCompact) ...[
+              const SizedBox(width: 6),
+              Text(
+                roomId,
+                style: TextStyle(
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white.withValues(alpha: 0.8),
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

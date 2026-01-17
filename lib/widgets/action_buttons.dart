@@ -169,6 +169,8 @@ class _ActionButton extends StatelessWidget {
             fontSize: ResponsiveUtils.fontSize(context, 13),
             fontWeight: FontWeight.bold,
           ),
+          softWrap: true,
+          textAlign: TextAlign.center,
         ),
       ),
     );

@@ -29,7 +29,8 @@ class AppColors {
   static const Color mafia = accentMagenta;
   static const Color mafiaDark = Color(0xFF800040);
   static const Color doctor = Color(0xFF00FF9F); // Fresh Greenish Neon
-  static const Color police = accentCyan;
+  static const Color police = Color(0xFF007BFF); // Police Blue
+  static const Color policeRed = Color(0xFFFF0033); // Police Red
   static const Color citizen = textSecondary;
   static const Color dead = Color(0xFFFF3131); // Bright Neon Red
   static const Color voteGold = Color(0xFFFFAC1C); // Neon Orange/Gold

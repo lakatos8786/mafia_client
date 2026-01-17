@@ -81,7 +81,7 @@ class LobbyScreen extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  SizedBox(height: ResponsiveUtils.spacing(context, 100)),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 50)),
                   FadeInDown(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
@@ -108,9 +108,45 @@ class LobbyScreen extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(height: ResponsiveUtils.spacing(context, 24)),
+                  FadeIn(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveUtils.padding(context, 24),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.people,
+                            color: Colors.white70,
+                            size: ResponsiveUtils.iconSize(context, 16),
+                          ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                          Text(
+                            '참가자',
+                            style: GoogleFonts.ibmPlexSansKr(
+                              color: Colors.white70,
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                          Text(
+                            '${gameState.players.length}',
+                            style: GoogleFonts.ibmPlexSansKr(
+                              color: AppColors.primary,
+                              fontSize: ResponsiveUtils.fontSize(context, 14),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                   ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.6,
+                      minHeight: ResponsiveUtils.spacing(context, 120),
+                      maxHeight: MediaQuery.of(context).size.height * 0.4,
                     ),
                     child: ListView.builder(
                       shrinkWrap: true,
@@ -297,117 +333,18 @@ class LobbyScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 16)),
+                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                   _buildSettingsSection(context, ref, gameState, myId),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
-                  FadeIn(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.padding(context, 24),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.people,
-                            color: Colors.white54,
-                            size: ResponsiveUtils.iconSize(context, 18),
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
-                          Text(
-                            '${gameState.players.length}명 참가 중',
-                            style: GoogleFonts.ibmPlexSansKr(
-                              color: Colors.white54,
-                              fontSize: ResponsiveUtils.fontSize(
-                                context,
-                                13,
-                              ), // Increased from 12
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 8)),
+
                   FadeInUp(
                     child: Padding(
-                      padding: EdgeInsets.all(
+                      padding: EdgeInsets.fromLTRB(
                         ResponsiveUtils.padding(context, 24),
+                        ResponsiveUtils.padding(context, 24),
+                        ResponsiveUtils.padding(context, 24),
+                        ResponsiveUtils.padding(context, 32), // 하단 여백 추가
                       ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: ResponsiveUtils.iconSize(context, 50),
-                        child: Builder(
-                          builder: (context) {
-                            if (gameState.roomId != null) {
-                              final isHost = gameState.players.any(
-                                (p) => p.id == myId && p.isHost,
-                              );
-                              if (isHost) {
-                                return ElevatedButton(
-                                  onPressed: () {
-                                    ref
-                                        .read(actionProvider.notifier)
-                                        .startGame();
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: Colors.white,
-                                    elevation: 8,
-                                    shadowColor: AppColors.primary.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    AppStrings.startGame,
-                                    style: GoogleFonts.ibmPlexSansKr(
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        18,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: ResponsiveUtils.spacing(
-                                        context,
-                                        2,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                return Container(
-                                  alignment: Alignment.center,
-                                  padding: EdgeInsets.all(
-                                    ResponsiveUtils.padding(context, 10),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.white24),
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  child: Text(
-                                    AppStrings.waitingForHost,
-                                    style: GoogleFonts.ibmPlexSansKr(
-                                      color: Colors.white54,
-                                      fontSize: ResponsiveUtils.fontSize(
-                                        context,
-                                        14,
-                                      ),
-                                      letterSpacing: ResponsiveUtils.spacing(
-                                        context,
-                                        1.5,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                            return Container();
-                          },
-                        ),
-                      ),
+                      child: _buildStartButton(context, ref, gameState, myId),
                     ),
                   ),
                 ],
@@ -417,6 +354,83 @@ class LobbyScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildStartButton(
+    BuildContext context,
+    WidgetRef ref,
+    GameState gameState,
+    String? myId,
+  ) {
+    if (gameState.roomId == null) return const SizedBox.shrink();
+
+    final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
+    if (isHost) {
+      final anyoneReviewing = gameState.players.any((p) => !p.atLobby);
+
+      return Column(
+        children: [
+          if (anyoneReviewing)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                '일부 플레이어가 아직 결과를 확인 중입니다.',
+                style: GoogleFonts.ibmPlexSansKr(
+                  color: AppColors.mafiaRed.withValues(alpha: 0.8),
+                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            height: ResponsiveUtils.iconSize(context, 50),
+            child: ElevatedButton(
+              onPressed: anyoneReviewing
+                  ? null
+                  : () => ref.read(actionProvider.notifier).startGame(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                disabledBackgroundColor: Colors.white10,
+                foregroundColor: Colors.white,
+                disabledForegroundColor: Colors.white24,
+                elevation: anyoneReviewing ? 0 : 8,
+                shadowColor: AppColors.primary.withValues(alpha: 0.6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: Text(
+                AppStrings.startGame,
+                style: GoogleFonts.ibmPlexSansKr(
+                  fontSize: ResponsiveUtils.fontSize(context, 18),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: ResponsiveUtils.spacing(context, 2),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      return Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.all(ResponsiveUtils.padding(context, 10)),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white24),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Text(
+          AppStrings.waitingForHost,
+          style: GoogleFonts.ibmPlexSansKr(
+            color: Colors.white54,
+            fontSize: ResponsiveUtils.fontSize(context, 14),
+            letterSpacing: ResponsiveUtils.spacing(context, 1.5),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
   }
 
   void _showKickConfirmation(
@@ -512,9 +526,11 @@ class LobbyScreen extends ConsumerWidget {
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             // Time Section
-            _buildSectionHeader('🕒 시간 설정'),
-            const SizedBox(height: 16),
+            _buildSectionHeader(context, '🕒 시간 설정'),
+            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             _buildSettingRow(
+              context,
+              ref,
               '낮 시간',
               settings.dayDuration == 0 ? '무제한' : '${settings.dayDuration}초',
               isHost,
@@ -538,8 +554,10 @@ class LobbyScreen extends ConsumerWidget {
               },
               defaultValue: '60초',
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             _buildSettingRow(
+              context,
+              ref,
               '밤 시간',
               settings.nightDuration == 0
                   ? '무제한'
@@ -565,153 +583,150 @@ class LobbyScreen extends ConsumerWidget {
               },
               defaultValue: '30초',
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Divider(color: Colors.white12, height: 1),
-            ),
+            const Divider(color: Colors.white12, height: 40),
             // Role Section
-            _buildSectionHeader('👥 직업 구성'),
-            const SizedBox(height: 16),
-            Builder(
-              builder: (context) {
-                final playerCount = gameState.players.length;
-                final isAuto = settings.mafiaCount == null;
+            _buildSectionHeader(context, '👥 직업 구성'),
+            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+            () {
+              final playerCount = gameState.players.length;
+              final isAuto = settings.mafiaCount == null;
 
-                // Auto role count prediction (mirroring server index.js)
-                final autoCounts = _getAutoRoleCounts(playerCount);
+              // Auto role count prediction (mirroring server index.js)
+              final autoCounts = _getAutoRoleCounts(playerCount);
 
-                final totalManualRoles =
-                    (settings.mafiaCount ?? 0) +
-                    (settings.policeCount ?? 0) +
-                    (settings.doctorCount ?? 0);
-                final canIncrease = totalManualRoles < playerCount;
+              final totalManualRoles =
+                  (settings.mafiaCount ?? 0) +
+                  (settings.policeCount ?? 0) +
+                  (settings.doctorCount ?? 0);
+              final canIncrease = totalManualRoles < playerCount;
 
-                return Column(
-                  children: [
-                    if (isHost)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Row(
-                          children: [
-                            const Text(
-                              '자동 직업 배정',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
+              return Column(
+                children: [
+                  if (isHost)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Row(
+                        children: [
+                          const Text(
+                            '자동 직업 배정',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
                             ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              height: 24,
-                              width: 40,
-                              child: Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: isAuto,
-                                  onChanged: (val) {
-                                    if (!val && !canIncrease) {
-                                      CustomSnackBar.show(
-                                        context,
-                                        '참여 인원수를 초과할 수 없습니다.',
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 24,
+                            width: 40,
+                            child: Transform.scale(
+                              scale: 0.7,
+                              child: Switch(
+                                value: isAuto,
+                                onChanged: (val) {
+                                  if (!val && !canIncrease) {
+                                    CustomSnackBar.show(
+                                      context,
+                                      '참여 인원수를 초과할 수 없습니다.',
+                                    );
+                                    return;
+                                  }
+                                  ref
+                                      .read(actionProvider.notifier)
+                                      .updateSettings(
+                                        settings.copyWith(
+                                          mafiaCount: val
+                                              ? null
+                                              : autoCounts['mafia'],
+                                          policeCount: val
+                                              ? null
+                                              : autoCounts['police'],
+                                          doctorCount: val
+                                              ? null
+                                              : autoCounts['doctor'],
+                                          clearMafia: val,
+                                          clearPolice: val,
+                                          clearDoctor: val,
+                                        ),
                                       );
-                                      return;
-                                    }
-                                    ref
-                                        .read(actionProvider.notifier)
-                                        .updateSettings(
-                                          settings.copyWith(
-                                            mafiaCount: val
-                                                ? null
-                                                : autoCounts['mafia'],
-                                            policeCount: val
-                                                ? null
-                                                : autoCounts['police'],
-                                            doctorCount: val
-                                                ? null
-                                                : autoCounts['doctor'],
-                                            clearMafia: val,
-                                            clearPolice: val,
-                                            clearDoctor: val,
-                                          ),
-                                        );
-                                  },
-                                  activeThumbColor: AppColors.primary,
-                                  activeTrackColor: AppColors.primary
-                                      .withValues(alpha: 0.3),
-                                  inactiveThumbColor: Colors.white38,
-                                  inactiveTrackColor: Colors.white10,
+                                },
+                                activeThumbColor: AppColors.primary,
+                                activeTrackColor: AppColors.primary.withValues(
+                                  alpha: 0.3,
                                 ),
+                                inactiveThumbColor: Colors.white38,
+                                inactiveTrackColor: Colors.white10,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildRoleCounter(
-                          context,
-                          '🕶️ 마피아',
-                          settings.mafiaCount,
-                          isHost,
-                          canIncrease,
-                          autoCounts['mafia']!,
-                          isAuto, // Pass isAuto to disable if global auto is on
-                          (val) {
-                            ref
-                                .read(actionProvider.notifier)
-                                .updateSettings(
-                                  settings.copyWith(
-                                    mafiaCount: val,
-                                    clearMafia: val == null,
-                                  ),
-                                );
-                          },
-                        ),
-                        _buildRoleCounter(
-                          context,
-                          '🚨 경찰',
-                          settings.policeCount,
-                          isHost,
-                          canIncrease,
-                          autoCounts['police']!,
-                          isAuto, // Pass isAuto to disable if global auto is on
-                          (val) {
-                            ref
-                                .read(actionProvider.notifier)
-                                .updateSettings(
-                                  settings.copyWith(
-                                    policeCount: val,
-                                    clearPolice: val == null,
-                                  ),
-                                );
-                          },
-                        ),
-                        _buildRoleCounter(
-                          context,
-                          '💉 의사',
-                          settings.doctorCount,
-                          isHost,
-                          canIncrease,
-                          autoCounts['doctor']!,
-                          isAuto, // Pass isAuto to disable if global auto is on
-                          (val) {
-                            ref
-                                .read(actionProvider.notifier)
-                                .updateSettings(
-                                  settings.copyWith(
-                                    doctorCount: val,
-                                    clearDoctor: val == null,
-                                  ),
-                                );
-                          },
-                        ),
-                      ],
                     ),
-                  ],
-                );
-              },
-            ),
+                  Column(
+                    children: [
+                      _buildRoleCounter(
+                        context,
+                        '🕶️ 마피아',
+                        settings.mafiaCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['mafia']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  mafiaCount: val,
+                                  clearMafia: val == null,
+                                ),
+                              );
+                        },
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      _buildRoleCounter(
+                        context,
+                        '🚨 경찰',
+                        settings.policeCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['police']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  policeCount: val,
+                                  clearPolice: val == null,
+                                ),
+                              );
+                        },
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      _buildRoleCounter(
+                        context,
+                        '💉 의사',
+                        settings.doctorCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['doctor']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  doctorCount: val,
+                                  clearDoctor: val == null,
+                                ),
+                              );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }(),
           ],
         ),
       ),
@@ -756,26 +771,21 @@ class LobbyScreen extends ConsumerWidget {
     return {'mafia': mafia, 'police': police, 'doctor': doctor};
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Builder(
-      builder: (context) {
-        return Text(
-          title,
-          style: GoogleFonts.ibmPlexSansKr(
-            color: Colors.white70,
-            fontSize: ResponsiveUtils.fontSize(
-              context,
-              16,
-            ), // Increased from 15
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-          ),
-        );
-      },
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Text(
+      title,
+      style: GoogleFonts.ibmPlexSansKr(
+        color: Colors.white70,
+        fontSize: ResponsiveUtils.fontSize(context, 16),
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.0,
+      ),
     );
   }
 
   Widget _buildSettingRow(
+    BuildContext context,
+    WidgetRef ref,
     String label,
     String valueText,
     bool isHost,
@@ -787,126 +797,16 @@ class LobbyScreen extends ConsumerWidget {
     ValueChanged<bool> onToggleUnlimited, {
     String? defaultValue,
   }) {
-    return Builder(
-      builder: (context) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          label,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: ResponsiveUtils.fontSize(context, 14),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (defaultValue != null) ...[
-                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
-                          Text(
-                            '(기본 $defaultValue)',
-                            style: TextStyle(
-                              color: Colors.white38,
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (isHost) ...[
-                      SizedBox(height: ResponsiveUtils.spacing(context, 3)),
-                      Row(
-                        children: [
-                          Text(
-                            '무제한',
-                            style: TextStyle(
-                              color: Colors.white38,
-                              fontSize: ResponsiveUtils.fontSize(context, 11),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          SizedBox(
-                            height: 24,
-                            width: 40,
-                            child: Transform.scale(
-                              scale: 0.8,
-                              child: Switch(
-                                value: isUnlimited,
-                                onChanged: onToggleUnlimited,
-                                activeThumbColor: AppColors.primary,
-                                activeTrackColor: AppColors.primary.withValues(
-                                  alpha: 0.3,
-                                ),
-                                inactiveThumbColor: Colors.white38,
-                                inactiveTrackColor: Colors.white10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: ResponsiveUtils.padding(context, 8),
-                    vertical: ResponsiveUtils.padding(context, 3),
-                  ),
-                  decoration: BoxDecoration(
-                    color: isUnlimited
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    valueText,
-                    style: TextStyle(
-                      color: isUnlimited ? Colors.white38 : Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: ResponsiveUtils.fontSize(context, 15),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (isHost)
-              SliderTheme(
-                data: SliderThemeData(
-                  trackHeight: 2,
-                  thumbShape: isUnlimited
-                      ? SliderComponentShape.noThumb
-                      : const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape: isUnlimited
-                      ? SliderComponentShape.noOverlay
-                      : const RoundSliderOverlayShape(overlayRadius: 14),
-                  activeTrackColor: isUnlimited
-                      ? Colors.white10
-                      : AppColors.primary,
-                  inactiveTrackColor: Colors.white10,
-                  thumbColor: AppColors.primary,
-                  overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                ),
-                child: Slider(
-                  value: isUnlimited ? max : value.clamp(min, max),
-                  min: min,
-                  max: max,
-                  divisions: max > min ? (max - min) ~/ 10 : null,
-                  onChanged: isUnlimited ? null : onChanged,
-                ),
-              )
-            else
-              const SizedBox(height: 10),
-          ],
-        );
-      },
+    return _SettingSlider(
+      label: label,
+      value: value,
+      min: min,
+      max: max,
+      isUnlimited: isUnlimited,
+      isHost: isHost,
+      defaultValue: defaultValue,
+      onChanged: onChanged,
+      onToggleUnlimited: onToggleUnlimited,
     );
   }
 
@@ -922,22 +822,26 @@ class LobbyScreen extends ConsumerWidget {
   ) {
     final int currentCount = count ?? predictedCount;
 
-    return Column(
+    return Row(
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: ResponsiveUtils.fontSize(context, 14),
-            fontWeight: FontWeight.w600,
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: ResponsiveUtils.fontSize(context, 15),
+              fontWeight: FontWeight.w600,
+            ),
+            softWrap: true,
           ),
         ),
-        if (isHost) const SizedBox(height: 12),
+        SizedBox(width: ResponsiveUtils.spacing(context, 12)),
         if (isHost)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildMinibutton(
+                context,
                 '-',
                 isGlobalAuto
                     ? null
@@ -946,7 +850,7 @@ class LobbyScreen extends ConsumerWidget {
                       },
               ),
               Container(
-                width: ResponsiveUtils.iconSize(context, 32),
+                width: ResponsiveUtils.iconSize(context, 40),
                 alignment: Alignment.center,
                 child: Text(
                   currentCount.toString(),
@@ -959,6 +863,7 @@ class LobbyScreen extends ConsumerWidget {
                 ),
               ),
               _buildMinibutton(
+                context,
                 '+',
                 isGlobalAuto
                     ? null
@@ -974,10 +879,9 @@ class LobbyScreen extends ConsumerWidget {
           )
         else
           Container(
-            margin: EdgeInsets.only(top: ResponsiveUtils.spacing(context, 6)),
             padding: EdgeInsets.symmetric(
-              horizontal: ResponsiveUtils.padding(context, 10),
-              vertical: ResponsiveUtils.padding(context, 5),
+              horizontal: ResponsiveUtils.padding(context, 12),
+              vertical: ResponsiveUtils.padding(context, 6),
             ),
             decoration: BoxDecoration(
               color: isGlobalAuto
@@ -998,34 +902,225 @@ class LobbyScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMinibutton(String label, VoidCallback? onPressed) {
-    return Builder(
-      builder: (context) {
-        return GestureDetector(
-          onTap: onPressed,
-          child: Opacity(
-            opacity: onPressed == null ? 0.3 : 1.0,
-            child: Container(
+  Widget _buildMinibutton(
+    BuildContext context,
+    String label,
+    VoidCallback? onPressed,
+  ) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Opacity(
+        opacity: onPressed == null ? 0.3 : 1.0,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveUtils.padding(context, 10),
+            vertical: ResponsiveUtils.padding(context, 5),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveUtils.fontSize(context, 14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingSlider extends StatefulWidget {
+  final String label;
+  final double value;
+  final double min;
+  final double max;
+  final bool isUnlimited;
+  final bool isHost;
+  final String? defaultValue;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<bool> onToggleUnlimited;
+
+  const _SettingSlider({
+    required this.label,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.isUnlimited,
+    required this.isHost,
+    this.defaultValue,
+    required this.onChanged,
+    required this.onToggleUnlimited,
+  });
+
+  @override
+  State<_SettingSlider> createState() => _SettingSliderState();
+}
+
+class _SettingSliderState extends State<_SettingSlider> {
+  late double _localValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _localValue = widget.value;
+  }
+
+  @override
+  void didUpdateWidget(_SettingSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 외부에서 값이 변경되었을 때만 로컬 값을 동기화 (예: 다른 플레이어가 변경)
+    if (oldWidget.value != widget.value) {
+      _localValue = widget.value;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final valueText = widget.isUnlimited
+        ? '무제한'
+        : _localValue == 0
+        ? '무제한'
+        : '${_localValue.toInt()}초';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.label,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: ResponsiveUtils.fontSize(context, 14),
+                          fontWeight: FontWeight.w600,
+                        ),
+                        softWrap: true,
+                      ),
+                    ),
+                    if (widget.defaultValue != null) ...[
+                      SizedBox(width: ResponsiveUtils.spacing(context, 8)),
+                      Text(
+                        '(기본 ${widget.defaultValue})',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (widget.isHost) ...[
+                  SizedBox(height: ResponsiveUtils.spacing(context, 6)),
+                  Row(
+                    children: [
+                      Text(
+                        '무제한',
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: ResponsiveUtils.fontSize(context, 12),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        height: 24,
+                        width: 40,
+                        child: Transform.scale(
+                          scale: 0.8,
+                          child: Switch(
+                            value: widget.isUnlimited,
+                            onChanged: widget.onToggleUnlimited,
+                            activeThumbColor: AppColors.primary,
+                            activeTrackColor: AppColors.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                            inactiveThumbColor: Colors.white38,
+                            inactiveTrackColor: Colors.white10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            Container(
               padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveUtils.padding(context, 6),
+                horizontal: ResponsiveUtils.padding(context, 8),
                 vertical: ResponsiveUtils.padding(context, 3),
               ),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(6),
+                color: widget.isUnlimited
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                label,
+                valueText,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: widget.isUnlimited ? Colors.white38 : Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.fontSize(context, 14),
+                  fontSize: ResponsiveUtils.fontSize(context, 15),
                 ),
               ),
             ),
+          ],
+        ),
+        if (widget.isHost) ...[
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 2,
+              thumbShape: widget.isUnlimited
+                  ? SliderComponentShape.noThumb
+                  : const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: widget.isUnlimited
+                  ? SliderComponentShape.noOverlay
+                  : const RoundSliderOverlayShape(overlayRadius: 14),
+              activeTrackColor: widget.isUnlimited
+                  ? Colors.white10
+                  : AppColors.primary,
+              inactiveTrackColor: Colors.white10,
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.2),
+            ),
+            child: Slider(
+              value: widget.isUnlimited
+                  ? widget.max
+                  : _localValue.clamp(widget.min, widget.max),
+              min: widget.min,
+              max: widget.max,
+              divisions: widget.max > widget.min
+                  ? (widget.max - widget.min) ~/ 10
+                  : null,
+              onChanged: widget.isUnlimited
+                  ? null
+                  : (val) {
+                      setState(() {
+                        _localValue = val;
+                      });
+                    },
+              onChangeEnd: (val) {
+                widget.onChanged(val);
+              },
+            ),
           ),
-        );
-      },
+        ] else
+          const SizedBox(height: 10),
+      ],
     );
   }
 }

@@ -6,9 +6,11 @@ import 'package:animate_do/animate_do.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
 import '../providers/game_state_provider.dart';
+import '../providers/connection_provider.dart';
 import '../widgets/custom_snackbar.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
+import '../models/game_enums.dart';
 import '../utils/responsive_utils.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -22,6 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _roomCodeController = TextEditingController();
   bool _isLoading = false;
+  String _loadingStatus = '입장 중...';
 
   @override
   void dispose() {
@@ -47,11 +50,97 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     CustomSnackBar.show(context, message);
   }
 
+  String _mapErrorMessage(dynamic error) {
+    String? code;
+    String? message;
+
+    if (error is Map) {
+      code = error['code']?.toString();
+      message = error['message']?.toString();
+    } else {
+      message = error.toString();
+    }
+
+    // 1. Map by standardized error codes
+    if (code != null) {
+      switch (code) {
+        case ErrorCode.roomNotFound:
+          return "입력하신 방 번호가 존재하지 않습니다.";
+        case ErrorCode.nicknameTaken:
+          return "이미 사용 중인 닉네임입니다.";
+        case ErrorCode.gameStarted:
+          return "이미 게임이 시작된 방입니다.";
+        case ErrorCode.roomFull:
+          return "방의 인원이 가득 차서 입장할 수 없습니다.";
+        case ErrorCode.notHost:
+          return "방장 권한이 필요한 기능입니다.";
+        case ErrorCode.kicked:
+          return "지정된 방에서 강퇴되었습니다.";
+        case ErrorCode.invalidParams:
+          return "잘못된 요청 정보입니다.";
+      }
+    }
+
+    // 2. Fallback to text-based mapping for backward compatibility
+    final lowerError = message?.toLowerCase() ?? '';
+    if (lowerError.contains('room_not_found') ||
+        lowerError.contains('not found') ||
+        lowerError.contains('존재하지 않는 방')) {
+      return "입력하신 방 번호가 존재하지 않습니다.";
+    }
+    if (lowerError.contains('room_full') ||
+        lowerError.contains('full') ||
+        lowerError.contains('가득 찼습니다')) {
+      return "방의 인원이 가득 차서 입장할 수 없습니다.";
+    }
+    if (lowerError.contains('already_started') ||
+        lowerError.contains('started') ||
+        lowerError.contains('이미 게임이 시작')) {
+      return "이미 게임이 시작된 방입니다.";
+    }
+    if (lowerError.contains('invalid_nickname') ||
+        lowerError.contains('nickname') ||
+        lowerError.contains('사용 중인 닉네임')) {
+      return "사용할 수 없는 닉네임입니다.";
+    }
+    if (lowerError.contains('kicked') || lowerError.contains('강퇴')) {
+      return "지정된 방에서 강퇴되었습니다.";
+    }
+
+    return message ?? "알 수 없는 오류가 발생했습니다.";
+  }
+
   Future<void> _createRoom() async {
     if (_isLoading) return;
+    if (!ref.read(connectionProvider).isConnected) {
+      _showError("현재 서버와 연결되어 있지 않습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
     if (!_validateNickname()) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingStatus = '방 생성 중...';
+    });
+
+    // Staged feedback for creating room
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_isLoading && mounted) {
+        setState(() => _loadingStatus = '서버 응답 대기 중...');
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 5), () {
+      if (_isLoading && mounted) {
+        setState(() => _isLoading = false);
+        final isConnected = ref.read(connectionProvider).isConnected;
+        _showError(
+          isConnected
+              ? '서버 응답이 지연되고 있습니다. 다시 시도해 주세요.'
+              : '서버와 연결이 끊어졌습니다. 네트워크 상태를 확인해 주세요.',
+        );
+      }
+    });
 
     try {
       ref.read(actionProvider.notifier).createRoom(_nameController.text.trim());
@@ -63,6 +152,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _joinRoom() async {
     if (_isLoading) return;
+    if (!ref.read(connectionProvider).isConnected) {
+      _showError("현재 서버와 연결되어 있지 않습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
     if (!_validateNickname()) return;
 
     final roomCode = _roomCodeController.text.trim();
@@ -75,7 +168,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingStatus = '입장 중...';
+    });
+
+    // Staged feedback for joining room
+    Future.delayed(const Duration(seconds: 3), () {
+      if (_isLoading && mounted) {
+        setState(() => _loadingStatus = '서버 응답 대기 중...');
+      }
+    });
+
+    // 5-second timeout for joining room
+    Future.delayed(const Duration(seconds: 5), () {
+      if (_isLoading && mounted) {
+        setState(() => _isLoading = false);
+        final isConnected = ref.read(connectionProvider).isConnected;
+        _showError(
+          isConnected
+              ? '서버 응답이 지연되고 있습니다. 다시 시도해 주세요.'
+              : '서버와 연결이 끊어졌습니다. 네트워크 상태를 확인해 주세요.',
+        );
+      }
+    });
 
     try {
       ref
@@ -98,7 +214,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         final errorMsg = ref.read(gameStateProvider).errorMessage;
         if (errorMsg != null) {
           setState(() => _isLoading = false);
-          _showError(errorMsg);
+          _showError(_mapErrorMessage(errorMsg));
         }
       }
     });
@@ -232,7 +348,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   sigmaY: 10,
                                 ),
                                 child: Container(
-                                  width: ResponsiveUtils.iconSize(context, 320),
+                                  constraints: BoxConstraints(
+                                    maxWidth: 400,
+                                    minWidth: ResponsiveUtils.iconSize(
+                                      context,
+                                      280,
+                                    ),
+                                  ),
+                                  width: constraints.maxWidth * 0.9,
                                   padding: EdgeInsets.all(
                                     ResponsiveUtils.padding(context, 24),
                                   ),
@@ -412,13 +535,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               : color.withValues(alpha: 0.5),
         ),
         child: isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _loadingStatus,
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.fontSize(context, 14),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               )
             : Text(
                 text,

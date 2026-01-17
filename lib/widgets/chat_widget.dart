@@ -27,7 +27,26 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
-  int _unreadCount = 0;
+  int _lastReadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with all current messages as read
+    _lastReadCount = ref.read(actionProvider.select((s) => s.messages)).length;
+  }
+
+  @override
+  void didUpdateWidget(ChatWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When expanding, or while expanded and new messages arrive, update read count
+    if (widget.isExpanded) {
+      final messages = ref.read(actionProvider.select((s) => s.messages));
+      if (_lastReadCount != messages.length) {
+        _lastReadCount = messages.length;
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -35,14 +54,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(ChatWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isExpanded && !oldWidget.isExpanded) {
-      setState(() => _unreadCount = 0);
-    }
   }
 
   void _sendMessage() {
@@ -64,21 +75,31 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   Widget build(BuildContext context) {
     final messages = ref.watch(actionProvider.select((s) => s.messages));
 
-    // 메시지 수신 시 읽지 않은 메시지 카운트 업데이트
-    ref.listen(actionProvider.select((s) => s.messages), (previous, next) {
-      if (!widget.isExpanded) {
-        final newMessagesCount = next.length - (previous?.length ?? 0);
-        if (newMessagesCount > 0) {
-          int addedUnread = 0;
-          for (int i = previous?.length ?? 0; i < next.length; i++) {
-            if (!next[i].isMine) addedUnread++;
-          }
-          if (addedUnread > 0) {
-            setState(() => _unreadCount += addedUnread);
-          }
-        }
+    // Exclude own messages AND system messages from badge count
+    int unreadCount = 0;
+    final bool isUserLookingAtChat = widget.isExpanded;
+
+    // Safety check if messages were reset
+    if (_lastReadCount > messages.length) {
+      _lastReadCount = messages.length;
+    }
+
+    // Simplified sync logic inside build (using ref.listen for reactive sync)
+    ref.listen(actionProvider.select((s) => s.messages), (prev, next) {
+      if (isUserLookingAtChat && mounted) {
+        setState(() {
+          _lastReadCount = next.length;
+        });
       }
     });
+
+    if (!isUserLookingAtChat) {
+      for (int i = _lastReadCount; i < messages.length; i++) {
+        if (!messages[i].isMine && !messages[i].isSystem) {
+          unreadCount++;
+        }
+      }
+    }
 
     return Column(
       children: [
@@ -89,6 +110,7 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
               isExpanded: widget.isExpanded,
               onToggleExpand: _handleToggleExpand,
               messages: messages,
+              unreadCount: unreadCount,
               scrollController: _scrollController,
             ),
           ),
@@ -99,7 +121,6 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
             controller: _msgController,
             focusNode: _focusNode,
             isExpanded: widget.isExpanded,
-            unreadCount: _unreadCount,
             onToggleExpand: _handleToggleExpand,
             onSendMessage: _sendMessage,
           ),
@@ -113,12 +134,14 @@ class _ChatListArea extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpand;
   final List<ChatMessage> messages;
+  final int unreadCount;
   final ScrollController scrollController;
 
   const _ChatListArea({
     required this.isExpanded,
     required this.onToggleExpand,
     required this.messages,
+    required this.unreadCount,
     required this.scrollController,
   });
 
@@ -161,12 +184,72 @@ class _ChatListArea extends StatelessWidget {
                 Positioned(
                   top: 5,
                   right: 20,
-                  child: Icon(
-                    isExpanded
-                        ? Icons.keyboard_arrow_down
-                        : Icons.keyboard_arrow_up,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                    size: 20,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.topRight,
+                    children: [
+                      Icon(
+                        isExpanded
+                            ? Icons.keyboard_arrow_down
+                            : Icons.keyboard_arrow_up,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.2,
+                        ),
+                        size: 20,
+                      ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: -6,
+                          right: -6,
+                          child: TweenAnimationBuilder<double>(
+                            duration: const Duration(milliseconds: 400),
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            curve: Curves.elasticOut,
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: child,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 5,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.error,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: theme.colorScheme.error.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 18,
+                                minHeight: 18,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  unreadCount > 99 ? '99+' : '$unreadCount',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                    height: 1.0,
+                                    letterSpacing: -0.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -333,7 +416,6 @@ class _ChatInputArea extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isExpanded;
-  final int unreadCount;
   final VoidCallback onToggleExpand;
   final VoidCallback onSendMessage;
 
@@ -341,7 +423,6 @@ class _ChatInputArea extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.isExpanded,
-    required this.unreadCount,
     required this.onToggleExpand,
     required this.onSendMessage,
   });
@@ -354,11 +435,6 @@ class _ChatInputArea extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       child: Row(
         children: [
-          _ExpandToggleButton(
-            isExpanded: isExpanded,
-            unreadCount: unreadCount,
-            onTap: onToggleExpand,
-          ),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -393,82 +469,6 @@ class _ChatInputArea extends StatelessWidget {
             onTap: onSendMessage,
             onTapDown: () => focusNode.requestFocus(),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ExpandToggleButton extends StatefulWidget {
-  final bool isExpanded;
-  final int unreadCount;
-  final VoidCallback onTap;
-
-  const _ExpandToggleButton({
-    required this.isExpanded,
-    required this.unreadCount,
-    required this.onTap,
-  });
-
-  @override
-  State<_ExpandToggleButton> createState() => _ExpandToggleButtonState();
-}
-
-class _ExpandToggleButtonState extends State<_ExpandToggleButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AnimatedScale(
-      scale: _isPressed ? 0.9 : 1.0,
-      duration: const Duration(milliseconds: 100),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: GestureDetector(
-              onTapDown: (_) => setState(() => _isPressed = true),
-              onTapUp: (_) => setState(() => _isPressed = false),
-              onTapCancel: () => setState(() => _isPressed = false),
-              onTap: widget.onTap,
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Icon(
-                  widget.isExpanded ? Icons.expand_more : Icons.expand_less,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ),
-          if (widget.unreadCount > 0 && !widget.isExpanded)
-            Positioned(
-              top: -4,
-              right: 4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.error,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: AppDecorations.neonGlow(
-                    theme.colorScheme.error.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Text(
-                  widget.unreadCount > 99 ? '99+' : '${widget.unreadCount}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

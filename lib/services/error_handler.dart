@@ -32,7 +32,7 @@ class ErrorHandler {
         case 'create_room':
           return '방 생성에 실패했습니다. 다시 시도해주세요.';
         case 'join_room':
-          return '방 참여에 실패했습니다. 방 코드를 확인해주세요.';
+          return '방 참여에 실패했습니다. 방 번호를 확인해주세요.';
         case 'start_game':
           return '게임 시작에 실패했습니다.';
         case 'vote':

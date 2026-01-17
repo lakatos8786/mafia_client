@@ -26,7 +26,7 @@ class GameState {
   final List<Map<String, dynamic>> gameLog;
   final GameSettings gameSettings;
   final bool isUnlimited;
-  final String? errorMessage;
+  final dynamic errorMessage;
   final DateTime? lastErrorTime;
 
   const GameState({
@@ -125,7 +125,7 @@ class GameState {
     List<Map<String, dynamic>>? gameLog,
     GameSettings? gameSettings,
     bool? isUnlimited,
-    String? errorMessage,
+    dynamic errorMessage,
     DateTime? lastErrorTime,
   }) {
     return GameState(
@@ -257,9 +257,12 @@ class GameStateNotifier extends _$GameStateNotifier {
 
         // If phase returns to lobby, do NOT reset automatically.
         // Let the user click the button in GameResultOverlay.
-        if (event.phase == GamePhase.waiting) {
-          // returnToLobby(); // Disabled auto-return
-          return; // Ignore this update so we stay in Result phase
+        if (event.phase == GamePhase.waiting &&
+            state.gamePhase == GamePhase.result) {
+          developer.log(
+            'Ignoring phase change to lobby (still in result screen)',
+          );
+          return;
         }
 
         state = state.copyWith(
@@ -307,17 +310,14 @@ class GameStateNotifier extends _$GameStateNotifier {
 
     socket.on(SocketEvent.error, (data) {
       developer.log('Server Error received: $data');
-      state = state.copyWith(
-        errorMessage: data.toString(),
-        lastErrorTime: DateTime.now(),
-      );
+      state = state.copyWith(errorMessage: data, lastErrorTime: DateTime.now());
     });
 
     socket.on(SocketEvent.kicked, (data) {
       developer.log('Kicked from room: $data');
       // Reset state to initial lobby state (but keep connection)
       state = GameState(
-        errorMessage: data.toString(), // Store the reason as an error message
+        errorMessage: data, // Store the reason as an error message
         lastErrorTime: DateTime.now(),
       );
     });
@@ -350,9 +350,15 @@ class GameStateNotifier extends _$GameStateNotifier {
 
         final myId = ref.read(connectionProvider.notifier).socketId;
 
+        // Preserve Result phase if user is currently reviewing results
+        final finalPhase =
+            (phase == GamePhase.waiting && state.gamePhase == GamePhase.result)
+            ? GamePhase.result
+            : phase;
+
         state = state.copyWith(
           players: players,
-          gamePhase: phase,
+          gamePhase: finalPhase,
           dayCount: data[ProtocolKey.dayCount] as int? ?? 1,
           myRole: myRole,
           gameSettings: GameSettings.fromMap(

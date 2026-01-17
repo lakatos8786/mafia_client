@@ -48,6 +48,9 @@ class PlayerCard extends ConsumerWidget {
       isSelected,
       identityColor,
     );
+    final isPoliceSelected = selectionTargets.contains(GameRole.police.name);
+    final isMafiaSelected = selectionTargets.contains(GameRole.mafia.name);
+    final isDoctorSelected = selectionTargets.contains(GameRole.doctor.name);
 
     return RepaintBoundary(
       child: ClipRRect(
@@ -68,9 +71,15 @@ class PlayerCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
                 border: Border.all(
                   color: isSelected
-                      ? borderColor.withValues(alpha: 1.0)
+                      ? (isPoliceSelected
+                            ? AppColors.police
+                            : (isMafiaSelected
+                                  ? gameTheme.mafiaRef
+                                  : (isDoctorSelected
+                                        ? gameTheme.doctorRef
+                                        : borderColor)))
                       : identityColor.withValues(alpha: 0.6),
-                  width: isSelected ? 3.0 : 1.5,
+                  width: isSelected ? (isPoliceSelected ? 4.0 : 3.0) : 1.5,
                 ),
                 boxShadow: player.isAlive
                     ? AppDecorations.neonGlow(
@@ -83,8 +92,10 @@ class PlayerCard extends ConsumerWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  if (isSelected && player.isAlive)
+                  if (isSelected && player.isAlive) ...[
                     _SelectedGlow(color: borderColor),
+                    if (isPoliceSelected) const _PoliceLightEffect(),
+                  ],
                   Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: ResponsiveUtils.padding(context, 10),
@@ -125,6 +136,9 @@ class PlayerCard extends ConsumerWidget {
     }
     if (selectionTargets.contains(GameRole.doctor.name)) {
       return gameTheme.doctorRef;
+    }
+    if (selectionTargets.contains(GameRole.police.name)) {
+      return AppColors.police;
     }
 
     return theme.colorScheme.secondary;
@@ -457,6 +471,106 @@ class _MafiaIndicator extends StatelessWidget {
         ),
         child: const Icon(Icons.people, color: Colors.white, size: 14),
       ),
+    );
+  }
+}
+
+class _PoliceLightEffect extends StatefulWidget {
+  const _PoliceLightEffect();
+
+  @override
+  State<_PoliceLightEffect> createState() => _PoliceLightEffectState();
+}
+
+class _PoliceLightEffectState extends State<_PoliceLightEffect>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Positioned.fill(
+          child: Stack(
+            children: [
+              // Flashing blue on the left
+              Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 60,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        AppColors.policeBlue.withValues(
+                          alpha: _animation.value * 0.5,
+                        ),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Flashing red on the right
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 60,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerRight,
+                      end: Alignment.centerLeft,
+                      colors: [
+                        AppColors.policeRed.withValues(
+                          alpha: (1.0 - _animation.value) * 0.5,
+                        ),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Overall pulse border
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+                  border: Border.all(
+                    color: Color.lerp(
+                      AppColors.policeBlue,
+                      AppColors.policeRed,
+                      _animation.value,
+                    )!.withValues(alpha: 0.3 * _animation.value),
+                    width: 4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

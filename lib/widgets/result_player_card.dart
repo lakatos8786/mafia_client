@@ -119,12 +119,28 @@ class ResultPlayerCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              player.role?.label ?? '알 수 없음',
-                              style: TextStyle(
-                                color: roleColor,
-                                fontSize: ResponsiveUtils.fontSize(context, 11),
-                                fontWeight: FontWeight.w500,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.overlayBlack50.withValues(
+                                  alpha: 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                player.role?.label ?? '알 수 없음',
+                                style: TextStyle(
+                                  color: roleColor,
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    10,
+                                  ),
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.0,
+                                ),
                               ),
                             ),
                           ],
