@@ -12,6 +12,7 @@ import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
 import '../widgets/neon_toast.dart';
+import '../widgets/judgement_buttons.dart';
 import '../theme/app_strings.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -117,6 +118,15 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
             ),
             if (gamePhase == GamePhase.result) const GameResultOverlay(),
+
+            // Judgement Buttons Overlay
+            if (gamePhase == GamePhase.judgement)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: isCompact ? 145 : 165, // 채팅창 높이(140/160)에 따라 유동적 배치
+                child: const JudgementButtons(),
+              ),
 
             // Role Reveal Modal
             if (shouldShowRoleModal && !_roleRevealed)

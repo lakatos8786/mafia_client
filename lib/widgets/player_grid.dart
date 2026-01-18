@@ -26,8 +26,56 @@ class PlayerGrid extends ConsumerWidget {
     );
 
     final socketId = ref.watch(connectionProvider.notifier).socketId;
+    final actionState = ref.watch(actionProvider);
 
-    // Use Wrap instead of GridView for intrinsic sizing
+    // --- Spotlight Effect for Last Word ---
+    if (gamePhase == GamePhase.lastWord &&
+        actionState.judgementTarget != null) {
+      final targetPlayer = players.firstWhere(
+        (p) => p.id == actionState.judgementTarget,
+        orElse: () => Player(id: '', nickname: '?', isAlive: true),
+      );
+
+      return Center(
+        child: ZoomIn(
+          duration: const Duration(milliseconds: 600),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                '최후의 변론',
+                style: TextStyle(
+                  color: Colors.amberAccent,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 4,
+                  shadows: [Shadow(color: Colors.amber, blurRadius: 10)],
+                ),
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: 240, // Enlarged size
+                child: PlayerCard(
+                  player: targetPlayer,
+                  isMe: targetPlayer.id == socketId,
+                  isMyVoteTarget: false,
+                  selectionTargets: const [],
+                  voteCount: 0,
+                  votersList: '',
+                  showMafiaIndicator: false,
+                  onTap: () {},
+                ),
+              ),
+              const SizedBox(
+                height: 100,
+              ), // Push up a bit to be seen above chat
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Standard Grid View
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: LayoutBuilder(
@@ -58,7 +106,10 @@ class PlayerGrid extends ConsumerWidget {
                   player.id != socketId;
 
               String votersList = '';
-              if (gamePhase == GamePhase.day &&
+              final isMafiaNightVote =
+                  gamePhase == GamePhase.night && myRole == GameRole.mafia;
+
+              if ((gamePhase == GamePhase.day || isMafiaNightVote) &&
                   player.isAlive &&
                   voteCount > 0) {
                 votersList = voters.entries
@@ -85,7 +136,9 @@ class PlayerGrid extends ConsumerWidget {
                     isMe: isMe,
                     isMyVoteTarget: isMyVoteTarget,
                     selectionTargets: selectionTargetForRole,
-                    voteCount: gamePhase == GamePhase.day ? voteCount : 0,
+                    voteCount: (gamePhase == GamePhase.day || isMafiaNightVote)
+                        ? voteCount
+                        : 0,
                     votersList: votersList,
                     showMafiaIndicator: showMafiaIndicator,
                     onTap: () {

@@ -10,6 +10,13 @@ class AppStrings {
   static const String nightStarted = '밤이 찾아왔습니다. 어둠 속에서 누군가 움직입니다...';
   static String dayAnnouncement(int count) => '$count번째 낮이 되었습니다.';
   static String nightAnnouncement(int count) => '$count번째 밤이 되었습니다.';
+  static String lastWordAnnouncement(String nickname) =>
+      '[$nickname]님의 최후의 변론 시간입니다. 신중하게 들어주세요.';
+  static const String judgementAnnouncement = '찬반 투표가 시작되었습니다. 지목된 인원을 처형할까요?';
+  static String judgementExecuted(String nickname) =>
+      '시민들의 과반수 찬성으로 [$nickname]이(가) 처형되었습니다.';
+  static String judgementSaved(String nickname) =>
+      '과반수의 찬성을 얻지 못해 [$nickname]이(가) 살아남았습니다.';
 
   // Reasons for elimination
   static const String reasonVote = '투표';
@@ -133,6 +140,9 @@ class AppStrings {
   static const String unknownRole = '알 수 없음';
   static const String skipVote = '투표 건너뛰기';
   static const String skipKill = '킬 건너뛰기';
+  static const String endLastWord = '변론 종료';
+  static const String lastWordChatHint = '최후의 변론 중입니다...';
+  static const String nightChatDisabled = '밤에는 마피아만 대화할 수 있습니다.';
   static const String returnToLobby = '로비로 돌아가기';
   static const String waitingForHost = '방장 대기 중...';
   static const String startGame = '게임 시작';

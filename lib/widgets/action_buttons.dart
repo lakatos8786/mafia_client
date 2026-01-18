@@ -30,6 +30,49 @@ class ActionButtons extends ConsumerWidget {
           if (gameState.gamePhase == GamePhase.night &&
               gameState.myRole == GameRole.mafia)
             const _MafiaSkipRow(),
+          if (gameState.gamePhase == GamePhase.lastWord) const _LastWordRow(),
+        ],
+      ),
+    );
+  }
+}
+
+class _LastWordRow extends ConsumerWidget {
+  const _LastWordRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final actionState = ref.watch(actionNotifierProvider);
+    final socketId = ref.watch(connectionProvider.notifier).socketId;
+
+    // Only show for the suspect who is speaking
+    if (actionState.judgementTarget != socketId) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _ActionButton(
+            label: AppStrings.endLastWord,
+            onPressed: () =>
+                ref.read(actionNotifierProvider.notifier).endLastWord(),
+            isHighlighted: false,
+            highlightColor: Colors.white,
+            normalColor: AppColors.grey700,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '변론이 끝나면 버튼을 눌러주세요.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -92,6 +135,7 @@ class _MafiaSkipRow extends ConsumerWidget {
     final isMafiaSkip = ref.watch(isMafiaSkipProvider);
     final mafiaSkipButtonText = ref.watch(mafiaSkipButtonTextProvider);
     final mafiaSkipActor = ref.watch(mafiaSkipActorNicknameProvider);
+    final actionState = ref.watch(actionProvider);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -107,12 +151,13 @@ class _MafiaSkipRow extends ConsumerWidget {
             highlightColor: gameTheme.mafiaRef,
             normalColor: AppColors.greyDark,
           ),
-          if (mafiaSkipActor.isNotEmpty)
+          if (actionState.votes[GameAction.skip] != null &&
+              actionState.votes[GameAction.skip]! > 0)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Text(
-                  '킬 건너뛰기: $mafiaSkipActor',
+                  '킬 건너뛰기: ${actionState.votes[GameAction.skip]} ($mafiaSkipActor)',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.bold,

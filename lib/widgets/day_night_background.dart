@@ -18,7 +18,9 @@ class DayNightBackground extends StatelessWidget {
     // Determine colors based on phase
     Decoration mainDecoration;
 
-    if (phase == GamePhase.day) {
+    if (phase == GamePhase.day ||
+        phase == GamePhase.lastWord ||
+        phase == GamePhase.judgement) {
       // Day: Slightly lighter midnight purple with cyan ambient glow
       mainDecoration = const BoxDecoration(
         gradient: RadialGradient(

@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/game_enums.dart';
+import '../providers/game_state_provider.dart';
+import '../providers/connection_provider.dart';
 import '../providers/action_provider.dart';
 import '../models/chat_message.dart';
 import '../theme/app_strings.dart';
@@ -415,7 +418,7 @@ class _UserMessage extends StatelessWidget {
   }
 }
 
-class _ChatInputArea extends StatelessWidget {
+class _ChatInputArea extends ConsumerWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isExpanded;
@@ -431,14 +434,43 @@ class _ChatInputArea extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final gameState = ref.watch(gameStateProvider);
+    final actionState = ref.watch(actionProvider);
+    final socketId = ref.watch(connectionProvider.notifier).socketId;
+
+    bool isEnabled = true;
+    String hintText = AppStrings.chatHint;
+
+    // Check if player is alive
+    final me = gameState.players.firstWhere(
+      (p) => p.id == socketId,
+      orElse: () => gameState.players.first,
+    );
+    final isAlive = me.isAlive;
+
+    if (isAlive) {
+      if (gameState.gamePhase == GamePhase.lastWord) {
+        if (actionState.judgementTarget != socketId) {
+          isEnabled = false;
+          hintText = AppStrings.lastWordChatHint;
+        }
+      } else if (gameState.gamePhase == GamePhase.night) {
+        if (gameState.myRole != GameRole.mafia) {
+          isEnabled = false;
+          hintText = AppStrings.nightChatDisabled;
+        }
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.overlayBlack50,
+          color: isEnabled
+              ? AppColors.overlayBlack50
+              : AppColors.overlayBlack50.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
@@ -447,10 +479,15 @@ class _ChatInputArea extends StatelessWidget {
         child: TextField(
           controller: controller,
           focusNode: focusNode,
+          enabled: isEnabled,
           textInputAction: TextInputAction.send,
-          style: theme.textTheme.bodyMedium,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: isEnabled
+                ? theme.colorScheme.onSurface
+                : theme.colorScheme.onSurface.withValues(alpha: 0.3),
+          ),
           decoration: InputDecoration(
-            hintText: AppStrings.chatHint,
+            hintText: hintText,
             hintStyle: TextStyle(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),

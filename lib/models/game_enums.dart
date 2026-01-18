@@ -39,6 +39,11 @@ class SocketEvent {
   static const String playerReconnected = 'player_reconnected';
   static const String playerDisconnected = 'player_disconnected';
   static const String reconnectFailed = 'reconnect_failed';
+  static const String judgementStarted = 'judgement_started';
+  static const String judgementVote = 'judgement_vote';
+  static const String judgementUpdate = 'judgement_update';
+  static const String judgementResult = 'judgement_result';
+  static const String endLastWord = 'end_last_word';
 }
 
 class ErrorCode {
@@ -187,6 +192,8 @@ enum GameRole {
 
 enum GamePhase {
   day,
+  lastWord,
+  judgement,
   night,
   waiting,
   result;
@@ -195,11 +202,16 @@ enum GamePhase {
     final normalized = val.trim().toLowerCase();
 
     try {
+      if (normalized == 'lastword') return GamePhase.lastWord;
       return GamePhase.values.byName(normalized);
     } catch (_) {
       switch (normalized) {
         case '낮':
           return GamePhase.day;
+        case '최후의변론':
+          return GamePhase.lastWord;
+        case '찬반투표':
+          return GamePhase.judgement;
         case '밤':
           return GamePhase.night;
         case '결과':
@@ -214,6 +226,10 @@ enum GamePhase {
     switch (this) {
       case GamePhase.day:
         return '낮';
+      case GamePhase.lastWord:
+        return '최후의 변론';
+      case GamePhase.judgement:
+        return '찬반 투표';
       case GamePhase.night:
         return '밤';
       case GamePhase.result:

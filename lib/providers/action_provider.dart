@@ -20,6 +20,11 @@ class ActionState {
   final Map<String, String> voters;
   final Map<String, String> nightSelections;
   final Map<String, String> nightActionActors;
+  final String? judgementTarget;
+  final String? judgementTargetNickname;
+  final Map<String, String> judgementVotes;
+  final int yesCount;
+  final int noCount;
   final List<ChatMessage> messages;
 
   const ActionState({
@@ -27,6 +32,11 @@ class ActionState {
     this.voters = const {},
     this.nightSelections = const {},
     this.nightActionActors = const {},
+    this.judgementTarget,
+    this.judgementTargetNickname,
+    this.judgementVotes = const {},
+    this.yesCount = 0,
+    this.noCount = 0,
     this.messages = const [],
   });
 
@@ -35,6 +45,11 @@ class ActionState {
     Map<String, String>? voters,
     Map<String, String>? nightSelections,
     Map<String, String>? nightActionActors,
+    String? judgementTarget,
+    String? judgementTargetNickname,
+    Map<String, String>? judgementVotes,
+    int? yesCount,
+    int? noCount,
     List<ChatMessage>? messages,
   }) {
     return ActionState(
@@ -42,6 +57,12 @@ class ActionState {
       voters: voters ?? this.voters,
       nightSelections: nightSelections ?? this.nightSelections,
       nightActionActors: nightActionActors ?? this.nightActionActors,
+      judgementTarget: judgementTarget ?? this.judgementTarget,
+      judgementTargetNickname:
+          judgementTargetNickname ?? this.judgementTargetNickname,
+      judgementVotes: judgementVotes ?? this.judgementVotes,
+      yesCount: yesCount ?? this.yesCount,
+      noCount: noCount ?? this.noCount,
       messages: messages ?? this.messages,
     );
   }
@@ -84,6 +105,11 @@ class ActionNotifier extends _$ActionNotifier {
                 _addSystemMessage(AppStrings.doctorHealNone);
               }
             }
+          } else if (phase == GamePhase.lastWord) {
+            final nickname = data['nickname']?.toString() ?? '?';
+            _addSystemMessage(AppStrings.lastWordAnnouncement(nickname));
+          } else if (phase == GamePhase.judgement) {
+            _addSystemMessage(AppStrings.judgementAnnouncement);
           } else if (phase == GamePhase.night) {
             _addSystemMessage(AppStrings.nightAnnouncement(dayCount));
 
@@ -108,7 +134,43 @@ class ActionNotifier extends _$ActionNotifier {
             }
           }
 
-          resetTurnData();
+          if (phase == GamePhase.day || phase == GamePhase.night) {
+            resetTurnData();
+          }
+        }
+      }
+    });
+
+    socket.on(SocketEvent.judgementStarted, (data) {
+      if (data is Map) {
+        state = state.copyWith(
+          judgementTarget: data['targetId']?.toString(),
+          judgementTargetNickname: data['nickname']?.toString(),
+          judgementVotes: {},
+          yesCount: 0,
+          noCount: 0,
+        );
+      }
+    });
+
+    socket.on(SocketEvent.judgementUpdate, (data) {
+      if (data is Map) {
+        state = state.copyWith(
+          yesCount: int.tryParse(data['yesCount']?.toString() ?? '0') ?? 0,
+          noCount: int.tryParse(data['noCount']?.toString() ?? '0') ?? 0,
+          judgementVotes: Map<String, String>.from(data['voters'] ?? {}),
+        );
+      }
+    });
+
+    socket.on(SocketEvent.judgementResult, (data) {
+      if (data is Map) {
+        final result = data['result']?.toString();
+        final nickname = data['nickname']?.toString() ?? '?';
+        if (result == 'executed') {
+          _addSystemMessage(AppStrings.judgementExecuted(nickname));
+        } else {
+          _addSystemMessage(AppStrings.judgementSaved(nickname));
         }
       }
     });
@@ -167,12 +229,33 @@ class ActionNotifier extends _$ActionNotifier {
       }
     });
 
+    socket.on(SocketEvent.playerDisconnected, (data) {
+      if (data != null) {
+        _addSystemMessage(AppStrings.disconnected(data.toString()));
+      }
+    });
+
+    socket.on(SocketEvent.playerReconnected, (data) {
+      if (data != null) {
+        _addSystemMessage(AppStrings.reconnected(data.toString()));
+      }
+    });
+
+    socket.on(SocketEvent.reconnectFailed, (data) {
+      if (data != null) {
+        _addSystemMessage(AppStrings.reconnectFailed(data.toString()));
+      }
+    });
+
     socket.on(SocketEvent.voteUpdate, (data) {
       try {
         if (data is! Map<String, dynamic>) {
           throw FormatException('Invalid vote update data format');
         }
         final event = VoteUpdateEvent.fromJson(data);
+
+        // Always update votes/voters regardless of phase.
+        // During day, it's public. During night, server only sends this to Mafia members.
         state = state.copyWith(votes: event.votes, voters: event.voters);
       } catch (e, stackTrace) {
         ErrorHandler.logError('vote_update', e, stackTrace);
@@ -301,6 +384,20 @@ class ActionNotifier extends _$ActionNotifier {
       }
     });
 
+    socket.on(SocketEvent.stateSync, (data) {
+      if (data is Map) {
+        final jVotes = Map<String, String>.from(data['judgementVotes'] ?? {});
+        state = state.copyWith(
+          votes: Map<String, int>.from(data[ProtocolKey.votes] ?? {}),
+          voters: Map<String, String>.from(data[ProtocolKey.voters] ?? {}),
+          judgementTarget: data['judgementTarget']?.toString(),
+          judgementVotes: jVotes,
+          yesCount: jVotes.values.where((v) => v == 'yes').length,
+          noCount: jVotes.values.where((v) => v == 'no').length,
+        );
+      }
+    });
+
     ref.onDispose(() {
       // Cleanup listeners if needed
     });
@@ -364,24 +461,47 @@ class ActionNotifier extends _$ActionNotifier {
 
       final newSelections = Map<String, String>.from(state.nightSelections);
       final newActors = Map<String, String>.from(state.nightActionActors);
+      final newVoters = Map<String, String>.from(state.voters);
+      final newVotes = Map<String, int>.from(state.votes);
+
+      final myId = ref.read(connectionProvider.notifier).socketId;
 
       if (currentSelection == targetId) {
         newSelections.remove(roleKey);
         newActors.remove(roleKey);
+
+        // Optimistic update for voters if Mafia
+        if (myRoleEnum == GameRole.mafia && myId != null) {
+          newVoters.remove(myId);
+          newVotes[targetId] = (newVotes[targetId] ?? 1) - 1;
+          if (newVotes[targetId]! <= 0) newVotes.remove(targetId);
+        }
       } else {
         newSelections[roleKey] = targetId;
         final players = ref.read(gameStateProvider).players;
-        final myId = ref.read(connectionProvider.notifier).socketId;
         final me = players.firstWhere(
           (p) => p.id == myId,
           orElse: () => Player(id: '', nickname: '', isAlive: false),
         );
         newActors[roleKey] = me.nickname;
+
+        // Optimistic update for voters if Mafia
+        if (myRoleEnum == GameRole.mafia && myId != null) {
+          final previousVote = newVoters[myId];
+          if (previousVote != null) {
+            newVotes[previousVote] = (newVotes[previousVote] ?? 1) - 1;
+            if (newVotes[previousVote]! <= 0) newVotes.remove(previousVote);
+          }
+          newVoters[myId] = targetId;
+          newVotes[targetId] = (newVotes[targetId] ?? 0) + 1;
+        }
       }
 
       state = state.copyWith(
         nightSelections: newSelections,
         nightActionActors: newActors,
+        voters: newVoters,
+        votes: newVotes,
       );
 
       ref.read(connectionProvider.notifier).socketService.emit(
@@ -456,6 +576,16 @@ class ActionNotifier extends _$ActionNotifier {
     );
   }
 
+  void sendJudgementVote(String vote) {
+    final socket = ref.read(connectionProvider.notifier).socketService;
+    socket.emit(SocketEvent.judgementVote, vote);
+  }
+
+  void endLastWord() {
+    final socket = ref.read(connectionProvider.notifier).socketService;
+    socket.emit(SocketEvent.endLastWord);
+  }
+
   void archiveMessages() {
     // 1. Filter out Mafia and Dead messages to prevent clutter/spoilers
     // 2. Map remaining to isLegacy = true
@@ -517,9 +647,20 @@ class ActionNotifier extends _$ActionNotifier {
 List<String> skipVoterNicknames(Ref ref) {
   final voters = ref.watch(actionProvider.select((s) => s.voters));
   final players = ref.watch(gameStateProvider.select((s) => s.players));
+  final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+  final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
 
   return voters.entries
-      .where((entry) => entry.value == GameAction.skip)
+      .where((entry) {
+        // During Day, anyone can see skips.
+        // During Night, only Mafia can see Mafia-skips.
+        if (gamePhase == GamePhase.day) {
+          return entry.value == GameAction.skip;
+        } else if (gamePhase == GamePhase.night && myRole == GameRole.mafia) {
+          return entry.value == GameAction.skip;
+        }
+        return false;
+      })
       .map((entry) {
         final voter = players.firstWhere(
           (p) => p.id == entry.key,
@@ -541,10 +682,12 @@ bool iVotedSkip(Ref ref) {
 
 @riverpod
 bool isMafiaSkip(Ref ref) {
-  final nightSelections = ref.watch(
-    actionProvider.select((s) => s.nightSelections),
-  );
-  return nightSelections[GameRole.mafia.name] == GameAction.skip;
+  final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+  if (gamePhase != GamePhase.night) return false;
+
+  final voters = ref.watch(actionProvider.select((s) => s.voters));
+  final myId = ref.watch(connectionProvider.notifier).socketId;
+  return voters[myId] == GameAction.skip;
 }
 
 @riverpod
@@ -554,11 +697,11 @@ String mafiaSkipButtonText(Ref ref) {
 
 @riverpod
 String mafiaSkipActorNickname(Ref ref) {
-  final nightActionActors = ref.watch(
-    actionNotifierProvider.select((s) => s.nightActionActors),
-  );
-  final isSkip = ref.watch(isMafiaSkipProvider);
-  return isSkip ? (nightActionActors[GameRole.mafia.name] ?? '') : '';
+  final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+  if (gamePhase != GamePhase.night) return '';
+
+  final skipVoters = ref.watch(skipVoterNicknamesProvider);
+  return skipVoters.join(', ');
 }
 
 final actionProvider = actionNotifierProvider;
