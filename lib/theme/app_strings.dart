@@ -78,6 +78,12 @@ class AppStrings {
   static const String voteTie = '투표가 동률입니다. 아무도 처형되지 않았습니다.';
   static const String voteTimeout = '시간이 종료되었습니다. 아무도 처형되지 않았습니다.';
 
+  static String politicianImmune(String nickname) =>
+      '정치인 [$nickname]님은 투표로 처형되지 않습니다!';
+
+  static String soldierShieldActivated(String nickname) =>
+      '군인 [$nickname]님이 마피아의 공격을 견뎌냈습니다! (방어막 소진)';
+
   // Night Results
   static const String nightKill = '어젯밤, 누군가 차가운 시체로 발견되었습니다...';
   static const String nightPeace = '평화로운 밤이었습니다.';
@@ -87,7 +93,7 @@ class AppStrings {
 
   // Death Notifications (with player names)
   static String nightKillPlayer(String nickname) =>
-      '어젯밤, [$nickname]이(가) 차가운 시체로 발견되었습니다...';
+      '[$nickname]님이 마피아에게 살해당했습니다.';
   static String dayExecution(String nickname) => '[$nickname]이(가) 투표로 처형되었습니다.';
   static String playerDied(String nickname) => '[$nickname]이(가) 사망했습니다.';
   static String playerEliminated(String nickname, String reason) =>

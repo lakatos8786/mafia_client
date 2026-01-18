@@ -33,6 +33,15 @@ class ResultPlayerCard extends StatelessWidget {
     } else if (player.role == GameRole.police) {
       roleColor = AppColors.policeBlue;
       roleEmoji = '🚨';
+    } else if (player.role == GameRole.madman) {
+      roleColor = AppColors.madman;
+      roleEmoji = '🤡';
+    } else if (player.role == GameRole.politician) {
+      roleColor = AppColors.politician;
+      roleEmoji = '🏛️';
+    } else if (player.role == GameRole.soldier) {
+      roleColor = AppColors.soldier;
+      roleEmoji = '🎖️';
     } else {
       roleColor = Colors.white70;
     }

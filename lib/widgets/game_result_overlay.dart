@@ -216,8 +216,8 @@ class _ResultsGrid extends StatelessWidget {
           children: List.generate(players.length, (index) {
             final p = players[index];
             bool isPlayerWinner = isMafiaWin
-                ? p.role == GameRole.mafia
-                : p.role != GameRole.mafia;
+                ? (p.role == GameRole.mafia || p.role == GameRole.madman)
+                : (p.role != GameRole.mafia && p.role != GameRole.madman);
 
             return ResultPlayerCard(
               player: p,

@@ -472,6 +472,24 @@ class GameInfoBottomSheet extends ConsumerWidget {
           roleCounts[GameRole.citizen.name] ?? 0,
           gameTheme.citizenRef,
         ),
+        _buildRoleCountItem(
+          context,
+          GameRole.madman.label,
+          roleCounts[GameRole.madman.name] ?? 0,
+          gameTheme.madmanRef,
+        ),
+        _buildRoleCountItem(
+          context,
+          GameRole.politician.label,
+          roleCounts[GameRole.politician.name] ?? 0,
+          gameTheme.politicianRef,
+        ),
+        _buildRoleCountItem(
+          context,
+          GameRole.soldier.label,
+          roleCounts[GameRole.soldier.name] ?? 0,
+          gameTheme.soldierRef,
+        ),
       ],
     );
   }
@@ -515,6 +533,12 @@ class GameInfoBottomSheet extends ConsumerWidget {
         return '🚨';
       case GameRole.citizen:
         return '👤';
+      case GameRole.madman:
+        return '🤡';
+      case GameRole.politician:
+        return '🏛️';
+      case GameRole.soldier:
+        return '🎖️';
     }
   }
 }

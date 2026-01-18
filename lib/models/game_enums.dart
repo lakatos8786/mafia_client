@@ -85,7 +85,11 @@ class ProtocolKey {
   static const String mafiaCount = 'mafiaCount';
   static const String policeCount = 'policeCount';
   static const String doctorCount = 'doctorCount';
+  static const String madmanCount = 'madmanCount';
+  static const String politicianCount = 'politicianCount';
+  static const String soldierCount = 'soldierCount';
   static const String isConnected = 'isConnected';
+  static const String isRevealed = 'isRevealed';
   static const String isLegacy = 'isLegacy';
 }
 
@@ -93,7 +97,10 @@ enum GameRole {
   mafia,
   doctor,
   police,
-  citizen;
+  citizen,
+  madman,
+  politician,
+  soldier;
 
   static GameRole? fromString(String? val) {
     if (val == null || val.isEmpty) return null;
@@ -120,6 +127,15 @@ enum GameRole {
       case '시민':
       case 'citizen':
         return GameRole.citizen;
+      case '광인':
+      case 'madman':
+        return GameRole.madman;
+      case '정치인':
+      case 'politician':
+        return GameRole.politician;
+      case '군인':
+      case 'soldier':
+        return GameRole.soldier;
       default:
         return null;
     }
@@ -136,6 +152,32 @@ enum GameRole {
         return '경찰';
       case GameRole.citizen:
         return '시민';
+      case GameRole.madman:
+        return '광인';
+      case GameRole.politician:
+        return '정치인';
+      case GameRole.soldier:
+        return '군인';
+    }
+  }
+
+  // Emoji for each role
+  String get emoji {
+    switch (this) {
+      case GameRole.mafia:
+        return '🕶️';
+      case GameRole.doctor:
+        return '💉';
+      case GameRole.police:
+        return '🚨';
+      case GameRole.citizen:
+        return '👤';
+      case GameRole.madman:
+        return '🤡';
+      case GameRole.politician:
+        return '🏛️';
+      case GameRole.soldier:
+        return '🎖️';
     }
   }
 

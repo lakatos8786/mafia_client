@@ -87,14 +87,24 @@ class ActionNotifier extends _$ActionNotifier {
           } else if (phase == GamePhase.night) {
             _addSystemMessage(AppStrings.nightAnnouncement(dayCount));
 
-            final myRole = ref.read(gameStateProvider).myRole;
-            // Sequential instructions for active roles
-            if (myRole == GameRole.mafia) {
-              _addSystemMessage(AppStrings.mafiaInstruction);
-            } else if (myRole == GameRole.doctor) {
-              _addSystemMessage(AppStrings.doctorInstruction);
-            } else if (myRole == GameRole.police) {
-              _addSystemMessage(AppStrings.policeInstruction);
+            // Only show night action instructions to alive players
+            final socketId = ref.read(connectionProvider.notifier).socketId;
+            final players = ref.read(gameStateProvider).players;
+            final me = players.firstWhere(
+              (p) => p.id == socketId,
+              orElse: () => Player(id: '', nickname: '', isAlive: false),
+            );
+
+            if (me.isAlive) {
+              final myRole = ref.read(gameStateProvider).myRole;
+              // Sequential instructions for active roles
+              if (myRole == GameRole.mafia) {
+                _addSystemMessage(AppStrings.mafiaInstruction);
+              } else if (myRole == GameRole.doctor) {
+                _addSystemMessage(AppStrings.doctorInstruction);
+              } else if (myRole == GameRole.police) {
+                _addSystemMessage(AppStrings.policeInstruction);
+              }
             }
           }
 
@@ -120,6 +130,9 @@ class ActionNotifier extends _$ActionNotifier {
           _addSystemMessage(AppStrings.voteSkipped);
         } else if (result == 'tie') {
           _addSystemMessage(AppStrings.voteTie);
+        } else if (result == 'immune') {
+          final nickname = data['nickname']?.toString() ?? '';
+          _addSystemMessage(AppStrings.politicianImmune(nickname));
         }
       }
     });
@@ -233,16 +246,11 @@ class ActionNotifier extends _$ActionNotifier {
           _addSystemMessage(AppStrings.nightKill);
         } else if (message == 'peace') {
           _addSystemMessage(AppStrings.nightPeace);
-
-          // Check for Doctor's success logic
-          final myRole = ref.read(gameStateProvider).myRole;
-          if (myRole == GameRole.doctor) {
-            final mySelection = state.nightSelections[GameRole.doctor.name];
-            if (mySelection != null && mySelection != GameAction.skip) {
-              _addSystemMessage(AppStrings.doctorSaved);
-            }
-          }
+        } else if (message == 'shield_activated') {
+          final nickname = data[ProtocolKey.nickname]?.toString() ?? '';
+          _addSystemMessage(AppStrings.soldierShieldActivated(nickname));
         }
+        // doctor_saved 메시지 제거: 게임 밸런스를 위해 의사는 치료 성공 여부를 알 수 없음
       }
     });
 

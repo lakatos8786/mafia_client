@@ -177,6 +177,12 @@ class RoleRevealModal extends StatelessWidget {
         return gameTheme.policeRef;
       case GameRole.citizen:
         return gameTheme.citizenRef;
+      case GameRole.madman:
+        return gameTheme.madmanRef;
+      case GameRole.politician:
+        return gameTheme.politicianRef;
+      case GameRole.soldier:
+        return gameTheme.soldierRef;
     }
   }
 
@@ -190,6 +196,12 @@ class RoleRevealModal extends StatelessWidget {
         return [gameTheme.policeRef, gameTheme.policeDarkRef];
       case GameRole.citizen:
         return [gameTheme.citizenRef, gameTheme.citizenDarkRef];
+      case GameRole.madman:
+        return [gameTheme.madmanRef, gameTheme.madmanDarkRef];
+      case GameRole.politician:
+        return [gameTheme.politicianRef, gameTheme.politicianDarkRef];
+      case GameRole.soldier:
+        return [gameTheme.soldierRef, gameTheme.soldierDarkRef];
     }
   }
 
@@ -203,19 +215,31 @@ class RoleRevealModal extends StatelessWidget {
         return '🚨';
       case GameRole.citizen:
         return '👤';
+      case GameRole.madman:
+        return '🤡';
+      case GameRole.politician:
+        return '🏛️';
+      case GameRole.soldier:
+        return '🎖️';
     }
   }
 
   String _getRoleDescription() {
     switch (role) {
       case GameRole.mafia:
-        return '밤마다 한 명을 제거할 수 있습니다.\n동료 마피아와 협력하여 시민을 속이세요.';
+        return '어둠 속에서 도시를 장악하세요. 밤마다 한 명을 처단하며 시민을 전멸시키면 승리합니다.';
       case GameRole.doctor:
-        return '밤마다 한 명을 치료할 수 있습니다.\n마피아의 타겟을 맞추면 생명을 구할 수 있습니다.';
+        return '생명의 불꽃을 지키세요. 밤마다 한 명을 치료하며 마피아를 모두 처단하면 승리합니다.';
       case GameRole.police:
-        return '밤마다 한 명을 조사할 수 있습니다.\n마피아인지 아닌지 확인하고 시민들을 이끄세요.';
+        return '진실을 쫓는 감시자입니다. 밤마다 마피아를 조사하며 마피아를 모두 처단하면 승리합니다.';
       case GameRole.citizen:
-        return '특별한 능력은 없지만 투표의 힘이 있습니다.\n토론을 통해 마피아를 찾아내세요.';
+        return '선량한 시민의 결속을 믿으세요. 낮 투표를 통해 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.madman:
+        return '혼돈을 즐기는 광인입니다. 경찰 조사에는 시민으로 보이며, 마피아 승리 시 함께 승리합니다.';
+      case GameRole.politician:
+        return '여론을 지배하는 권력가입니다. 투표로 처형되지 않으며 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.soldier:
+        return '강인한 정신의 소유자입니다. 마피아의 공격을 1회 견뎌내며 마피아를 모두 처단하면 승리합니다.';
     }
   }
 }

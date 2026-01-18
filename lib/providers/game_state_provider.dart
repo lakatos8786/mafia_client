@@ -76,6 +76,15 @@ class GameState {
         case GameRole.citizen:
           emoji = '👤 ';
           break;
+        case GameRole.madman:
+          emoji = '🤡 ';
+          break;
+        case GameRole.politician:
+          emoji = '🏛️ ';
+          break;
+        case GameRole.soldier:
+          emoji = '🎖️ ';
+          break;
         default:
           break;
       }
@@ -101,6 +110,15 @@ class GameState {
           break;
         case GameRole.citizen:
           emoji = '👤';
+          break;
+        case GameRole.madman:
+          emoji = '🤡';
+          break;
+        case GameRole.politician:
+          emoji = '🏛️';
+          break;
+        case GameRole.soldier:
+          emoji = '🎖️';
           break;
         default:
           break;
@@ -189,7 +207,10 @@ class GameStateNotifier extends _$GameStateNotifier {
           List<Player> sanitizedPlayers = players;
           if (state.gamePhase == GamePhase.waiting) {
             sanitizedPlayers = players
-                .map((p) => p.copyWith(isAlive: true, role: null))
+                .map(
+                  (p) =>
+                      p.copyWith(isAlive: true, role: null, isRevealed: false),
+                )
                 .toList();
           }
 
@@ -418,6 +439,7 @@ class GameStateNotifier extends _$GameStateNotifier {
             (p) => p.copyWith(
               isAlive: true,
               role: null,
+              isRevealed: false,
               atLobby: p.id == myId, // Me is definitely in lobby
             ),
           )

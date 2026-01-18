@@ -610,7 +610,10 @@ class LobbyScreen extends ConsumerWidget {
               final totalManualRoles =
                   (settings.mafiaCount ?? 0) +
                   (settings.policeCount ?? 0) +
-                  (settings.doctorCount ?? 0);
+                  (settings.doctorCount ?? 0) +
+                  (settings.madmanCount ?? 0) +
+                  (settings.politicianCount ?? 0) +
+                  (settings.soldierCount ?? 0);
               final canIncrease = totalManualRoles < playerCount;
 
               return Column(
@@ -656,9 +659,21 @@ class LobbyScreen extends ConsumerWidget {
                                           doctorCount: val
                                               ? null
                                               : autoCounts['doctor'],
+                                          madmanCount: val
+                                              ? null
+                                              : autoCounts['madman'],
+                                          politicianCount: val
+                                              ? null
+                                              : autoCounts['politician'],
+                                          soldierCount: val
+                                              ? null
+                                              : autoCounts['soldier'],
                                           clearMafia: val,
                                           clearPolice: val,
                                           clearDoctor: val,
+                                          clearMadman: val,
+                                          clearPolitician: val,
+                                          clearSoldier: val,
                                         ),
                                       );
                                 },
@@ -735,6 +750,66 @@ class LobbyScreen extends ConsumerWidget {
                               );
                         },
                       ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      _buildRoleCounter(
+                        context,
+                        '🤡 광인',
+                        settings.madmanCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['madman']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  madmanCount: val,
+                                  clearMadman: val == null,
+                                ),
+                              );
+                        },
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      _buildRoleCounter(
+                        context,
+                        '🏛️ 정치인',
+                        settings.politicianCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['politician']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  politicianCount: val,
+                                  clearPolitician: val == null,
+                                ),
+                              );
+                        },
+                      ),
+                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                      _buildRoleCounter(
+                        context,
+                        '🎖️ 군인',
+                        settings.soldierCount,
+                        isHost,
+                        canIncrease,
+                        autoCounts['soldier']!,
+                        isAuto,
+                        (val) {
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  soldierCount: val,
+                                  clearSoldier: val == null,
+                                ),
+                              );
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -750,38 +825,50 @@ class LobbyScreen extends ConsumerWidget {
     int mafia = 1;
     int police = 1;
     int doctor = 1;
+    int madman = 0;
+    int politician = 0;
+    int soldier = 0;
 
-    if (playerCount < 5) {
-      if (playerCount == 1) {
-        mafia = 1;
-        police = 0;
-        doctor = 0;
-      } else if (playerCount == 2) {
-        mafia = 1;
-        police = 0;
-        doctor = 0;
-      } else if (playerCount == 3) {
-        mafia = 1;
-        police = 1;
-        doctor = 0;
-      } else if (playerCount == 4) {
-        mafia = 1;
-        police = 1;
-        doctor = 1;
-      }
-    } else {
-      if (playerCount == 5) {
-        mafia = 1;
-      } else if (playerCount >= 6 && playerCount <= 8) {
-        mafia = 2;
-      } else if (playerCount >= 9 && playerCount <= 12) {
-        mafia = 3;
-      } else if (playerCount >= 13) {
-        // High level balance (following server pattern)
-        mafia = (playerCount / 4).floor();
-      }
+    if (playerCount < 4) {
+      mafia = 1;
+      police = 0;
+      doctor = 0;
+    } else if (playerCount < 6) {
+      mafia = 1;
+      police = 1;
+      doctor = 0;
+    } else if (playerCount < 8) {
+      mafia = 2;
+      police = 1;
+      doctor = 1;
+    } else if (playerCount == 8) {
+      mafia = 2;
+      police = 1;
+      doctor = 1;
+      soldier = 1;
+    } else if (playerCount == 9) {
+      mafia = 2;
+      madman = 1;
+      police = 1;
+      doctor = 1;
+      soldier = 1;
+    } else if (playerCount >= 10) {
+      mafia = playerCount >= 12 ? 3 : 2;
+      madman = 1;
+      police = 1;
+      doctor = 1;
+      politician = 1;
+      soldier = 1;
     }
-    return {'mafia': mafia, 'police': police, 'doctor': doctor};
+
+    return {
+      'mafia': mafia,
+      'police': police,
+      'doctor': doctor,
+      'madman': madman,
+      'politician': politician,
+      'soldier': soldier,
+    };
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {

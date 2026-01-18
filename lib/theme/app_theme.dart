@@ -36,6 +36,12 @@ class AppTheme {
           policeDarkRef: AppColors.policeDark,
           citizenRef: AppColors.citizen,
           citizenDarkRef: AppColors.citizenDark,
+          madmanRef: AppColors.madman,
+          madmanDarkRef: AppColors.madmanDark,
+          politicianRef: AppColors.politician,
+          politicianDarkRef: AppColors.politicianDark,
+          soldierRef: AppColors.soldier,
+          soldierDarkRef: AppColors.soldierDark,
           voteRef: AppColors.voteGold,
           deadRef: AppColors.dead,
         ),
@@ -54,6 +60,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
   final Color policeDarkRef;
   final Color citizenRef;
   final Color citizenDarkRef;
+  final Color madmanRef;
+  final Color madmanDarkRef;
+  final Color politicianRef;
+  final Color politicianDarkRef;
+  final Color soldierRef;
+  final Color soldierDarkRef;
   final Color voteRef;
   final Color deadRef;
 
@@ -66,6 +78,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     required this.policeDarkRef,
     required this.citizenRef,
     required this.citizenDarkRef,
+    required this.madmanRef,
+    required this.madmanDarkRef,
+    required this.politicianRef,
+    required this.politicianDarkRef,
+    required this.soldierRef,
+    required this.soldierDarkRef,
     required this.voteRef,
     required this.deadRef,
   });
@@ -81,6 +99,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
         return policeRef;
       case GameRole.citizen:
         return citizenRef;
+      case GameRole.madman:
+        return madmanRef;
+      case GameRole.politician:
+        return politicianRef;
+      case GameRole.soldier:
+        return soldierRef;
       default:
         return mafiaRef;
     }
@@ -97,6 +121,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
         return policeDarkRef;
       case GameRole.citizen:
         return citizenDarkRef;
+      case GameRole.madman:
+        return madmanDarkRef;
+      case GameRole.politician:
+        return politicianDarkRef;
+      case GameRole.soldier:
+        return soldierDarkRef;
       default:
         return mafiaDarkRef;
     }
@@ -112,6 +142,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
     Color? policeDarkRef,
     Color? citizenRef,
     Color? citizenDarkRef,
+    Color? madmanRef,
+    Color? madmanDarkRef,
+    Color? politicianRef,
+    Color? politicianDarkRef,
+    Color? soldierRef,
+    Color? soldierDarkRef,
     Color? voteRef,
     Color? deadRef,
   }) {
@@ -124,6 +160,12 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       policeDarkRef: policeDarkRef ?? this.policeDarkRef,
       citizenRef: citizenRef ?? this.citizenRef,
       citizenDarkRef: citizenDarkRef ?? this.citizenDarkRef,
+      madmanRef: madmanRef ?? this.madmanRef,
+      madmanDarkRef: madmanDarkRef ?? this.madmanDarkRef,
+      politicianRef: politicianRef ?? this.politicianRef,
+      politicianDarkRef: politicianDarkRef ?? this.politicianDarkRef,
+      soldierRef: soldierRef ?? this.soldierRef,
+      soldierDarkRef: soldierDarkRef ?? this.soldierDarkRef,
       voteRef: voteRef ?? this.voteRef,
       deadRef: deadRef ?? this.deadRef,
     );
@@ -144,6 +186,16 @@ class GameThemeExtension extends ThemeExtension<GameThemeExtension> {
       policeDarkRef: Color.lerp(policeDarkRef, other.policeDarkRef, t)!,
       citizenRef: Color.lerp(citizenRef, other.citizenRef, t)!,
       citizenDarkRef: Color.lerp(citizenDarkRef, other.citizenDarkRef, t)!,
+      madmanRef: Color.lerp(madmanRef, other.madmanRef, t)!,
+      madmanDarkRef: Color.lerp(madmanDarkRef, other.madmanDarkRef, t)!,
+      politicianRef: Color.lerp(politicianRef, other.politicianRef, t)!,
+      politicianDarkRef: Color.lerp(
+        politicianDarkRef,
+        other.politicianDarkRef,
+        t,
+      )!,
+      soldierRef: Color.lerp(soldierRef, other.soldierRef, t)!,
+      soldierDarkRef: Color.lerp(soldierDarkRef, other.soldierDarkRef, t)!,
       voteRef: Color.lerp(voteRef, other.voteRef, t)!,
       deadRef: Color.lerp(deadRef, other.deadRef, t)!,
     );

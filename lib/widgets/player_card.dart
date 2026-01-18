@@ -250,6 +250,9 @@ class _PlayerCardContent extends StatelessWidget {
               isMe: isMe,
               identityColor: identityColor,
             ),
+            if (player.role != null)
+              if (player.isRevealed || !isMe)
+                _RevealedRoleBadge(role: player.role!),
             if (player.isAlive && voteCount > 0)
               _VoteBadge(voteCount: voteCount, votersList: votersList),
           ],
@@ -571,6 +574,58 @@ class _PoliceLightEffectState extends State<_PoliceLightEffect>
           ),
         );
       },
+    );
+  }
+}
+
+class _RevealedRoleBadge extends StatelessWidget {
+  final GameRole role;
+  const _RevealedRoleBadge({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    Color roleColor = Colors.grey;
+    switch (role) {
+      case GameRole.mafia:
+        roleColor = AppColors.mafia;
+        break;
+      case GameRole.doctor:
+        roleColor = AppColors.doctor;
+        break;
+      case GameRole.police:
+        roleColor = AppColors.police;
+        break;
+      case GameRole.madman:
+        roleColor = AppColors.madman;
+        break;
+      case GameRole.politician:
+        roleColor = AppColors.politician;
+        break;
+      case GameRole.soldier:
+        roleColor = AppColors.soldier;
+        break;
+      case GameRole.citizen:
+        roleColor = AppColors.citizen;
+        break;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: roleColor.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: roleColor.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Text(
+        '${role.emoji} ${role.label}',
+        style: TextStyle(
+          color: roleColor,
+          fontSize: ResponsiveUtils.fontSize(context, 10),
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 }

@@ -32,6 +32,12 @@ class AppColors {
   static const Color police = Color(0xFF007BFF); // Police Blue
   static const Color policeRed = Color(0xFFFF0033); // Police Red
   static const Color citizen = textSecondary;
+  static const Color madman = Color(0xFF9D50BB); // Neon Purple
+  static const Color madmanDark = Color(0xFF3B0066);
+  static const Color politician = Color(0xFFFFD700); // Neon Gold
+  static const Color politicianDark = Color(0xFF8B7500);
+  static const Color soldier = Color(0xFF4CAF50); // Military Green
+  static const Color soldierDark = Color(0xFF1B5E20);
   static const Color dead = Color(0xFFFF3131); // Bright Neon Red
   static const Color voteGold = Color(0xFFFFAC1C); // Neon Orange/Gold
 
@@ -92,6 +98,9 @@ class AppColors {
   static const Color doctorDark = Color(0xFF008F5B);
   static const Color policeDark = Color(0xFF008BBB);
   static const Color citizenDark = textMuted;
+  static const Color madmanPurple = madman;
+  static const Color politicianGold = politician;
+  static const Color soldierGreen = soldier;
   static const Color mafiaRed = mafia;
   static const Color doctorGreen = doctor;
   static const Color policeBlue = police;

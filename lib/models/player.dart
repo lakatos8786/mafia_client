@@ -8,6 +8,7 @@ class Player {
   final bool isHost;
   final bool isConnected;
   final bool atLobby;
+  final bool isRevealed;
 
   Player({
     required this.id,
@@ -17,17 +18,21 @@ class Player {
     this.isHost = false,
     this.isConnected = true,
     this.atLobby = true,
+    this.isRevealed = false,
   });
 
   factory Player.fromMap(Map<String, dynamic> map) {
     return Player(
-      id: map['id']?.toString() ?? '',
-      nickname: map['nickname']?.toString() ?? 'Unknown',
-      role: GameRole.fromString(map['role']?.toString()),
-      isAlive: map['isAlive'] ?? false,
-      isHost: map['isHost'] ?? false,
-      isConnected: map['isConnected'] ?? true,
-      atLobby: map['atLobby'] ?? true,
+      id: map[ProtocolKey.id]?.toString() ?? '',
+      nickname: map[ProtocolKey.nickname]?.toString() ?? 'Unknown',
+      role: GameRole.fromString(map[ProtocolKey.role]?.toString()),
+      isAlive: map[ProtocolKey.isAlive] ?? false,
+      isHost: map[ProtocolKey.isHost] ?? false,
+      isConnected: map[ProtocolKey.isConnected] ?? true,
+      atLobby:
+          map['atLobby'] ??
+          true, // atLobby is usually client-side or simple key
+      isRevealed: map[ProtocolKey.isRevealed] ?? false,
     );
   }
 
@@ -39,6 +44,7 @@ class Player {
     bool? isHost,
     bool? isConnected,
     bool? atLobby,
+    bool? isRevealed,
   }) {
     return Player(
       id: id ?? this.id,
@@ -48,6 +54,7 @@ class Player {
       isHost: isHost ?? this.isHost,
       isConnected: isConnected ?? this.isConnected,
       atLobby: atLobby ?? this.atLobby,
+      isRevealed: isRevealed ?? this.isRevealed,
     );
   }
 }
