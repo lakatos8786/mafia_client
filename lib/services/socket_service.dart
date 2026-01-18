@@ -15,6 +15,9 @@ class SocketService {
 
   /// Initialize and connect to the server
   void initialize(String uuid) {
+    if (_socket != null) {
+      _socket?.dispose();
+    }
     _socket = io.io(AppConfig.serverUrl, <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,

@@ -143,6 +143,9 @@ class ActionNotifier extends _$ActionNotifier {
       if (data is Map) {
         final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
         final dayCount = int.tryParse(data['dayCount']?.toString() ?? '1') ?? 1;
+        final socketId = ref.read(connectionProvider.notifier).socketId;
+        final players = ref.read(gameStateProvider).players;
+        final myRole = ref.read(gameStateProvider).myRole;
 
         state = state.copyWith(clearJudgementResult: true);
 
@@ -150,8 +153,12 @@ class ActionNotifier extends _$ActionNotifier {
           if (phase == GamePhase.day) {
             _addSystemMessage(AppStrings.dayAnnouncement(dayCount));
 
-            final myRole = ref.read(gameStateProvider).myRole;
-            if (myRole == GameRole.doctor && dayCount > 1) {
+            final me = players.firstWhere(
+              (p) => p.id == socketId,
+              orElse: () => Player(id: '', nickname: '', isAlive: false),
+            );
+
+            if (myRole == GameRole.doctor && dayCount > 1 && me.isAlive) {
               final mySelection = state.nightSelections[GameRole.doctor.name];
               if (mySelection == null || mySelection == GameAction.skip) {
                 _addSystemMessage(AppStrings.doctorHealNone);
@@ -165,15 +172,12 @@ class ActionNotifier extends _$ActionNotifier {
           } else if (phase == GamePhase.night) {
             _addSystemMessage(AppStrings.nightAnnouncement(dayCount));
 
-            final socketId = ref.read(connectionProvider.notifier).socketId;
-            final players = ref.read(gameStateProvider).players;
             final me = players.firstWhere(
               (p) => p.id == socketId,
               orElse: () => Player(id: '', nickname: '', isAlive: false),
             );
 
             if (me.isAlive) {
-              final myRole = ref.read(gameStateProvider).myRole;
               if (myRole == GameRole.mafia) {
                 _addSystemMessage(AppStrings.mafiaInstruction);
               } else if (myRole == GameRole.doctor) {

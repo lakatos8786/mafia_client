@@ -55,39 +55,47 @@ class ConnectionNotifier extends _$ConnectionNotifier {
   }
 
   void _setupConnectionListeners() {
-    _socketService.on('connect', (_) {
-      developer.log('DEBUG: Connected to server: ${_socketService.id}');
-      state = state.copyWith(status: 'connected', error: null);
-    });
+    _socketService.onConnect(_onConnect);
+    _socketService.onDisconnect(_onDisconnect);
+    _socketService.on('reconnect_attempt', _onReconnectAttempt);
+    _socketService.on('reconnect', _onReconnect);
+    _socketService.on('reconnect_failed', _onReconnectFailed);
+    _socketService.onConnectError(_onConnectError);
+    _socketService.onError(_onSocketError);
+  }
 
-    _socketService.on('disconnect', (_) {
-      state = state.copyWith(status: 'disconnected', error: '서버와 연결이 끊어졌습니다.');
-    });
+  void _onConnect() {
+    developer.log('DEBUG: Connected to server: ${_socketService.id}');
+    state = state.copyWith(status: 'connected', error: null);
+  }
 
-    _socketService.on('reconnect_attempt', (attemptNumber) {
-      state = state.copyWith(
-        status: 'reconnecting',
-        error: '재연결 시도 중... ($attemptNumber/${AppConfig.reconnectionAttempts})',
-      );
-    });
+  void _onDisconnect() {
+    state = state.copyWith(status: 'disconnected', error: '서버와 연결이 끊어졌습니다.');
+  }
 
-    _socketService.on('reconnect', (_) {
-      state = state.copyWith(status: 'connected', error: null);
-    });
+  void _onReconnectAttempt(dynamic attemptNumber) {
+    state = state.copyWith(
+      status: 'reconnecting',
+      error: '재연결 시도 중... ($attemptNumber/${AppConfig.reconnectionAttempts})',
+    );
+  }
 
-    _socketService.on('reconnect_failed', (_) {
-      state = state.copyWith(status: 'error', error: '재연결 실패. 앱을 다시 시작해 주세요.');
-    });
+  void _onReconnect(dynamic _) {
+    state = state.copyWith(status: 'connected', error: null);
+  }
 
-    _socketService.onConnectError((data) {
-      final errorMsg = ErrorHandler.handleError('socket_connection', data);
-      state = state.copyWith(status: 'error', error: errorMsg);
-    });
+  void _onReconnectFailed(dynamic _) {
+    state = state.copyWith(status: 'error', error: '재연결 실패. 앱을 다시 시작해 주세요.');
+  }
 
-    _socketService.onError((data) {
-      final errorMsg = ErrorHandler.handleError('socket_error', data);
-      state = state.copyWith(error: errorMsg);
-    });
+  void _onConnectError(dynamic data) {
+    final errorMsg = ErrorHandler.handleError('socket_connection', data);
+    state = state.copyWith(status: 'error', error: errorMsg);
+  }
+
+  void _onSocketError(dynamic data) {
+    final errorMsg = ErrorHandler.handleError('socket_error', data);
+    state = state.copyWith(error: errorMsg);
   }
 
   void clearError() {

@@ -100,7 +100,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
     });
 
     if (!isUserLookingAtChat) {
-      for (int i = _lastReadCount; i < messages.length; i++) {
+      final messageCount = messages.length;
+      final startIdx = _lastReadCount.clamp(0, messageCount);
+      for (int i = startIdx; i < messageCount; i++) {
         if (!messages[i].isMine && !messages[i].isSystem) {
           unreadCount++;
         }
@@ -444,11 +446,9 @@ class _ChatInputArea extends ConsumerWidget {
     String hintText = AppStrings.chatHint;
 
     // Check if player is alive
-    final me = gameState.players.firstWhere(
-      (p) => p.id == socketId,
-      orElse: () => gameState.players.first,
-    );
-    final isAlive = me.isAlive;
+    final isAlive = gameState.players.any((p) => p.id == socketId && p.isAlive);
+
+    final myRole = gameState.myRole;
 
     if (isAlive) {
       if (gameState.gamePhase == GamePhase.lastWord) {
@@ -457,7 +457,7 @@ class _ChatInputArea extends ConsumerWidget {
           hintText = AppStrings.lastWordChatHint;
         }
       } else if (gameState.gamePhase == GamePhase.night) {
-        if (gameState.myRole != GameRole.mafia) {
+        if (myRole != GameRole.mafia) {
           isEnabled = false;
           hintText = AppStrings.nightChatDisabled;
         }
