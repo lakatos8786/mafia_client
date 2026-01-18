@@ -8,6 +8,8 @@ import 'connection_provider.dart';
 
 import '../../models/game_settings.dart';
 
+import '../../services/socket_service.dart';
+
 part 'game_state_provider.g.dart';
 
 class GameState {
@@ -174,235 +176,249 @@ final gameStateProvider = gameStateNotifierProvider;
 class GameStateNotifier extends _$GameStateNotifier {
   @override
   GameState build() {
-    // We don't watch connectionNotifierProvider to avoid rebuilding on every connection status change
-    // Instead we just access the socket service
     final socket = ref.read(connectionProvider.notifier).socketService;
 
-    // Listeners are set up once
-
-    // Room events
-    socket.on(SocketEvent.roomCreated, (roomId) {
-      // Reset state to clean values on room creation
-      state = GameState(roomId: roomId?.toString(), isAdmin: true);
-    });
-
-    socket.on(SocketEvent.joinedRoom, (roomId) {
-      // Reset state to clean values on join/reconnect to prevent stale data (like settings)
-      state = GameState(
-        roomId: roomId?.toString(),
-        isAdmin: false, // Default to false, server will update if we are host
-      );
-    });
-
-    socket.on(SocketEvent.playerUpdate, (data) {
-      try {
-        if (data is List) {
-          final players = data
-              .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
-              .toList();
-
-          final myId = ref.read(connectionProvider.notifier).socketId;
-
-          // Sanitize players if we are already in waiting phase to prevent stale "dead" status
-          List<Player> sanitizedPlayers = players;
-          if (state.gamePhase == GamePhase.waiting) {
-            sanitizedPlayers = players
-                .map(
-                  (p) =>
-                      p.copyWith(isAlive: true, role: null, isRevealed: false),
-                )
-                .toList();
-          }
-
-          final myRole = _deriveMyRole(sanitizedPlayers, myId);
-          final isAdmin = sanitizedPlayers.any((p) => p.id == myId && p.isHost);
-
-          state = state.copyWith(
-            players: sanitizedPlayers,
-            myRole: myRole,
-            isAdmin: isAdmin,
-          );
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('player_update', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.updateSettings, (data) {
-      try {
-        if (data is Map) {
-          state = state.copyWith(
-            gameSettings: GameSettings.fromMap(Map<String, dynamic>.from(data)),
-          );
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('update_settings', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.roleCounts, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid role counts data format');
-        }
-        final event = RoleCountsEvent.fromJson(data);
-        state = state.copyWith(roleCounts: event.roleCounts);
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('role_counts', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.roleAssigned, (data) {
-      final role = GameRole.fromString(data.toString());
-      state = state.copyWith(myRole: role);
-    });
-
-    // Game flow events
-    socket.on(SocketEvent.startGame, (_) {
-      state = state.copyWith(
-        gamePhase: GamePhase.day,
-        dayCount: 1,
-        gameLog: [],
-        timerRemaining: 0,
-        timerTotal: 0,
-        isUnlimited: false,
-      );
-    });
-
-    socket.on(SocketEvent.phaseChange, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid phase change data format');
-        }
-        final event = PhaseChangeEvent.fromJson(data);
-
-        // If phase returns to lobby, do NOT reset automatically.
-        // Let the user click the button in GameResultOverlay.
-        if (event.phase == GamePhase.waiting &&
-            state.gamePhase == GamePhase.result) {
-          developer.log(
-            'Ignoring phase change to lobby (still in result screen)',
-          );
-          return;
-        }
-
-        state = state.copyWith(
-          gamePhase: event.phase,
-          dayCount: event.dayCount,
-          isUnlimited: false, // Reset on phase change
-        );
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('phase_change', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.gameOver, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid game over data format');
-        }
-        final event = GameOverEvent.fromJson(data);
-        state = state.copyWith(
-          winner: event.winner?.label ?? '알 수 없음',
-          gamePhase: GamePhase.result,
-          endGamePlayers: event.players.map((e) => Player.fromMap(e)).toList(),
-          gameOverTime: DateTime.now(),
-        );
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('game_over', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.timerTick, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid timer tick data format');
-        }
-        final event = TimerTickEvent.fromJson(data);
-        state = state.copyWith(
-          timerRemaining: event.remaining,
-          timerTotal: event.total,
-          isUnlimited: event.isUnlimited,
-        );
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('timer_tick', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.error, (data) {
-      developer.log('Server Error received: $data');
-      state = state.copyWith(errorMessage: data, lastErrorTime: DateTime.now());
-    });
-
-    socket.on(SocketEvent.kicked, (data) {
-      developer.log('Kicked from room: $data');
-      // Reset state to initial lobby state (but keep connection)
-      state = GameState(
-        errorMessage: data, // Store the reason as an error message
-        lastErrorTime: DateTime.now(),
-      );
-    });
-
-    socket.on(SocketEvent.stateSync, (data) {
-      try {
-        developer.log('STATE_SYNC received: $data');
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid state sync data format');
-        }
-
-        final playersData = data[ProtocolKey.players] as List;
-        List<Player> players = playersData
-            .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
-            .toList();
-
-        final rawPhase = data[ProtocolKey.phase] as String;
-        final phase = GamePhase.fromString(rawPhase);
-
-        // Sanitize if syncing into waiting phase
-        if (phase == GamePhase.waiting) {
-          players = players
-              .map((p) => p.copyWith(isAlive: true, role: null))
-              .toList();
-        }
-
-        final myRole = phase == GamePhase.waiting
-            ? null
-            : GameRole.fromString(data[ProtocolKey.role]?.toString());
-
-        final myId = ref.read(connectionProvider.notifier).socketId;
-
-        // Preserve Result phase if user is currently reviewing results
-        final finalPhase =
-            (phase == GamePhase.waiting && state.gamePhase == GamePhase.result)
-            ? GamePhase.result
-            : phase;
-
-        state = state.copyWith(
-          players: players,
-          gamePhase: finalPhase,
-          dayCount: data[ProtocolKey.dayCount] as int? ?? 1,
-          myRole: myRole,
-          gameSettings: GameSettings.fromMap(
-            Map<String, dynamic>.from(data[ProtocolKey.settings] ?? {}),
-          ),
-          timerRemaining: data['timerRemaining'] as int? ?? 0,
-          timerTotal: data['timerTotal'] as int? ?? 0,
-          isUnlimited: data['isUnlimited'] as bool? ?? false,
-          isAdmin: players.any((p) => p.id == myId && p.isHost),
-        );
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('state_sync', e, stackTrace);
-      }
-    });
+    // Register all listeners
+    _setupListeners(socket);
 
     ref.onDispose(() {
-      // Clean up listeners?
-      // Since SocketService doesn't expose clean off(), we assume app lifecycle manages this
-      // or we rely on socket disconnect.
-      // If we strictly needed to, we would access socket.socket.off(...)
+      _cleanupListeners(socket);
     });
 
     return const GameState();
+  }
+
+  void _setupListeners(SocketService socket) {
+    socket.on(SocketEvent.roomCreated, _onRoomCreated);
+    socket.on(SocketEvent.joinedRoom, _onJoinedRoom);
+    socket.on(SocketEvent.playerUpdate, _onPlayerUpdate);
+    socket.on(SocketEvent.updateSettings, _onUpdateSettings);
+    socket.on(SocketEvent.roleCounts, _onRoleCounts);
+    socket.on(SocketEvent.roleAssigned, _onRoleAssigned);
+    socket.on(SocketEvent.startGame, _onStartGame);
+    socket.on(SocketEvent.phaseChange, _onPhaseChange);
+    socket.on(SocketEvent.gameOver, _onGameOver);
+    socket.on(SocketEvent.timerTick, _onTimerTick);
+    socket.on(SocketEvent.error, _onServerError);
+    socket.on(SocketEvent.kicked, _onKicked);
+    socket.on(SocketEvent.stateSync, _onStateSync);
+  }
+
+  void _cleanupListeners(SocketService socket) {
+    socket.off(SocketEvent.roomCreated, _onRoomCreated);
+    socket.off(SocketEvent.joinedRoom, _onJoinedRoom);
+    socket.off(SocketEvent.playerUpdate, _onPlayerUpdate);
+    socket.off(SocketEvent.updateSettings, _onUpdateSettings);
+    socket.off(SocketEvent.roleCounts, _onRoleCounts);
+    socket.off(SocketEvent.roleAssigned, _onRoleAssigned);
+    socket.off(SocketEvent.startGame, _onStartGame);
+    socket.off(SocketEvent.phaseChange, _onPhaseChange);
+    socket.off(SocketEvent.gameOver, _onGameOver);
+    socket.off(SocketEvent.timerTick, _onTimerTick);
+    socket.off(SocketEvent.error, _onServerError);
+    socket.off(SocketEvent.kicked, _onKicked);
+    socket.off(SocketEvent.stateSync, _onStateSync);
+  }
+
+  void _onRoomCreated(dynamic roomId) {
+    state = GameState(roomId: roomId?.toString(), isAdmin: true);
+  }
+
+  void _onJoinedRoom(dynamic roomId) {
+    state = GameState(roomId: roomId?.toString(), isAdmin: false);
+  }
+
+  void _onPlayerUpdate(dynamic data) {
+    try {
+      if (data is List) {
+        final players = data
+            .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+            .toList();
+
+        final myId = ref.read(connectionProvider.notifier).socketId;
+
+        List<Player> sanitizedPlayers = players;
+        if (state.gamePhase == GamePhase.waiting) {
+          sanitizedPlayers = players
+              .map(
+                (p) => p.copyWith(isAlive: true, role: null, isRevealed: false),
+              )
+              .toList();
+        }
+
+        final myRole = _deriveMyRole(sanitizedPlayers, myId);
+        final isAdmin = sanitizedPlayers.any((p) => p.id == myId && p.isHost);
+
+        state = state.copyWith(
+          players: sanitizedPlayers,
+          myRole: myRole,
+          isAdmin: isAdmin,
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('player_update', e, stackTrace);
+    }
+  }
+
+  void _onUpdateSettings(dynamic data) {
+    try {
+      if (data is Map) {
+        state = state.copyWith(
+          gameSettings: GameSettings.fromMap(Map<String, dynamic>.from(data)),
+        );
+      }
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('update_settings', e, stackTrace);
+    }
+  }
+
+  void _onRoleCounts(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid role counts data format');
+      }
+      final event = RoleCountsEvent.fromJson(Map<String, dynamic>.from(data));
+      state = state.copyWith(roleCounts: event.roleCounts);
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('role_counts', e, stackTrace);
+    }
+  }
+
+  void _onRoleAssigned(dynamic data) {
+    final role = GameRole.fromString(data.toString());
+    state = state.copyWith(myRole: role);
+  }
+
+  void _onStartGame(dynamic _) {
+    state = state.copyWith(
+      gamePhase: GamePhase.day,
+      dayCount: 1,
+      gameLog: [],
+      timerRemaining: 0,
+      timerTotal: 0,
+      isUnlimited: false,
+    );
+  }
+
+  void _onPhaseChange(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid phase change data format');
+      }
+      final event = PhaseChangeEvent.fromJson(Map<String, dynamic>.from(data));
+
+      if (event.phase == GamePhase.waiting &&
+          state.gamePhase == GamePhase.result) {
+        developer.log(
+          'Ignoring phase change to lobby (still in result screen)',
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        gamePhase: event.phase,
+        dayCount: event.dayCount,
+        isUnlimited: false,
+      );
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('phase_change', e, stackTrace);
+    }
+  }
+
+  void _onGameOver(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid game over data format');
+      }
+      final event = GameOverEvent.fromJson(Map<String, dynamic>.from(data));
+      state = state.copyWith(
+        winner: event.winner?.label ?? '알 수 없음',
+        gamePhase: GamePhase.result,
+        endGamePlayers: event.players
+            .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+            .toList(),
+        gameOverTime: DateTime.now(),
+      );
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('game_over', e, stackTrace);
+    }
+  }
+
+  void _onTimerTick(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid timer tick data format');
+      }
+      final event = TimerTickEvent.fromJson(Map<String, dynamic>.from(data));
+      state = state.copyWith(
+        timerRemaining: event.remaining,
+        timerTotal: event.total,
+        isUnlimited: event.isUnlimited,
+      );
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('timer_tick', e, stackTrace);
+    }
+  }
+
+  void _onServerError(dynamic data) {
+    developer.log('Server Error received: $data');
+    state = state.copyWith(errorMessage: data, lastErrorTime: DateTime.now());
+  }
+
+  void _onKicked(dynamic data) {
+    developer.log('Kicked from room: $data');
+    state = GameState(errorMessage: data, lastErrorTime: DateTime.now());
+  }
+
+  void _onStateSync(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid state sync data format');
+      }
+      final mappedData = Map<String, dynamic>.from(data);
+      developer.log('STATE_SYNC received: $mappedData');
+
+      final playersData = mappedData[ProtocolKey.players] as List;
+      List<Player> players = playersData
+          .map((e) => Player.fromMap(Map<String, dynamic>.from(e)))
+          .toList();
+
+      final rawPhase = mappedData[ProtocolKey.phase] as String;
+      final phase = GamePhase.fromString(rawPhase);
+
+      if (phase == GamePhase.waiting) {
+        players = players
+            .map((p) => p.copyWith(isAlive: true, role: null))
+            .toList();
+      }
+
+      final myRole = phase == GamePhase.waiting
+          ? null
+          : GameRole.fromString(mappedData[ProtocolKey.role]?.toString());
+
+      final myId = ref.read(connectionProvider.notifier).socketId;
+
+      final finalPhase =
+          (phase == GamePhase.waiting && state.gamePhase == GamePhase.result)
+          ? GamePhase.result
+          : phase;
+
+      state = state.copyWith(
+        players: players,
+        gamePhase: finalPhase,
+        dayCount: mappedData[ProtocolKey.dayCount] as int? ?? 1,
+        myRole: myRole,
+        gameSettings: GameSettings.fromMap(
+          Map<String, dynamic>.from(mappedData[ProtocolKey.settings] ?? {}),
+        ),
+        timerRemaining: mappedData['timerRemaining'] as int? ?? 0,
+        timerTotal: mappedData['timerTotal'] as int? ?? 0,
+        isUnlimited: mappedData['isUnlimited'] as bool? ?? false,
+        isAdmin: players.any((p) => p.id == myId && p.isHost),
+      );
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('state_sync', e, stackTrace);
+    }
   }
 
   void addGameLogEntry(String type, Map<String, dynamic> data) {
@@ -417,20 +433,17 @@ class GameStateNotifier extends _$GameStateNotifier {
   void returnToLobby() {
     developer.log('Returning to lobby (client-side reset)');
 
-    // Notify server that we are returning to lobby
     ref
         .read(connectionProvider.notifier)
         .socketService
         .emit('return_to_lobby', null);
 
-    // Preserve connection, room info, and settings
     final currentRoomId = state.roomId;
     final currentIsAdmin = state.isAdmin;
     final currentPlayers = state.players;
     final currentSettings = state.gameSettings;
     final myId = ref.read(connectionProvider.notifier).socketId;
 
-    // Reset game-specific state but keep room info and settings
     state = GameState(
       roomId: currentRoomId,
       isAdmin: currentIsAdmin,
@@ -440,15 +453,14 @@ class GameStateNotifier extends _$GameStateNotifier {
               isAlive: true,
               role: null,
               isRevealed: false,
-              atLobby: p.id == myId, // Me is definitely in lobby
+              atLobby: p.id == myId,
             ),
           )
           .toList(),
       gameSettings: currentSettings,
       gamePhase: GamePhase.waiting,
       dayCount: 1,
-      myRole: null, // Clear my role
-      // all other fields default to initial values
+      myRole: null,
     );
   }
 
