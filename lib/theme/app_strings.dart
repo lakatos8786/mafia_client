@@ -91,7 +91,7 @@ class AppStrings {
   static String dayExecution(String nickname) => '[$nickname]이(가) 투표로 처형되었습니다.';
   static String playerDied(String nickname) => '[$nickname]이(가) 사망했습니다.';
   static String playerEliminated(String nickname, String reason) =>
-      '[$nickname]님이 ${reason}으로 탈락 처리되었습니다.';
+      '[$nickname]님이 $reason으로 탈락 처리되었습니다.';
 
   // Instructions
   static const String mafiaInstruction = '제거할 대상을 선택하거나 킬을 건너뛰세요.';
