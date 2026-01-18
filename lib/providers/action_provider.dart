@@ -26,6 +26,7 @@ class ActionState {
   final int yesCount;
   final int noCount;
   final List<ChatMessage> messages;
+  final Map<String, dynamic>? judgementResultData;
 
   const ActionState({
     this.votes = const {},
@@ -38,6 +39,7 @@ class ActionState {
     this.yesCount = 0,
     this.noCount = 0,
     this.messages = const [],
+    this.judgementResultData,
   });
 
   ActionState copyWith({
@@ -51,6 +53,8 @@ class ActionState {
     int? yesCount,
     int? noCount,
     List<ChatMessage>? messages,
+    Map<String, dynamic>? judgementResultData,
+    bool clearJudgementResult = false,
   }) {
     return ActionState(
       votes: votes ?? this.votes,
@@ -64,6 +68,9 @@ class ActionState {
       yesCount: yesCount ?? this.yesCount,
       noCount: noCount ?? this.noCount,
       messages: messages ?? this.messages,
+      judgementResultData: clearJudgementResult
+          ? null
+          : (judgementResultData ?? this.judgementResultData),
     );
   }
 }
@@ -78,6 +85,7 @@ class ActionNotifier extends _$ActionNotifier {
     socket.on(SocketEvent.startGame, (_) {
       archiveMessages();
       _addSystemMessage(AppStrings.gameStarted);
+      state = state.copyWith(clearJudgementResult: true);
     });
 
     socket.on(SocketEvent.roleAssigned, (_) {
@@ -88,6 +96,9 @@ class ActionNotifier extends _$ActionNotifier {
       if (data is Map) {
         final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
         final dayCount = int.tryParse(data['dayCount']?.toString() ?? '1') ?? 1;
+
+        // Clear judgement result on any phase change (especially moving away from judgement)
+        state = state.copyWith(clearJudgementResult: true);
 
         if (phase != GamePhase.waiting) {
           // Announcement first
@@ -149,6 +160,7 @@ class ActionNotifier extends _$ActionNotifier {
           judgementVotes: {},
           yesCount: 0,
           noCount: 0,
+          clearJudgementResult: true,
         );
       }
     });
@@ -167,6 +179,12 @@ class ActionNotifier extends _$ActionNotifier {
       if (data is Map) {
         final result = data['result']?.toString();
         final nickname = data['nickname']?.toString() ?? '?';
+
+        // Store for reveal animation
+        state = state.copyWith(
+          judgementResultData: Map<String, dynamic>.from(data),
+        );
+
         if (result == 'executed') {
           _addSystemMessage(AppStrings.judgementExecuted(nickname));
         } else {
@@ -177,6 +195,7 @@ class ActionNotifier extends _$ActionNotifier {
 
     socket.on(SocketEvent.gameOver, (data) {
       if (data is Map) {
+        state = state.copyWith(clearJudgementResult: true);
         final winnerRole = GameRole.fromString(data['winner']?.toString());
         final winMsg = winnerRole == GameRole.mafia
             ? AppStrings.mafiaWin
@@ -573,6 +592,7 @@ class ActionNotifier extends _$ActionNotifier {
       voters: {},
       nightSelections: {},
       nightActionActors: {},
+      clearJudgementResult: true,
     );
   }
 

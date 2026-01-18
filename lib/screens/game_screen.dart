@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/game_state_provider.dart';
+import '../providers/action_provider.dart';
 import '../models/game_enums.dart';
 import '../utils/responsive_utils.dart';
 
@@ -10,9 +11,10 @@ import '../widgets/player_grid.dart';
 import '../widgets/chat_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
+import '../widgets/judgement_buttons.dart';
+import '../widgets/judgement_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
 import '../widgets/neon_toast.dart';
-import '../widgets/judgement_buttons.dart';
 import '../theme/app_strings.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
+    final actionState = ref.watch(actionProvider);
 
     // Listen for server errors
     ref.listen(gameStateProvider.select((s) => s.lastErrorTime), (
@@ -139,6 +142,12 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                     _lastDayCount = dayCount;
                   });
                 },
+              ),
+
+            // Judgement Result Dramatic Overlay
+            if (actionState.judgementResultData != null)
+              JudgementResultOverlay(
+                resultData: actionState.judgementResultData!,
               ),
           ],
         ),
