@@ -12,6 +12,7 @@ import '../../models/game_settings.dart';
 
 import 'connection_provider.dart';
 import 'game_state_provider.dart';
+import '../../services/socket_service.dart';
 
 part 'action_provider.g.dart';
 
@@ -81,37 +82,77 @@ class ActionNotifier extends _$ActionNotifier {
   ActionState build() {
     final socket = ref.read(connectionProvider.notifier).socketService;
 
-    // Listeners
-    socket.on(SocketEvent.startGame, (_) {
-      archiveMessages();
-      _addSystemMessage(AppStrings.gameStarted);
-      state = state.copyWith(clearJudgementResult: true);
+    // Register all listeners
+    _setupListeners(socket);
+
+    ref.onDispose(() {
+      _cleanupListeners(socket);
     });
 
-    socket.on(SocketEvent.roleAssigned, (_) {
-      // Role assigned is now handled by GameStateProvider and specific ActionState logic
-    });
+    return const ActionState();
+  }
 
-    socket.on(SocketEvent.phaseChange, (data) {
+  void _setupListeners(SocketService socket) {
+    socket.on(SocketEvent.startGame, _onStartGame);
+    socket.on(SocketEvent.phaseChange, _onPhaseChange);
+    socket.on(SocketEvent.judgementStarted, _onJudgementStarted);
+    socket.on(SocketEvent.judgementUpdate, _onJudgementUpdate);
+    socket.on(SocketEvent.judgementResult, _onJudgementResult);
+    socket.on(SocketEvent.gameOver, _onGameOver);
+    socket.on(SocketEvent.voteResult, _onVoteResult);
+    socket.on(SocketEvent.playerEliminated, _onPlayerEliminated);
+    socket.on(SocketEvent.playerDisconnected, _onPlayerDisconnected);
+    socket.on(SocketEvent.playerReconnected, _onPlayerReconnected);
+    socket.on(SocketEvent.reconnectFailed, _onReconnectFailed);
+    socket.on(SocketEvent.voteUpdate, _onVoteUpdate);
+    socket.on(SocketEvent.nightSelectionUpdate, _onNightSelectionUpdate);
+    socket.on(SocketEvent.investigationResult, _onInvestigationResult);
+    socket.on(SocketEvent.nightResult, _onNightResult);
+    socket.on(SocketEvent.chatMessage, _onChatMessage);
+    socket.on(SocketEvent.stateSync, _onStateSync);
+  }
+
+  void _cleanupListeners(SocketService socket) {
+    socket.off(SocketEvent.startGame, _onStartGame);
+    socket.off(SocketEvent.phaseChange, _onPhaseChange);
+    socket.off(SocketEvent.judgementStarted, _onJudgementStarted);
+    socket.off(SocketEvent.judgementUpdate, _onJudgementUpdate);
+    socket.off(SocketEvent.judgementResult, _onJudgementResult);
+    socket.off(SocketEvent.gameOver, _onGameOver);
+    socket.off(SocketEvent.voteResult, _onVoteResult);
+    socket.off(SocketEvent.playerEliminated, _onPlayerEliminated);
+    socket.off(SocketEvent.playerDisconnected, _onPlayerDisconnected);
+    socket.off(SocketEvent.playerReconnected, _onPlayerReconnected);
+    socket.off(SocketEvent.reconnectFailed, _onReconnectFailed);
+    socket.off(SocketEvent.voteUpdate, _onVoteUpdate);
+    socket.off(SocketEvent.nightSelectionUpdate, _onNightSelectionUpdate);
+    socket.off(SocketEvent.investigationResult, _onInvestigationResult);
+    socket.off(SocketEvent.nightResult, _onNightResult);
+    socket.off(SocketEvent.chatMessage, _onChatMessage);
+    socket.off(SocketEvent.stateSync, _onStateSync);
+  }
+
+  void _onStartGame(dynamic _) {
+    archiveMessages();
+    _addSystemMessage(AppStrings.gameStarted);
+    state = state.copyWith(clearJudgementResult: true);
+  }
+
+  void _onPhaseChange(dynamic data) {
+    try {
       if (data is Map) {
         final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
         final dayCount = int.tryParse(data['dayCount']?.toString() ?? '1') ?? 1;
 
-        // Clear judgement result on any phase change (especially moving away from judgement)
         state = state.copyWith(clearJudgementResult: true);
 
         if (phase != GamePhase.waiting) {
-          // Announcement first
           if (phase == GamePhase.day) {
             _addSystemMessage(AppStrings.dayAnnouncement(dayCount));
 
             final myRole = ref.read(gameStateProvider).myRole;
-            // Special check for Doctor: if day started and no heal action previously, show message
             if (myRole == GameRole.doctor && dayCount > 1) {
               final mySelection = state.nightSelections[GameRole.doctor.name];
-              // If selection is null or 'skip', validation implies no effective heal
-              // But usually 'skip' is explicit. If null, it means timeout/no selection.
-              // User asked for "when time passes without selection" mainly, but 'skip' implies same result visually if we want consistent feedback.
               if (mySelection == null || mySelection == GameAction.skip) {
                 _addSystemMessage(AppStrings.doctorHealNone);
               }
@@ -124,7 +165,6 @@ class ActionNotifier extends _$ActionNotifier {
           } else if (phase == GamePhase.night) {
             _addSystemMessage(AppStrings.nightAnnouncement(dayCount));
 
-            // Only show night action instructions to alive players
             final socketId = ref.read(connectionProvider.notifier).socketId;
             final players = ref.read(gameStateProvider).players;
             final me = players.firstWhere(
@@ -134,7 +174,6 @@ class ActionNotifier extends _$ActionNotifier {
 
             if (me.isAlive) {
               final myRole = ref.read(gameStateProvider).myRole;
-              // Sequential instructions for active roles
               if (myRole == GameRole.mafia) {
                 _addSystemMessage(AppStrings.mafiaInstruction);
               } else if (myRole == GameRole.doctor) {
@@ -150,278 +189,267 @@ class ActionNotifier extends _$ActionNotifier {
           }
         }
       }
-    });
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('phase_change', e, stackTrace);
+    }
+  }
 
-    socket.on(SocketEvent.judgementStarted, (data) {
+  void _onJudgementStarted(dynamic data) {
+    if (data is Map) {
+      state = state.copyWith(
+        judgementTarget: data['targetId']?.toString(),
+        judgementTargetNickname: data['nickname']?.toString(),
+        judgementVotes: {},
+        yesCount: 0,
+        noCount: 0,
+        clearJudgementResult: true,
+      );
+    }
+  }
+
+  void _onJudgementUpdate(dynamic data) {
+    if (data is Map) {
+      state = state.copyWith(
+        yesCount: int.tryParse(data['yesCount']?.toString() ?? '0') ?? 0,
+        noCount: int.tryParse(data['noCount']?.toString() ?? '0') ?? 0,
+        judgementVotes: Map<String, String>.from(data['voters'] ?? {}),
+      );
+    }
+  }
+
+  void _onJudgementResult(dynamic data) {
+    if (data is Map) {
+      final result = data['result']?.toString();
+      final nickname = data['nickname']?.toString() ?? '?';
+
+      state = state.copyWith(
+        judgementResultData: Map<String, dynamic>.from(data),
+      );
+
+      if (result == 'executed') {
+        _addSystemMessage(AppStrings.judgementExecuted(nickname));
+      } else {
+        _addSystemMessage(AppStrings.judgementSaved(nickname));
+      }
+    }
+  }
+
+  void _onGameOver(dynamic data) {
+    if (data is Map) {
+      state = state.copyWith(clearJudgementResult: true);
+      final winnerRole = GameRole.fromString(data['winner']?.toString());
+      final winMsg = winnerRole == GameRole.mafia
+          ? AppStrings.mafiaWin
+          : AppStrings.citizenWin;
+      _addSystemMessage(winMsg);
+    }
+  }
+
+  void _onVoteResult(dynamic data) {
+    if (data is Map) {
+      final result = data['result']?.toString();
+      if (result == 'skip') {
+        _addSystemMessage(AppStrings.voteSkipped);
+      } else if (result == 'tie') {
+        _addSystemMessage(AppStrings.voteTie);
+      } else if (result == 'immune') {
+        final nickname = data['nickname']?.toString() ?? '';
+        _addSystemMessage(AppStrings.politicianImmune(nickname));
+      }
+    }
+  }
+
+  void _onPlayerEliminated(dynamic data) {
+    try {
       if (data is Map) {
-        state = state.copyWith(
-          judgementTarget: data['targetId']?.toString(),
-          judgementTargetNickname: data['nickname']?.toString(),
-          judgementVotes: {},
-          yesCount: 0,
-          noCount: 0,
-          clearJudgementResult: true,
+        final event = PlayerEliminatedEvent.fromJson(
+          Map<String, dynamic>.from(data),
         );
-      }
-    });
 
-    socket.on(SocketEvent.judgementUpdate, (data) {
-      if (data is Map) {
-        state = state.copyWith(
-          yesCount: int.tryParse(data['yesCount']?.toString() ?? '0') ?? 0,
-          noCount: int.tryParse(data['noCount']?.toString() ?? '0') ?? 0,
-          judgementVotes: Map<String, String>.from(data['voters'] ?? {}),
-        );
-      }
-    });
+        final nickname = event.playerNickname;
+        final reason = event.reason.toLowerCase();
 
-    socket.on(SocketEvent.judgementResult, (data) {
-      if (data is Map) {
-        final result = data['result']?.toString();
-        final nickname = data['nickname']?.toString() ?? '?';
-
-        // Store for reveal animation
-        state = state.copyWith(
-          judgementResultData: Map<String, dynamic>.from(data),
-        );
-
-        if (result == 'executed') {
-          _addSystemMessage(AppStrings.judgementExecuted(nickname));
-        } else {
-          _addSystemMessage(AppStrings.judgementSaved(nickname));
-        }
-      }
-    });
-
-    socket.on(SocketEvent.gameOver, (data) {
-      if (data is Map) {
-        state = state.copyWith(clearJudgementResult: true);
-        final winnerRole = GameRole.fromString(data['winner']?.toString());
-        final winMsg = winnerRole == GameRole.mafia
-            ? AppStrings.mafiaWin
-            : AppStrings.citizenWin;
-        _addSystemMessage(winMsg);
-      }
-    });
-
-    socket.on(SocketEvent.voteResult, (data) {
-      if (data is Map) {
-        final result = data['result']?.toString();
-        if (result == 'skip') {
-          _addSystemMessage(AppStrings.voteSkipped);
-        } else if (result == 'tie') {
-          _addSystemMessage(AppStrings.voteTie);
-        } else if (result == 'immune') {
-          final nickname = data['nickname']?.toString() ?? '';
-          _addSystemMessage(AppStrings.politicianImmune(nickname));
-        }
-      }
-    });
-
-    socket.on(SocketEvent.playerEliminated, (data) {
-      try {
-        if (data is Map) {
-          final event = PlayerEliminatedEvent.fromJson(
-            Map<String, dynamic>.from(data),
+        if (reason == 'vote') {
+          _addSystemMessage(AppStrings.dayExecution(nickname));
+        } else if (reason == 'mafia') {
+          _addSystemMessage(AppStrings.nightKillPlayer(nickname));
+        } else if (reason == 'disconnect') {
+          _addSystemMessage(
+            AppStrings.playerEliminated(nickname, AppStrings.reasonDisconnect),
           );
-
-          final nickname = event.playerNickname;
-          final reason = event.reason.toLowerCase();
-
-          if (reason == 'vote') {
-            _addSystemMessage(AppStrings.dayExecution(nickname));
-          } else if (reason == 'mafia') {
-            _addSystemMessage(AppStrings.nightKillPlayer(nickname));
-          } else if (reason == 'disconnect') {
-            _addSystemMessage(
-              AppStrings.playerEliminated(
-                nickname,
-                AppStrings.reasonDisconnect,
-              ),
-            );
-          } else {
-            _addSystemMessage(AppStrings.playerEliminated(nickname, reason));
-          }
-        }
-      } catch (e) {
-        // Fallback or silent
-      }
-    });
-
-    socket.on(SocketEvent.playerDisconnected, (data) {
-      if (data != null) {
-        _addSystemMessage(AppStrings.disconnected(data.toString()));
-      }
-    });
-
-    socket.on(SocketEvent.playerReconnected, (data) {
-      if (data != null) {
-        _addSystemMessage(AppStrings.reconnected(data.toString()));
-      }
-    });
-
-    socket.on(SocketEvent.reconnectFailed, (data) {
-      if (data != null) {
-        _addSystemMessage(AppStrings.reconnectFailed(data.toString()));
-      }
-    });
-
-    socket.on(SocketEvent.voteUpdate, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid vote update data format');
-        }
-        final event = VoteUpdateEvent.fromJson(data);
-
-        // Always update votes/voters regardless of phase.
-        // During day, it's public. During night, server only sends this to Mafia members.
-        state = state.copyWith(votes: event.votes, voters: event.voters);
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('vote_update', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.nightSelectionUpdate, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid night selection data format');
-        }
-        final event = NightSelectionEvent.fromJson(data);
-        if (event.role != null) {
-          final newSelections = Map<String, String>.from(state.nightSelections);
-          final newActors = Map<String, String>.from(state.nightActionActors);
-
-          if (event.targetId == null) {
-            newSelections.remove(event.role!.name);
-            newActors.remove(event.role!.name);
-          } else {
-            newSelections[event.role!.name] = event.targetId!;
-            if (event.actorNickname != null) {
-              newActors[event.role!.name] = event.actorNickname!;
-            }
-          }
-          state = state.copyWith(
-            nightSelections: newSelections,
-            nightActionActors: newActors,
-          );
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('night_selection', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.investigationResult, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid investigation result data format');
-        }
-        final event = InvestigationResultEvent.fromJson(data);
-
-        // Need player list to resolve nickname
-        final players = ref.read(gameStateProvider).players;
-
-        final targetNick = players
-            .firstWhere(
-              (p) => p.id == event.targetId,
-              orElse: () => Player(id: '', nickname: '?', isAlive: true),
-            )
-            .nickname;
-
-        String resultMsg;
-        if (targetNick == '?' || event.targetId.isEmpty) {
-          resultMsg = AppStrings.investigationNone;
         } else {
-          resultMsg = event.role == GameRole.mafia
-              ? AppStrings.investigationMafia(targetNick)
-              : AppStrings.investigationClear(targetNick);
+          _addSystemMessage(AppStrings.playerEliminated(nickname, reason));
         }
-        _addSystemMessage(resultMsg);
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('investigation_result', e, stackTrace);
       }
-    });
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('player_eliminated', e, stackTrace);
+    }
+  }
 
-    socket.on(SocketEvent.nightResult, (data) {
-      if (data is Map) {
-        final message = data[ProtocolKey.message]?.toString();
-        if (message == 'kill') {
-          _addSystemMessage(AppStrings.nightKill);
-        } else if (message == 'peace') {
-          _addSystemMessage(AppStrings.nightPeace);
-        } else if (message == 'shield_activated') {
-          final nickname = data[ProtocolKey.nickname]?.toString() ?? '';
-          _addSystemMessage(AppStrings.soldierShieldActivated(nickname));
-        }
-        // doctor_saved 메시지 제거: 게임 밸런스를 위해 의사는 치료 성공 여부를 알 수 없음
+  void _onPlayerDisconnected(dynamic data) {
+    if (data != null) {
+      _addSystemMessage(AppStrings.disconnected(data.toString()));
+    }
+  }
+
+  void _onPlayerReconnected(dynamic data) {
+    if (data != null) {
+      _addSystemMessage(AppStrings.reconnected(data.toString()));
+    }
+  }
+
+  void _onReconnectFailed(dynamic data) {
+    if (data != null) {
+      _addSystemMessage(AppStrings.reconnectFailed(data.toString()));
+    }
+  }
+
+  void _onVoteUpdate(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid vote update data format');
       }
-    });
+      final event = VoteUpdateEvent.fromJson(Map<String, dynamic>.from(data));
 
-    socket.on(SocketEvent.chatMessage, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid chat message data format');
-        }
-        final event = ChatMessageEvent.fromJson(data);
+      state = state.copyWith(votes: event.votes, voters: event.voters);
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('vote_update', e, stackTrace);
+    }
+  }
 
-        // Determine ownership
-        final socketId = ref.read(connectionProvider.notifier).socketId;
+  void _onNightSelectionUpdate(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid night selection data format');
+      }
+      final event = NightSelectionEvent.fromJson(
+        Map<String, dynamic>.from(data),
+      );
+      if (event.role != null) {
+        final newSelections = Map<String, String>.from(state.nightSelections);
+        final newActors = Map<String, String>.from(state.nightActionActors);
 
-        // We need 'my nickname' to compare with sender.
-        // GameState has players list, we can find ourselves.
-        final players = ref.read(gameStateProvider).players;
-        String myNickname = '';
-        try {
-          if (socketId != null && players.isNotEmpty) {
-            final me = players.firstWhere((p) => p.id == socketId);
-            myNickname = me.nickname;
+        if (event.targetId == null) {
+          newSelections.remove(event.role!.name);
+          newActors.remove(event.role!.name);
+        } else {
+          newSelections[event.role!.name] = event.targetId!;
+          if (event.actorNickname != null) {
+            newActors[event.role!.name] = event.actorNickname!;
           }
-        } catch (_) {
-          // Player might not be found if joining or error
         }
-
-        final bool isMe =
-            (socketId != null && event.sender == socketId) ||
-            (myNickname.isNotEmpty && event.sender == myNickname);
-
-        final newMsg = ChatMessage.fromMap({
-          'sender': event.sender,
-          'message': event.message,
-          'type': event.type.name,
-          'isSystem': event.sender == SystemConstant.sender,
-        }, isMine: isMe);
-
-        state = state.copyWith(messages: [...state.messages, newMsg]);
-
-        // Also add to game log in GameState
-        ref.read(gameStateProvider.notifier).addGameLogEntry('chat', {
-          'sender': event.sender,
-          'message': event.message,
-          'type': event.type.name,
-        });
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('chat_message', e, stackTrace);
-      }
-    });
-
-    socket.on(SocketEvent.stateSync, (data) {
-      if (data is Map) {
-        final jVotes = Map<String, String>.from(data['judgementVotes'] ?? {});
         state = state.copyWith(
-          votes: Map<String, int>.from(data[ProtocolKey.votes] ?? {}),
-          voters: Map<String, String>.from(data[ProtocolKey.voters] ?? {}),
-          judgementTarget: data['judgementTarget']?.toString(),
-          judgementVotes: jVotes,
-          yesCount: jVotes.values.where((v) => v == 'yes').length,
-          noCount: jVotes.values.where((v) => v == 'no').length,
+          nightSelections: newSelections,
+          nightActionActors: newActors,
         );
       }
-    });
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('night_selection', e, stackTrace);
+    }
+  }
 
-    ref.onDispose(() {
-      // Cleanup listeners if needed
-    });
+  void _onInvestigationResult(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid investigation result data format');
+      }
+      final event = InvestigationResultEvent.fromJson(
+        Map<String, dynamic>.from(data),
+      );
 
-    return const ActionState();
+      final players = ref.read(gameStateProvider).players;
+
+      final targetNick = players
+          .firstWhere(
+            (p) => p.id == event.targetId,
+            orElse: () => Player(id: '', nickname: '?', isAlive: true),
+          )
+          .nickname;
+
+      String resultMsg;
+      if (targetNick == '?' || event.targetId.isEmpty) {
+        resultMsg = AppStrings.investigationNone;
+      } else {
+        resultMsg = event.role == GameRole.mafia
+            ? AppStrings.investigationMafia(targetNick)
+            : AppStrings.investigationClear(targetNick);
+      }
+      _addSystemMessage(resultMsg);
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('investigation_result', e, stackTrace);
+    }
+  }
+
+  void _onNightResult(dynamic data) {
+    if (data is Map) {
+      final message = data[ProtocolKey.message]?.toString();
+      if (message == 'kill') {
+        _addSystemMessage(AppStrings.nightKill);
+      } else if (message == 'peace') {
+        _addSystemMessage(AppStrings.nightPeace);
+      } else if (message == 'shield_activated') {
+        final nickname = data[ProtocolKey.nickname]?.toString() ?? '';
+        _addSystemMessage(AppStrings.soldierShieldActivated(nickname));
+      }
+    }
+  }
+
+  void _onChatMessage(dynamic data) {
+    try {
+      if (data is! Map) {
+        throw FormatException('Invalid chat message data format');
+      }
+      final mappedData = Map<String, dynamic>.from(data);
+      final event = ChatMessageEvent.fromJson(mappedData);
+
+      final socketId = ref.read(connectionProvider.notifier).socketId;
+      final players = ref.read(gameStateProvider).players;
+      String myNickname = '';
+      try {
+        if (socketId != null && players.isNotEmpty) {
+          final me = players.firstWhere((p) => p.id == socketId);
+          myNickname = me.nickname;
+        }
+      } catch (_) {}
+
+      final bool isMe =
+          (socketId != null && event.sender == socketId) ||
+          (myNickname.isNotEmpty && event.sender == myNickname);
+
+      final newMsg = ChatMessage.fromMap({
+        'sender': event.sender,
+        'message': event.message,
+        'type': event.type.name,
+        'isSystem': event.sender == SystemConstant.sender,
+      }, isMine: isMe);
+
+      state = state.copyWith(messages: [...state.messages, newMsg]);
+
+      ref.read(gameStateProvider.notifier).addGameLogEntry('chat', {
+        'sender': event.sender,
+        'message': event.message,
+        'type': event.type.name,
+      });
+    } catch (e, stackTrace) {
+      ErrorHandler.logError('chat_message', e, stackTrace);
+    }
+  }
+
+  void _onStateSync(dynamic data) {
+    if (data is Map) {
+      final mappedData = Map<String, dynamic>.from(data);
+      final jVotes = Map<String, String>.from(
+        mappedData['judgementVotes'] ?? {},
+      );
+      state = state.copyWith(
+        votes: Map<String, int>.from(mappedData[ProtocolKey.votes] ?? {}),
+        voters: Map<String, String>.from(mappedData[ProtocolKey.voters] ?? {}),
+        judgementTarget: mappedData['judgementTarget']?.toString(),
+        judgementVotes: jVotes,
+        yesCount: jVotes.values.where((v) => v == 'yes').length,
+        noCount: jVotes.values.where((v) => v == 'no').length,
+      );
+    }
   }
 
   void vote(String targetId) {
