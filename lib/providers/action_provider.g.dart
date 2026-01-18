@@ -7,7 +7,7 @@ part of 'action_provider.dart';
 // **************************************************************************
 
 String _$skipVoterNicknamesHash() =>
-    r'1d028a718cf28d13cbaef98031e973c96836ba88';
+    r'45831e375546b5fa1de16311f20a0f076426154b';
 
 /// See also [skipVoterNicknames].
 @ProviderFor(skipVoterNicknames)
@@ -24,7 +24,7 @@ final skipVoterNicknamesProvider = AutoDisposeProvider<List<String>>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef SkipVoterNicknamesRef = AutoDisposeProviderRef<List<String>>;
-String _$iVotedSkipHash() => r'b404d31dec61b97a1754bbde6b228c356827be2e';
+String _$iVotedSkipHash() => r'ae57007e4fb07b490f63c3dcb6cce2cac5da64f2';
 
 /// See also [iVotedSkip].
 @ProviderFor(iVotedSkip)
@@ -41,7 +41,7 @@ final iVotedSkipProvider = AutoDisposeProvider<bool>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef IVotedSkipRef = AutoDisposeProviderRef<bool>;
-String _$isMafiaSkipHash() => r'5d4c4e3f7bfdf4dbfb407d5cc47ea05d53287e72';
+String _$isMafiaSkipHash() => r'547728d89c2000b40b33469850e2db30aefba14e';
 
 /// See also [isMafiaSkip].
 @ProviderFor(isMafiaSkip)
@@ -59,7 +59,7 @@ final isMafiaSkipProvider = AutoDisposeProvider<bool>.internal(
 // ignore: unused_element
 typedef IsMafiaSkipRef = AutoDisposeProviderRef<bool>;
 String _$mafiaSkipButtonTextHash() =>
-    r'efa4ae468f111699d202a0362bb33d41adfe2064';
+    r'88716873b2ebdeab50ce3bef35726c7da15e6733';
 
 /// See also [mafiaSkipButtonText].
 @ProviderFor(mafiaSkipButtonText)
@@ -76,7 +76,25 @@ final mafiaSkipButtonTextProvider = AutoDisposeProvider<String>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MafiaSkipButtonTextRef = AutoDisposeProviderRef<String>;
-String _$actionNotifierHash() => r'd6dd0d8f9cd3ffb70b5bb50c14941ff832436467';
+String _$mafiaSkipActorNicknameHash() =>
+    r'21d47e58a67ac50630876524479cbc5e35cc1d8f';
+
+/// See also [mafiaSkipActorNickname].
+@ProviderFor(mafiaSkipActorNickname)
+final mafiaSkipActorNicknameProvider = AutoDisposeProvider<String>.internal(
+  mafiaSkipActorNickname,
+  name: r'mafiaSkipActorNicknameProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$mafiaSkipActorNicknameHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef MafiaSkipActorNicknameRef = AutoDisposeProviderRef<String>;
+String _$actionNotifierHash() => r'654652beeba93e0b6adfbdfafe22927a1475ade2';
 
 /// See also [ActionNotifier].
 @ProviderFor(ActionNotifier)

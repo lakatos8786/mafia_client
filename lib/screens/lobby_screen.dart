@@ -24,6 +24,19 @@ class LobbyScreen extends ConsumerWidget {
     final gameState = ref.watch(gameStateProvider);
     final myId = ref.watch(connectionProvider.notifier).socketId;
 
+    // Listen for server errors
+    ref.listen(gameStateProvider.select((s) => s.lastErrorTime), (
+      previous,
+      next,
+    ) {
+      if (next != null && next != previous) {
+        final errorMsg = ref.read(gameStateProvider).errorMessage;
+        if (errorMsg != null) {
+          CustomSnackBar.show(context, AppStrings.localizedError(errorMsg));
+        }
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       extendBodyBehindAppBar: true,

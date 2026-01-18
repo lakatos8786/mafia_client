@@ -59,6 +59,9 @@ class _ChatWidgetState extends ConsumerState<ChatWidget> {
   void _sendMessage() {
     if (_msgController.text.isNotEmpty) {
       ref.read(actionProvider.notifier).sendMessage(_msgController.text);
+      // 포커스가 있는 상태에서 clear() 호출 시 발생하는 전체 선택 잔상을 방지하기 위해
+      // 커서 위치를 강제로 초기화합니다.
+      _msgController.selection = const TextSelection.collapsed(offset: 0);
       _msgController.clear();
     }
   }
@@ -433,90 +436,31 @@ class _ChatInputArea extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(10.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.overlayBlack50,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                ),
-              ),
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                textInputAction: TextInputAction.send,
-                style: theme.textTheme.bodyMedium,
-                decoration: InputDecoration(
-                  hintText: AppStrings.chatHint,
-                  hintStyle: TextStyle(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 15,
-                  ),
-                  border: InputBorder.none,
-                ),
-                onEditingComplete: onSendMessage,
-              ),
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.overlayBlack50,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
           ),
-          const SizedBox(width: 10),
-          _SendButton(
-            onTap: onSendMessage,
-            onTapDown: () => focusNode.requestFocus(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SendButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final VoidCallback? onTapDown;
-
-  const _SendButton({required this.onTap, this.onTapDown});
-
-  @override
-  State<_SendButton> createState() => _SendButtonState();
-}
-
-class _SendButtonState extends State<_SendButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AnimatedScale(
-      scale: _isPressed ? 0.9 : 1.0,
-      duration: const Duration(milliseconds: 100),
-      child: GestureDetector(
-        onTapDown: (_) {
-          setState(() => _isPressed = true);
-          widget.onTapDown?.call();
-        },
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: widget.onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.votePillEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        ),
+        child: TextField(
+          controller: controller,
+          focusNode: focusNode,
+          textInputAction: TextInputAction.send,
+          style: theme.textTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: AppStrings.chatHint,
+            hintStyle: TextStyle(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
-            shape: BoxShape.circle,
-            boxShadow: AppDecorations.neonGlow(
-              AppColors.primary.withValues(alpha: 0.4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 15,
             ),
+            border: InputBorder.none,
           ),
-          child: const Icon(Icons.send, color: Colors.white, size: 24),
+          onEditingComplete: onSendMessage,
         ),
       ),
     );

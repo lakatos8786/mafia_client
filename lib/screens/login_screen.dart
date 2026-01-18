@@ -10,7 +10,6 @@ import '../providers/connection_provider.dart';
 import '../widgets/custom_snackbar.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
-import '../models/game_enums.dart';
 import '../utils/responsive_utils.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -51,63 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   String _mapErrorMessage(dynamic error) {
-    String? code;
-    String? message;
-
-    if (error is Map) {
-      code = error['code']?.toString();
-      message = error['message']?.toString();
-    } else {
-      message = error.toString();
-    }
-
-    // 1. Map by standardized error codes
-    if (code != null) {
-      switch (code) {
-        case ErrorCode.roomNotFound:
-          return "입력하신 방 번호가 존재하지 않습니다.";
-        case ErrorCode.nicknameTaken:
-          return "이미 사용 중인 닉네임입니다.";
-        case ErrorCode.gameStarted:
-          return "이미 게임이 시작된 방입니다.";
-        case ErrorCode.roomFull:
-          return "방의 인원이 가득 차서 입장할 수 없습니다.";
-        case ErrorCode.notHost:
-          return "방장 권한이 필요한 기능입니다.";
-        case ErrorCode.kicked:
-          return "지정된 방에서 강퇴되었습니다.";
-        case ErrorCode.invalidParams:
-          return "잘못된 요청 정보입니다.";
-      }
-    }
-
-    // 2. Fallback to text-based mapping for backward compatibility
-    final lowerError = message?.toLowerCase() ?? '';
-    if (lowerError.contains('room_not_found') ||
-        lowerError.contains('not found') ||
-        lowerError.contains('존재하지 않는 방')) {
-      return "입력하신 방 번호가 존재하지 않습니다.";
-    }
-    if (lowerError.contains('room_full') ||
-        lowerError.contains('full') ||
-        lowerError.contains('가득 찼습니다')) {
-      return "방의 인원이 가득 차서 입장할 수 없습니다.";
-    }
-    if (lowerError.contains('already_started') ||
-        lowerError.contains('started') ||
-        lowerError.contains('이미 게임이 시작')) {
-      return "이미 게임이 시작된 방입니다.";
-    }
-    if (lowerError.contains('invalid_nickname') ||
-        lowerError.contains('nickname') ||
-        lowerError.contains('사용 중인 닉네임')) {
-      return "사용할 수 없는 닉네임입니다.";
-    }
-    if (lowerError.contains('kicked') || lowerError.contains('강퇴')) {
-      return "지정된 방에서 강퇴되었습니다.";
-    }
-
-    return message ?? "알 수 없는 오류가 발생했습니다.";
+    return AppStrings.localizedError(error);
   }
 
   Future<void> _createRoom() async {

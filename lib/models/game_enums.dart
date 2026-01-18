@@ -36,6 +36,9 @@ class SocketEvent {
   static const String stateSync = 'state_sync';
   static const String kickPlayer = 'kick_player';
   static const String kicked = 'kicked';
+  static const String playerReconnected = 'player_reconnected';
+  static const String playerDisconnected = 'player_disconnected';
+  static const String reconnectFailed = 'reconnect_failed';
 }
 
 class ErrorCode {
@@ -49,7 +52,7 @@ class ErrorCode {
 }
 
 class SystemConstant {
-  static const String sender = '시스템';
+  static const String sender = 'System';
 }
 
 class ProtocolKey {

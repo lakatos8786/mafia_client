@@ -11,6 +11,8 @@ import '../widgets/chat_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
+import '../widgets/custom_snackbar.dart';
+import '../theme/app_strings.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
   const GameScreen({super.key});
@@ -30,6 +32,20 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
+
+    // Listen for server errors
+    ref.listen(gameStateProvider.select((s) => s.lastErrorTime), (
+      previous,
+      next,
+    ) {
+      if (next != null && next != previous) {
+        final errorMsg = ref.read(gameStateProvider).errorMessage;
+        if (errorMsg != null) {
+          CustomSnackBar.show(context, AppStrings.localizedError(errorMsg));
+        }
+      }
+    });
+
     final isCompact = ResponsiveUtils.isCompactScreen(context);
     final screenHeight = MediaQuery.sizeOf(context).height;
 

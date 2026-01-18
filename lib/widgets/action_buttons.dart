@@ -48,23 +48,10 @@ class _SkipVoteRow extends ConsumerWidget {
     final iVotedSkip = ref.watch(iVotedSkipProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          if (actionState.votes[GameAction.skip] != null &&
-              actionState.votes[GameAction.skip]! > 0)
-            Flexible(
-              child: Text(
-                '건너뛰기 투표: ${actionState.votes[GameAction.skip]} (${skipVoterNicknames.join(", ")})  ',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                  fontWeight: FontWeight.bold,
-                  fontSize: ResponsiveUtils.fontSize(context, 11),
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
           _ActionButton(
             label: AppStrings.skipVote,
             onPressed: () =>
@@ -73,6 +60,22 @@ class _SkipVoteRow extends ConsumerWidget {
             highlightColor: gameTheme.policeRef,
             normalColor: AppColors.grey700,
           ),
+          if (actionState.votes[GameAction.skip] != null &&
+              actionState.votes[GameAction.skip]! > 0)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  '건너뛰기 투표: ${actionState.votes[GameAction.skip]} (${skipVoterNicknames.join(", ")})',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.fontSize(context, 11),
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -88,11 +91,12 @@ class _MafiaSkipRow extends ConsumerWidget {
     final gameTheme = theme.extension<GameThemeExtension>()!;
     final isMafiaSkip = ref.watch(isMafiaSkipProvider);
     final mafiaSkipButtonText = ref.watch(mafiaSkipButtonTextProvider);
+    final mafiaSkipActor = ref.watch(mafiaSkipActorNicknameProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           _ActionButton(
             label: mafiaSkipButtonText,
@@ -103,6 +107,21 @@ class _MafiaSkipRow extends ConsumerWidget {
             highlightColor: gameTheme.mafiaRef,
             normalColor: AppColors.greyDark,
           ),
+          if (mafiaSkipActor.isNotEmpty)
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  '킬 건너뛰기: $mafiaSkipActor',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveUtils.fontSize(context, 11),
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              ),
+            ),
         ],
       ),
     );

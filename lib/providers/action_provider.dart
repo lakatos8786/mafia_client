@@ -66,12 +66,15 @@ class ActionNotifier extends _$ActionNotifier {
     socket.on(SocketEvent.phaseChange, (data) {
       if (data is Map) {
         final phase = GamePhase.fromString(data['phase']?.toString() ?? '');
+        final dayCount = int.tryParse(data['dayCount']?.toString() ?? '1') ?? 1;
+
         if (phase != GamePhase.waiting) {
-          // Special check for Doctor: if night ended and no heal action, show message
-          // But skip this message on the first night (day 1)
+          // Announcement first
           if (phase == GamePhase.day) {
+            _addSystemMessage(AppStrings.dayAnnouncement(dayCount));
+
             final myRole = ref.read(gameStateProvider).myRole;
-            final dayCount = ref.read(gameStateProvider).dayCount;
+            // Special check for Doctor: if day started and no heal action previously, show message
             if (myRole == GameRole.doctor && dayCount > 1) {
               final mySelection = state.nightSelections[GameRole.doctor.name];
               // If selection is null or 'skip', validation implies no effective heal
@@ -80,6 +83,18 @@ class ActionNotifier extends _$ActionNotifier {
               if (mySelection == null || mySelection == GameAction.skip) {
                 _addSystemMessage(AppStrings.doctorHealNone);
               }
+            }
+          } else if (phase == GamePhase.night) {
+            _addSystemMessage(AppStrings.nightAnnouncement(dayCount));
+
+            final myRole = ref.read(gameStateProvider).myRole;
+            // Sequential instructions for active roles
+            if (myRole == GameRole.mafia) {
+              _addSystemMessage(AppStrings.mafiaInstruction);
+            } else if (myRole == GameRole.doctor) {
+              _addSystemMessage(AppStrings.doctorInstruction);
+            } else if (myRole == GameRole.police) {
+              _addSystemMessage(AppStrings.policeInstruction);
             }
           }
 
@@ -99,78 +114,43 @@ class ActionNotifier extends _$ActionNotifier {
     });
 
     socket.on(SocketEvent.voteResult, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid vote result data format');
+      if (data is Map) {
+        final result = data['result']?.toString();
+        if (result == 'skip') {
+          _addSystemMessage(AppStrings.voteSkipped);
+        } else if (result == 'tie') {
+          _addSystemMessage(AppStrings.voteTie);
         }
-        final event = VoteResultEvent.fromJson(data);
-
-        // If someone was eliminated, show specific message
-        if (event.eliminatedNickname != null &&
-            event.eliminatedNickname!.isNotEmpty) {
-          _addSystemMessage(AppStrings.dayExecution(event.eliminatedNickname!));
-        } else if (event.message.isNotEmpty) {
-          // Otherwise show generic message (skip/tie)
-          _addSystemMessage(event.message);
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('vote_result', e, stackTrace);
       }
     });
 
     socket.on(SocketEvent.playerEliminated, (data) {
       try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid player eliminated data format');
-        }
-
-        // Debug logging
-        print('🔍 playerEliminated raw data: $data');
-
-        final event = PlayerEliminatedEvent.fromJson(data);
-
-        print('🔍 Parsed event:');
-        print('  - playerId: "${event.playerId}"');
-        print('  - playerNickname: "${event.playerNickname}"');
-        print('  - reason: "${event.reason}"');
-
-        // Get nickname from game state if not provided
-        String nickname = event.playerNickname;
-        if (nickname.isEmpty) {
-          final players = ref.read(gameStateProvider).players;
-          final player = players.firstWhere(
-            (p) => p.id == event.playerId,
-            orElse: () =>
-                Player(id: '', nickname: '알 수 없는 플레이어', isAlive: false),
+        if (data is Map) {
+          final event = PlayerEliminatedEvent.fromJson(
+            Map<String, dynamic>.from(data),
           );
-          nickname = player.nickname;
-          print('🔍 Retrieved nickname from game state: "$nickname"');
-        }
 
-        // Normalize reason (support both Korean and English)
-        final normalizedReason = event.reason.toLowerCase().trim();
+          final nickname = event.playerNickname;
+          final reason = event.reason.toLowerCase();
 
-        // Show death message based on reason
-        if (normalizedReason == 'vote' ||
-            normalizedReason == '투표' ||
-            normalizedReason == 'voted' ||
-            normalizedReason == 'day') {
-          print('✅ Using dayExecution message');
-          _addSystemMessage(AppStrings.dayExecution(nickname));
-        } else if (normalizedReason == 'night' ||
-            normalizedReason == '밤' ||
-            normalizedReason == 'killed' ||
-            normalizedReason == 'mafia') {
-          print('✅ Using nightKillPlayer message');
-          _addSystemMessage(AppStrings.nightKillPlayer(nickname));
-        } else {
-          print(
-            '⚠️ Using generic playerDied message (reason: "${event.reason}")',
-          );
-          _addSystemMessage(AppStrings.playerDied(nickname));
+          if (reason == 'vote') {
+            _addSystemMessage(AppStrings.dayExecution(nickname));
+          } else if (reason == 'mafia') {
+            _addSystemMessage(AppStrings.nightKillPlayer(nickname));
+          } else if (reason == 'disconnect') {
+            _addSystemMessage(
+              AppStrings.playerEliminated(
+                nickname,
+                AppStrings.reasonDisconnect,
+              ),
+            );
+          } else {
+            _addSystemMessage(AppStrings.playerEliminated(nickname, reason));
+          }
         }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('player_eliminated', e, stackTrace);
+      } catch (e) {
+        // Fallback or silent
       }
     });
 
@@ -247,16 +227,22 @@ class ActionNotifier extends _$ActionNotifier {
     });
 
     socket.on(SocketEvent.nightResult, (data) {
-      try {
-        if (data is! Map<String, dynamic>) {
-          throw FormatException('Invalid night result data format');
+      if (data is Map) {
+        final message = data[ProtocolKey.message]?.toString();
+        if (message == 'kill') {
+          _addSystemMessage(AppStrings.nightKill);
+        } else if (message == 'peace') {
+          _addSystemMessage(AppStrings.nightPeace);
+
+          // Check for Doctor's success logic
+          final myRole = ref.read(gameStateProvider).myRole;
+          if (myRole == GameRole.doctor) {
+            final mySelection = state.nightSelections[GameRole.doctor.name];
+            if (mySelection != null && mySelection != GameAction.skip) {
+              _addSystemMessage(AppStrings.doctorSaved);
+            }
+          }
         }
-        final event = NightResultEvent.fromJson(data);
-        if (event.message.isNotEmpty) {
-          _addSystemMessage(event.message);
-        }
-      } catch (e, stackTrace) {
-        ErrorHandler.logError('night_result', e, stackTrace);
       }
     });
 
@@ -439,6 +425,14 @@ class ActionNotifier extends _$ActionNotifier {
 
   void sendMessage(String message) {
     if (message.trim().isEmpty) return;
+
+    final gameState = ref.read(gameStateProvider);
+    if (gameState.gamePhase == GamePhase.night &&
+        gameState.myRole != GameRole.mafia) {
+      _addSystemMessage(AppStrings.nightChatForbidden);
+      return;
+    }
+
     ref
         .read(connectionProvider.notifier)
         .socketService
@@ -547,12 +541,16 @@ bool isMafiaSkip(Ref ref) {
 
 @riverpod
 String mafiaSkipButtonText(Ref ref) {
+  return '킬 건너뛰기';
+}
+
+@riverpod
+String mafiaSkipActorNickname(Ref ref) {
   final nightActionActors = ref.watch(
-    actionProvider.select((s) => s.nightActionActors),
+    actionNotifierProvider.select((s) => s.nightActionActors),
   );
   final isSkip = ref.watch(isMafiaSkipProvider);
-  final actor = nightActionActors[GameRole.mafia.name] ?? '';
-  return isSkip ? '킬 건너뛰기 ($actor)' : '킬 건너뛰기';
+  return isSkip ? (nightActionActors[GameRole.mafia.name] ?? '') : '';
 }
 
 final actionProvider = actionNotifierProvider;
