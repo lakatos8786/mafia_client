@@ -11,7 +11,7 @@ import '../providers/action_provider.dart';
 import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
-import '../widgets/custom_snackbar.dart';
+import '../widgets/neon_toast.dart';
 import '../models/game_settings.dart';
 import '../models/player.dart';
 import '../utils/responsive_utils.dart';
@@ -32,7 +32,7 @@ class LobbyScreen extends ConsumerWidget {
       if (next != null && next != previous) {
         final errorMsg = ref.read(gameStateProvider).errorMessage;
         if (errorMsg != null) {
-          CustomSnackBar.show(context, AppStrings.localizedError(errorMsg));
+          NeonToast.show(context, AppStrings.localizedError(errorMsg));
         }
       }
     });
@@ -57,7 +57,7 @@ class LobbyScreen extends ConsumerWidget {
             onPressed: () {
               if (gameState.roomId != null) {
                 Clipboard.setData(ClipboardData(text: gameState.roomId!));
-                CustomSnackBar.show(context, '복사됨: ${gameState.roomId}');
+                NeonToast.show(context, '복사됨: ${gameState.roomId}');
               }
             },
           ),
@@ -637,7 +637,7 @@ class LobbyScreen extends ConsumerWidget {
                                 value: isAuto,
                                 onChanged: (val) {
                                   if (!val && !canIncrease) {
-                                    CustomSnackBar.show(
+                                    NeonToast.show(
                                       context,
                                       '참여 인원수를 초과할 수 없습니다.',
                                     );
@@ -882,7 +882,7 @@ class LobbyScreen extends ConsumerWidget {
                     ? null
                     : () {
                         if (!canIncrease) {
-                          CustomSnackBar.show(context, '참여 인원수를 초과할 수 없습니다.');
+                          NeonToast.show(context, '참여 인원수를 초과할 수 없습니다.');
                           return;
                         }
                         onChanged(currentCount + 1);

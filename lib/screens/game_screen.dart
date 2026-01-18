@@ -11,7 +11,7 @@ import '../widgets/chat_widget.dart';
 import '../widgets/action_buttons.dart';
 import '../widgets/game_result_overlay.dart';
 import '../widgets/role_reveal_modal.dart';
-import '../widgets/custom_snackbar.dart';
+import '../widgets/neon_toast.dart';
 import '../theme/app_strings.dart';
 
 class GameScreen extends ConsumerStatefulWidget {
@@ -41,7 +41,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       if (next != null && next != previous) {
         final errorMsg = ref.read(gameStateProvider).errorMessage;
         if (errorMsg != null) {
-          CustomSnackBar.show(context, AppStrings.localizedError(errorMsg));
+          NeonToast.show(context, AppStrings.localizedError(errorMsg));
         }
       }
     });

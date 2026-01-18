@@ -11,6 +11,7 @@ import '../theme/app_styles.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_utils.dart';
 import 'role_reveal_modal.dart';
+import 'neon_toast.dart';
 
 /// 게임 정보를 표시하는 Bottom Sheet
 class GameInfoBottomSheet extends ConsumerWidget {
@@ -290,56 +291,52 @@ class GameInfoBottomSheet extends ConsumerWidget {
                       _buildSection(
                         context,
                         '🔑 방 번호',
-                        child: GestureDetector(
-                          onTap: () {
-                            if (gameState.roomId != null) {
-                              Clipboard.setData(
-                                ClipboardData(text: gameState.roomId!),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('복사됨: ${gameState.roomId}'),
-                                  behavior: SnackBarBehavior.floating,
-                                  width: 200,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: AppDecorations.glass(
-                              opacity: 0.1,
-                              borderRadius: 12,
-                              border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.3),
-                              ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: AppDecorations.glass(
+                            opacity: 0.1,
+                            borderRadius: 12,
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.3),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  gameState.roomId ?? '알 수 없음',
-                                  style: GoogleFonts.ibmPlexSansKr(
-                                    fontSize: ResponsiveUtils.fontSize(
-                                      context,
-                                      18,
-                                    ),
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                    letterSpacing: 2,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                gameState.roomId ?? '알 수 없음',
+                                style: GoogleFonts.ibmPlexSansKr(
+                                  fontSize: ResponsiveUtils.fontSize(
+                                    context,
+                                    18,
                                   ),
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                  letterSpacing: 2,
                                 ),
-                                Icon(
+                              ),
+                              IconButton(
+                                icon: Icon(
                                   Icons.copy,
                                   color: AppColors.primary,
                                   size: ResponsiveUtils.iconSize(context, 20),
                                 ),
-                              ],
-                            ),
+                                onPressed: () {
+                                  if (gameState.roomId != null) {
+                                    Clipboard.setData(
+                                      ClipboardData(text: gameState.roomId!),
+                                    );
+                                    NeonToast.show(
+                                      context,
+                                      '복사됨: ${gameState.roomId}',
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       ),

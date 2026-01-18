@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/action_provider.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/connection_provider.dart';
-import '../widgets/custom_snackbar.dart';
+import '../widgets/neon_toast.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../utils/responsive_utils.dart';
@@ -46,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showError(String message) {
-    CustomSnackBar.show(context, message);
+    NeonToast.show(context, message);
   }
 
   String _mapErrorMessage(dynamic error) {
