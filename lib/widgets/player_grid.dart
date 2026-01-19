@@ -119,6 +119,7 @@ class PlayerGrid extends ConsumerWidget {
                   voters[socketId] == player.id || isJudgementTarget;
 
               final showMafiaIndicator =
+                  gamePhase == GamePhase.night &&
                   player.isAlive &&
                   myRole == GameRole.mafia &&
                   player.role == GameRole.mafia &&
