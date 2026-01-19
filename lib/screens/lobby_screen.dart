@@ -15,6 +15,7 @@ import '../widgets/neon_toast.dart';
 import '../models/game_settings.dart';
 import '../models/player.dart';
 import '../utils/responsive_utils.dart';
+import '../widgets/role_reveal_modal.dart';
 
 class LobbyScreen extends ConsumerWidget {
   const LobbyScreen({super.key});
@@ -693,7 +694,7 @@ class LobbyScreen extends ConsumerWidget {
                     children: [
                       _buildRoleCounter(
                         context,
-                        '🕶️ 마피아',
+                        GameRole.mafia,
                         settings.mafiaCount,
                         isHost,
                         canIncrease,
@@ -713,7 +714,7 @@ class LobbyScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       _buildRoleCounter(
                         context,
-                        '🚨 경찰',
+                        GameRole.police,
                         settings.policeCount,
                         isHost,
                         canIncrease,
@@ -733,7 +734,7 @@ class LobbyScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       _buildRoleCounter(
                         context,
-                        '💉 의사',
+                        GameRole.doctor,
                         settings.doctorCount,
                         isHost,
                         canIncrease,
@@ -753,7 +754,7 @@ class LobbyScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       _buildRoleCounter(
                         context,
-                        '🤡 광인',
+                        GameRole.madman,
                         settings.madmanCount,
                         isHost,
                         canIncrease,
@@ -773,7 +774,7 @@ class LobbyScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       _buildRoleCounter(
                         context,
-                        '🏛️ 정치인',
+                        GameRole.politician,
                         settings.politicianCount,
                         isHost,
                         canIncrease,
@@ -793,7 +794,7 @@ class LobbyScreen extends ConsumerWidget {
                       SizedBox(height: ResponsiveUtils.spacing(context, 12)),
                       _buildRoleCounter(
                         context,
-                        '🎖️ 군인',
+                        GameRole.soldier,
                         settings.soldierCount,
                         isHost,
                         canIncrease,
@@ -912,7 +913,7 @@ class LobbyScreen extends ConsumerWidget {
 
   Widget _buildRoleCounter(
     BuildContext context,
-    String label,
+    GameRole role,
     int? count,
     bool isHost,
     bool canIncrease,
@@ -925,14 +926,44 @@ class LobbyScreen extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: ResponsiveUtils.fontSize(context, 15),
-              fontWeight: FontWeight.w600,
-            ),
-            softWrap: true,
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  '${role.emoji} ${role.label}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: ResponsiveUtils.fontSize(context, 15),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => RoleRevealModal(
+                      role: role,
+                      onDismiss: () => Navigator.of(context).pop(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.info_outline,
+                    size: ResponsiveUtils.iconSize(context, 16),
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(width: ResponsiveUtils.spacing(context, 12)),

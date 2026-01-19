@@ -186,6 +186,26 @@ enum GameRole {
     }
   }
 
+  // Description for each role
+  String get description {
+    switch (this) {
+      case GameRole.mafia:
+        return '어둠 속에서 도시를 장악하세요. 밤마다 한 명을 처단하며 시민을 전멸시키면 승리합니다.';
+      case GameRole.doctor:
+        return '생명의 불꽃을 지키세요. 밤마다 한 명을 치료하며 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.police:
+        return '진실을 쫓는 감시자입니다. 밤마다 마피아를 조사하며 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.citizen:
+        return '선량한 시민의 결속을 믿으세요. 낮 투표를 통해 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.madman:
+        return '혼돈을 즐기는 광인입니다. 경찰 조사에는 시민으로 보이며, 마피아 승리 시 함께 승리합니다.';
+      case GameRole.politician:
+        return '여론을 지배하는 권력가입니다. 투표로 처형되지 않으며 마피아를 모두 처단하면 승리합니다.';
+      case GameRole.soldier:
+        return '강인한 정신의 소유자입니다. 마피아의 공격을 1회 견뎌내며 마피아를 모두 처단하면 승리합니다.';
+    }
+  }
+
   // Protocol string (for socket emit)
   String get id => name; // Returns 'mafia', 'doctor' etc. directly
 }
