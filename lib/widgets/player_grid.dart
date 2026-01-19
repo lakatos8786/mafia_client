@@ -111,7 +111,12 @@ class PlayerGrid extends ConsumerWidget {
                   .map((entry) => entry.key)
                   .toList();
 
-              final isMyVoteTarget = voters[socketId] == player.id;
+              final isJudgementTarget =
+                  gamePhase == GamePhase.judgement &&
+                  actionState.judgementTarget == player.id;
+
+              final isMyVoteTarget =
+                  voters[socketId] == player.id || isJudgementTarget;
 
               final showMafiaIndicator =
                   player.isAlive &&
