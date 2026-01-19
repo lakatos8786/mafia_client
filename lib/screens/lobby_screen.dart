@@ -550,7 +550,7 @@ class LobbyScreen extends ConsumerWidget {
               isHost,
               settings.dayDuration.toDouble(),
               0,
-              180,
+              600,
               settings.dayDuration == 0,
               (val) {
                 ref
@@ -563,10 +563,11 @@ class LobbyScreen extends ConsumerWidget {
                 ref
                     .read(actionProvider.notifier)
                     .updateSettings(
-                      settings.copyWith(dayDuration: unlimited ? 0 : 60),
+                      settings.copyWith(dayDuration: unlimited ? 0 : 240),
                     );
               },
-              defaultValue: '60초',
+              defaultValue: '4분',
+              step: 30,
             ),
             SizedBox(height: ResponsiveUtils.spacing(context, 20)),
             _buildSettingRow(
@@ -592,10 +593,11 @@ class LobbyScreen extends ConsumerWidget {
                 ref
                     .read(actionProvider.notifier)
                     .updateSettings(
-                      settings.copyWith(nightDuration: unlimited ? 0 : 30),
+                      settings.copyWith(nightDuration: unlimited ? 0 : 40),
                     );
               },
-              defaultValue: '30초',
+              defaultValue: '40초',
+              step: 10,
             ),
             const Divider(color: Colors.white12, height: 40),
             // Role Section
@@ -897,6 +899,7 @@ class LobbyScreen extends ConsumerWidget {
     ValueChanged<double> onChanged,
     ValueChanged<bool> onToggleUnlimited, {
     String? defaultValue,
+    double step = 10,
   }) {
     return _SettingSlider(
       label: label,
@@ -906,6 +909,7 @@ class LobbyScreen extends ConsumerWidget {
       isUnlimited: isUnlimited,
       isHost: isHost,
       defaultValue: defaultValue,
+      step: step,
       onChanged: onChanged,
       onToggleUnlimited: onToggleUnlimited,
     );
@@ -1073,6 +1077,7 @@ class _SettingSlider extends StatefulWidget {
   final bool isUnlimited;
   final bool isHost;
   final String? defaultValue;
+  final double step;
   final ValueChanged<double> onChanged;
   final ValueChanged<bool> onToggleUnlimited;
 
@@ -1084,6 +1089,7 @@ class _SettingSlider extends StatefulWidget {
     required this.isUnlimited,
     required this.isHost,
     this.defaultValue,
+    this.step = 10,
     required this.onChanged,
     required this.onToggleUnlimited,
   });
@@ -1112,11 +1118,19 @@ class _SettingSliderState extends State<_SettingSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final valueText = widget.isUnlimited
-        ? '무제한'
-        : _localValue == 0
-        ? '무제한'
-        : '${_localValue.toInt()}초';
+    String formatTime(double seconds) {
+      if (seconds == 0) return '무제한';
+      final int s = seconds.toInt();
+      if (s >= 60) {
+        final int m = s ~/ 60;
+        final int leftS = s % 60;
+        if (leftS == 0) return '$m분';
+        return '$m분 $leftS초';
+      }
+      return '$s초';
+    }
+
+    final valueText = widget.isUnlimited ? '무제한' : formatTime(_localValue);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1235,7 +1249,7 @@ class _SettingSliderState extends State<_SettingSlider> {
               min: widget.min,
               max: widget.max,
               divisions: widget.max > widget.min
-                  ? (widget.max - widget.min) ~/ 10
+                  ? (widget.max - widget.min) ~/ widget.step
                   : null,
               onChanged: widget.isUnlimited
                   ? null

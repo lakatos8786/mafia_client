@@ -143,6 +143,7 @@ class AppStrings {
   static const String endLastWord = '변론 종료';
   static const String lastWordChatHint = '최후의 변론 중입니다...';
   static const String nightChatDisabled = '밤에는 마피아만 대화할 수 있습니다.';
+  static const String judgementChatDisabled = '찬반 투표 중에는 대화할 수 없습니다.';
   static const String returnToLobby = '로비로 돌아가기';
   static const String waitingForHost = '방장 대기 중...';
   static const String startGame = '게임 시작';

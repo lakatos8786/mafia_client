@@ -15,8 +15,9 @@ class JudgementButtons extends ConsumerWidget {
     final socketId = ref.read(connectionProvider.notifier).socketId;
 
     // Only show during judgement phase
-    if (gameState.gamePhase != GamePhase.judgement)
+    if (gameState.gamePhase != GamePhase.judgement) {
       return const SizedBox.shrink();
+    }
 
     // Disable for the target (the person on the stand cannot vote)
     final isTarget = actionState.judgementTarget == socketId;

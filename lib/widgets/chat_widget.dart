@@ -461,6 +461,9 @@ class _ChatInputArea extends ConsumerWidget {
           isEnabled = false;
           hintText = AppStrings.nightChatDisabled;
         }
+      } else if (gameState.gamePhase == GamePhase.judgement) {
+        isEnabled = false;
+        hintText = AppStrings.judgementChatDisabled;
       }
     }
 

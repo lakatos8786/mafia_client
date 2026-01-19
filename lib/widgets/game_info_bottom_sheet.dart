@@ -358,18 +358,16 @@ class GameInfoBottomSheet extends ConsumerWidget {
                               _buildInfoRow(
                                 context,
                                 '낮 시간',
-                                gameState.gameSettings.dayDuration == 0
-                                    ? '무제한'
-                                    : '${gameState.gameSettings.dayDuration}초',
+                                _formatTime(gameState.gameSettings.dayDuration),
                                 Colors.white70,
                               ),
                               const SizedBox(height: 12),
                               _buildInfoRow(
                                 context,
                                 '밤 시간',
-                                gameState.gameSettings.nightDuration == 0
-                                    ? '무제한'
-                                    : '${gameState.gameSettings.nightDuration}초',
+                                _formatTime(
+                                  gameState.gameSettings.nightDuration,
+                                ),
                                 Colors.white70,
                               ),
                             ],
@@ -385,6 +383,17 @@ class GameInfoBottomSheet extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _formatTime(int seconds) {
+    if (seconds == 0) return '무제한';
+    if (seconds >= 60) {
+      final int m = seconds ~/ 60;
+      final int leftS = seconds % 60;
+      if (leftS == 0) return '$m분';
+      return '$m분 $leftS초';
+    }
+    return '$seconds초';
   }
 
   Widget _buildSection(

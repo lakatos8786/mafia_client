@@ -11,8 +11,8 @@ class GameSettings {
   final int? soldierCount;
 
   const GameSettings({
-    this.dayDuration = 60,
-    this.nightDuration = 30,
+    this.dayDuration = 240,
+    this.nightDuration = 40,
     this.mafiaCount,
     this.policeCount,
     this.doctorCount,
@@ -23,8 +23,8 @@ class GameSettings {
 
   factory GameSettings.fromMap(Map<String, dynamic> map) {
     return GameSettings(
-      dayDuration: (map[ProtocolKey.dayDuration] as num?)?.toInt() ?? 60,
-      nightDuration: (map[ProtocolKey.nightDuration] as num?)?.toInt() ?? 30,
+      dayDuration: (map[ProtocolKey.dayDuration] as num?)?.toInt() ?? 240,
+      nightDuration: (map[ProtocolKey.nightDuration] as num?)?.toInt() ?? 40,
       mafiaCount: (map[ProtocolKey.mafiaCount] as num?)?.toInt(),
       policeCount: (map[ProtocolKey.policeCount] as num?)?.toInt(),
       doctorCount: (map[ProtocolKey.doctorCount] as num?)?.toInt(),
