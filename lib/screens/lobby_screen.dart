@@ -42,11 +42,26 @@ class LobbyScreen extends ConsumerWidget {
       backgroundColor: AppColors.backgroundDark,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          '방 번호: ${gameState.roomId}',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2.0,
+        title: GestureDetector(
+          onTap: () {
+            if (gameState.roomId != null) {
+              Clipboard.setData(ClipboardData(text: gameState.roomId!));
+              NeonToast.show(context, '복사됨: ${gameState.roomId}');
+            }
+          },
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '방 번호: ${gameState.roomId}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.copy, color: AppColors.mafiaRed, size: 18),
+            ],
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -54,144 +69,171 @@ class LobbyScreen extends ConsumerWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.copy, color: AppColors.mafiaRed),
-            onPressed: () {
-              if (gameState.roomId != null) {
-                Clipboard.setData(ClipboardData(text: gameState.roomId!));
-                NeonToast.show(context, '복사됨: ${gameState.roomId}');
-              }
-            },
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () =>
+                _showSettingsBottomSheet(context, ref, gameState, myId),
+            tooltip: '방 설정',
           ),
         ],
       ),
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const ParticleBackground(phase: GamePhase.day),
+          const RepaintBoundary(
+            child: Stack(children: [ParticleBackground(phase: GamePhase.day)]),
+          ),
           Positioned.fill(
             child: Container(color: Colors.black.withValues(alpha: 0.3)),
           ),
-          Positioned(
-            bottom: -100,
-            left: -50,
-            child: Container(
-              width: 400,
-              height: 400,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primary.withValues(alpha: 0.1),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.2),
-                    blurRadius: 150,
-                    spreadRadius: 20,
+          RepaintBoundary(
+            child: Stack(
+              children: [
+                Positioned(
+                  bottom: -100,
+                  left: -50,
+                  child: Container(
+                    width: 400,
+                    height: 400,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          blurRadius: 150,
+                          spreadRadius: 20,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                children: [
-                  SizedBox(height: ResponsiveUtils.spacing(context, 50)),
-                  FadeInDown(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.padding(context, 24),
-                      ),
-                      child: Text(
-                        '플레이어 대기 중...',
-                        style: GoogleFonts.ibmPlexSansKr(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          fontSize: ResponsiveUtils.fontSize(
-                            context,
-                            18,
-                          ), // Increased from 16
-                          letterSpacing: ResponsiveUtils.spacing(context, 4),
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.5),
-                              blurRadius: 20,
+            child: Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 50),
+                            ),
+                            FadeInDown(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveUtils.padding(
+                                    context,
+                                    24,
+                                  ),
+                                ),
+                                child: Text(
+                                  '플레이어 대기 중...',
+                                  style: GoogleFonts.ibmPlexSansKr(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      18,
+                                    ),
+                                    letterSpacing: ResponsiveUtils.spacing(
+                                      context,
+                                      4,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [
+                                      BoxShadow(
+                                        color: AppColors.primary.withValues(
+                                          alpha: 0.5,
+                                        ),
+                                        blurRadius: 20,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: ResponsiveUtils.spacing(context, 24),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 24)),
-                  FadeIn(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.padding(context, 24),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.people,
-                            color: Colors.white70,
-                            size: ResponsiveUtils.iconSize(context, 16),
-                          ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 8)),
-                          Text(
-                            '참가자',
-                            style: GoogleFonts.ibmPlexSansKr(
-                              color: Colors.white70,
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              fontWeight: FontWeight.bold,
+                      SliverToBoxAdapter(
+                        child: FadeIn(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: ResponsiveUtils.padding(context, 24),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.people,
+                                  color: Colors.white70,
+                                  size: ResponsiveUtils.iconSize(context, 16),
+                                ),
+                                SizedBox(
+                                  width: ResponsiveUtils.spacing(context, 8),
+                                ),
+                                Text(
+                                  '참가자',
+                                  style: GoogleFonts.ibmPlexSansKr(
+                                    color: Colors.white70,
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      14,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: ResponsiveUtils.spacing(context, 6),
+                                ),
+                                Text(
+                                  '${gameState.players.length}',
+                                  style: GoogleFonts.ibmPlexSansKr(
+                                    color: AppColors.primary,
+                                    fontSize: ResponsiveUtils.fontSize(
+                                      context,
+                                      14,
+                                    ),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(width: ResponsiveUtils.spacing(context, 6)),
-                          Text(
-                            '${gameState.players.length}',
-                            style: GoogleFonts.ibmPlexSansKr(
-                              color: AppColors.primary,
-                              fontSize: ResponsiveUtils.fontSize(context, 14),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: ResponsiveUtils.spacing(context, 120),
-                      maxHeight: MediaQuery.of(context).size.height * 0.4,
-                    ),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: ResponsiveUtils.padding(context, 20),
-                      ),
-                      itemCount: gameState.players.length,
-                      itemBuilder: (context, index) {
-                        final player = gameState.players[index];
-                        final isMe = player.id == myId;
+                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                      SliverList.builder(
+                        itemCount: gameState.players.length,
+                        itemBuilder: (context, index) {
+                          final player = gameState.players[index];
+                          final isMe = player.id == myId;
 
-                        return FadeInLeft(
-                          delay: Duration(milliseconds: 100 * index),
-                          child: Container(
-                            margin: EdgeInsets.only(
-                              bottom: ResponsiveUtils.spacing(context, 10),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                          return RepaintBoundary(
+                            child: FadeInLeft(
+                              delay: Duration(milliseconds: 100 * index),
+                              child: Container(
+                                margin: EdgeInsets.only(
+                                  bottom: ResponsiveUtils.spacing(context, 10),
+                                ),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: ResponsiveUtils.padding(
+                                    context,
+                                    20,
+                                  ),
+                                ),
                                 child: Opacity(
                                   opacity: player.atLobby ? 1.0 : 0.5,
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 300),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: ResponsiveUtils.padding(
-                                        context,
-                                        16,
-                                      ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
                                       vertical: 15,
                                     ),
                                     decoration: BoxDecoration(
@@ -200,28 +242,19 @@ class LobbyScreen extends ConsumerWidget {
                                               alpha: 0.2,
                                             )
                                           : Colors.white.withValues(
-                                              alpha: 0.05,
+                                              alpha: 0.08,
                                             ),
                                       borderRadius: BorderRadius.circular(15),
                                       border: Border.all(
                                         color: isMe
                                             ? AppColors.primary.withValues(
-                                                alpha: 0.6,
+                                                alpha: 0.4,
                                               )
                                             : Colors.white.withValues(
                                                 alpha: 0.1,
                                               ),
                                         width: isMe ? 1.5 : 1.0,
                                       ),
-                                      boxShadow: isMe
-                                          ? [
-                                              BoxShadow(
-                                                color: AppColors.primary
-                                                    .withValues(alpha: 0.2),
-                                                blurRadius: 15,
-                                              ),
-                                            ]
-                                          : [],
                                     ),
                                     child: Row(
                                       children: [
@@ -246,7 +279,7 @@ class LobbyScreen extends ConsumerWidget {
                                                   ResponsiveUtils.fontSize(
                                                     context,
                                                     16,
-                                                  ), // Increased from 15
+                                                  ),
                                               fontWeight: FontWeight.bold,
                                               color: player.isAlive
                                                   ? Colors.white
@@ -281,7 +314,7 @@ class LobbyScreen extends ConsumerWidget {
                                                     ResponsiveUtils.fontSize(
                                                       context,
                                                       12,
-                                                    ), // Increased from 10
+                                                    ),
                                                 color: Colors.white54,
                                               ),
                                             ),
@@ -308,24 +341,18 @@ class LobbyScreen extends ConsumerWidget {
                                                 8,
                                               ),
                                             ),
-                                            child: Icon(
+                                            child: const Icon(
                                               Icons.star,
                                               color: AppColors.accentYellow,
-                                              size: ResponsiveUtils.iconSize(
-                                                context,
-                                                18,
-                                              ),
+                                              size: 18,
                                             ),
                                           ),
                                         if (gameState.isAdmin && !isMe)
                                           IconButton(
-                                            icon: Icon(
+                                            icon: const Icon(
                                               Icons.logout,
                                               color: AppColors.mafiaRed,
-                                              size: ResponsiveUtils.iconSize(
-                                                context,
-                                                18,
-                                              ),
+                                              size: 18,
                                             ),
                                             onPressed: () {
                                               _showKickConfirmation(
@@ -342,27 +369,24 @@ class LobbyScreen extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                  _buildSettingsSection(context, ref, gameState, myId),
-
-                  FadeInUp(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        ResponsiveUtils.padding(context, 24),
-                        ResponsiveUtils.padding(context, 24),
-                        ResponsiveUtils.padding(context, 24),
-                        ResponsiveUtils.padding(context, 32), // 하단 여백 추가
+                          );
+                        },
                       ),
-                      child: _buildStartButton(context, ref, gameState, myId),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                FadeInUp(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      ResponsiveUtils.padding(context, 24),
+                      ResponsiveUtils.padding(context, 16),
+                      ResponsiveUtils.padding(context, 24),
+                      ResponsiveUtils.padding(context, 32),
+                    ),
+                    child: _buildStartButton(context, ref, gameState, myId),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -447,6 +471,59 @@ class LobbyScreen extends ConsumerWidget {
     }
   }
 
+  void _showSettingsBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    GameState gameState,
+    String? myId,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final currentGameState = ref.watch(gameStateProvider);
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 40),
+                      child: _buildSettingsSection(
+                        context,
+                        ref,
+                        currentGameState,
+                        myId,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showKickConfirmation(
     BuildContext context,
     WidgetRef ref,
@@ -502,324 +579,314 @@ class LobbyScreen extends ConsumerWidget {
     final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
     final GameSettings settings = gameState.gameSettings;
 
-    return FadeInUp(
-      delay: const Duration(milliseconds: 400),
-      child: Container(
-        margin: EdgeInsets.symmetric(
-          horizontal: ResponsiveUtils.padding(context, 20),
-        ),
-        padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.settings,
-                  color: AppColors.primary,
-                  size: ResponsiveUtils.iconSize(context, 20),
+    return Container(
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveUtils.padding(context, 20),
+      ),
+      padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.settings,
+                color: AppColors.primary,
+                size: ResponsiveUtils.iconSize(context, 20),
+              ),
+              SizedBox(width: ResponsiveUtils.spacing(context, 10)),
+              Text(
+                '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
+                style: GoogleFonts.ibmPlexSansKr(
+                  color: Colors.white,
+                  fontSize: ResponsiveUtils.fontSize(
+                    context,
+                    19,
+                  ), // Increased from 18
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(width: ResponsiveUtils.spacing(context, 10)),
-                Text(
-                  '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
-                  style: GoogleFonts.ibmPlexSansKr(
-                    color: Colors.white,
-                    fontSize: ResponsiveUtils.fontSize(
-                      context,
-                      19,
-                    ), // Increased from 18
-                    fontWeight: FontWeight.bold,
+              ),
+            ],
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+          // Time Section
+          _buildSectionHeader(context, '🕒 시간 설정'),
+          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+          _buildSettingRow(
+            context,
+            ref,
+            '낮 시간',
+            settings.dayDuration == 0 ? '무제한' : '${settings.dayDuration}초',
+            isHost,
+            settings.dayDuration.toDouble(),
+            0,
+            600,
+            settings.dayDuration == 0,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(settings.copyWith(dayDuration: val.toInt()));
+            },
+            (unlimited) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(dayDuration: unlimited ? 0 : 240),
+                  );
+            },
+            defaultValue: '4분',
+            step: 30,
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+          _buildSettingRow(
+            context,
+            ref,
+            '밤 시간',
+            settings.nightDuration == 0 ? '무제한' : '${settings.nightDuration}초',
+            isHost,
+            settings.nightDuration.toDouble(),
+            0,
+            120,
+            settings.nightDuration == 0,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(nightDuration: val.toInt()),
+                  );
+            },
+            (unlimited) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(nightDuration: unlimited ? 0 : 40),
+                  );
+            },
+            defaultValue: '40초',
+            step: 10,
+          ),
+          const Divider(color: Colors.white12, height: 40),
+          // Role Section
+          _buildSectionHeader(context, '👥 직업 구성'),
+          SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+          () {
+            final playerCount = gameState.players.length;
+            final isAuto = settings.mafiaCount == null;
+
+            // Auto role count prediction (mirroring server index.js)
+            final autoCounts = _getAutoRoleCounts(playerCount);
+
+            final totalManualRoles =
+                (settings.mafiaCount ?? 0) +
+                (settings.policeCount ?? 0) +
+                (settings.doctorCount ?? 0) +
+                (settings.madmanCount ?? 0) +
+                (settings.politicianCount ?? 0) +
+                (settings.soldierCount ?? 0);
+            final canIncrease = totalManualRoles < playerCount;
+
+            return Column(
+              children: [
+                if (isHost)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Row(
+                      children: [
+                        const Text(
+                          '자동 직업 배정',
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          height: 24,
+                          width: 40,
+                          child: Transform.scale(
+                            scale: 0.7,
+                            child: Switch(
+                              value: isAuto,
+                              onChanged: (val) {
+                                if (!val && !canIncrease) {
+                                  NeonToast.show(
+                                    context,
+                                    '참여 인원수를 초과할 수 없습니다.',
+                                  );
+                                  return;
+                                }
+                                ref
+                                    .read(actionProvider.notifier)
+                                    .updateSettings(
+                                      settings.copyWith(
+                                        mafiaCount: val
+                                            ? null
+                                            : autoCounts['mafia'],
+                                        policeCount: val
+                                            ? null
+                                            : autoCounts['police'],
+                                        doctorCount: val
+                                            ? null
+                                            : autoCounts['doctor'],
+                                        madmanCount: val
+                                            ? null
+                                            : autoCounts['madman'],
+                                        politicianCount: val
+                                            ? null
+                                            : autoCounts['politician'],
+                                        soldierCount: val
+                                            ? null
+                                            : autoCounts['soldier'],
+                                        clearMafia: val,
+                                        clearPolice: val,
+                                        clearDoctor: val,
+                                        clearMadman: val,
+                                        clearPolitician: val,
+                                        clearSoldier: val,
+                                      ),
+                                    );
+                              },
+                              activeThumbColor: AppColors.primary,
+                              activeTrackColor: AppColors.primary.withValues(
+                                alpha: 0.3,
+                              ),
+                              inactiveThumbColor: Colors.white38,
+                              inactiveTrackColor: Colors.white10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                Column(
+                  children: [
+                    _buildRoleCounter(
+                      context,
+                      GameRole.mafia,
+                      settings.mafiaCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['mafia']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                mafiaCount: val,
+                                clearMafia: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                    _buildRoleCounter(
+                      context,
+                      GameRole.police,
+                      settings.policeCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['police']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                policeCount: val,
+                                clearPolice: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                    _buildRoleCounter(
+                      context,
+                      GameRole.doctor,
+                      settings.doctorCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['doctor']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                doctorCount: val,
+                                clearDoctor: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                    _buildRoleCounter(
+                      context,
+                      GameRole.madman,
+                      settings.madmanCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['madman']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                madmanCount: val,
+                                clearMadman: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                    _buildRoleCounter(
+                      context,
+                      GameRole.politician,
+                      settings.politicianCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['politician']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                politicianCount: val,
+                                clearPolitician: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+                    _buildRoleCounter(
+                      context,
+                      GameRole.soldier,
+                      settings.soldierCount,
+                      isHost,
+                      canIncrease,
+                      autoCounts['soldier']!,
+                      isAuto,
+                      (val) {
+                        ref
+                            .read(actionProvider.notifier)
+                            .updateSettings(
+                              settings.copyWith(
+                                soldierCount: val,
+                                clearSoldier: val == null,
+                              ),
+                            );
+                      },
+                    ),
+                  ],
                 ),
               ],
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            // Time Section
-            _buildSectionHeader(context, '🕒 시간 설정'),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            _buildSettingRow(
-              context,
-              ref,
-              '낮 시간',
-              settings.dayDuration == 0 ? '무제한' : '${settings.dayDuration}초',
-              isHost,
-              settings.dayDuration.toDouble(),
-              0,
-              600,
-              settings.dayDuration == 0,
-              (val) {
-                ref
-                    .read(actionProvider.notifier)
-                    .updateSettings(
-                      settings.copyWith(dayDuration: val.toInt()),
-                    );
-              },
-              (unlimited) {
-                ref
-                    .read(actionProvider.notifier)
-                    .updateSettings(
-                      settings.copyWith(dayDuration: unlimited ? 0 : 240),
-                    );
-              },
-              defaultValue: '4분',
-              step: 30,
-            ),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            _buildSettingRow(
-              context,
-              ref,
-              '밤 시간',
-              settings.nightDuration == 0
-                  ? '무제한'
-                  : '${settings.nightDuration}초',
-              isHost,
-              settings.nightDuration.toDouble(),
-              0,
-              120,
-              settings.nightDuration == 0,
-              (val) {
-                ref
-                    .read(actionProvider.notifier)
-                    .updateSettings(
-                      settings.copyWith(nightDuration: val.toInt()),
-                    );
-              },
-              (unlimited) {
-                ref
-                    .read(actionProvider.notifier)
-                    .updateSettings(
-                      settings.copyWith(nightDuration: unlimited ? 0 : 40),
-                    );
-              },
-              defaultValue: '40초',
-              step: 10,
-            ),
-            const Divider(color: Colors.white12, height: 40),
-            // Role Section
-            _buildSectionHeader(context, '👥 직업 구성'),
-            SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-            () {
-              final playerCount = gameState.players.length;
-              final isAuto = settings.mafiaCount == null;
-
-              // Auto role count prediction (mirroring server index.js)
-              final autoCounts = _getAutoRoleCounts(playerCount);
-
-              final totalManualRoles =
-                  (settings.mafiaCount ?? 0) +
-                  (settings.policeCount ?? 0) +
-                  (settings.doctorCount ?? 0) +
-                  (settings.madmanCount ?? 0) +
-                  (settings.politicianCount ?? 0) +
-                  (settings.soldierCount ?? 0);
-              final canIncrease = totalManualRoles < playerCount;
-
-              return Column(
-                children: [
-                  if (isHost)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Row(
-                        children: [
-                          const Text(
-                            '자동 직업 배정',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            height: 24,
-                            width: 40,
-                            child: Transform.scale(
-                              scale: 0.7,
-                              child: Switch(
-                                value: isAuto,
-                                onChanged: (val) {
-                                  if (!val && !canIncrease) {
-                                    NeonToast.show(
-                                      context,
-                                      '참여 인원수를 초과할 수 없습니다.',
-                                    );
-                                    return;
-                                  }
-                                  ref
-                                      .read(actionProvider.notifier)
-                                      .updateSettings(
-                                        settings.copyWith(
-                                          mafiaCount: val
-                                              ? null
-                                              : autoCounts['mafia'],
-                                          policeCount: val
-                                              ? null
-                                              : autoCounts['police'],
-                                          doctorCount: val
-                                              ? null
-                                              : autoCounts['doctor'],
-                                          madmanCount: val
-                                              ? null
-                                              : autoCounts['madman'],
-                                          politicianCount: val
-                                              ? null
-                                              : autoCounts['politician'],
-                                          soldierCount: val
-                                              ? null
-                                              : autoCounts['soldier'],
-                                          clearMafia: val,
-                                          clearPolice: val,
-                                          clearDoctor: val,
-                                          clearMadman: val,
-                                          clearPolitician: val,
-                                          clearSoldier: val,
-                                        ),
-                                      );
-                                },
-                                activeThumbColor: AppColors.primary,
-                                activeTrackColor: AppColors.primary.withValues(
-                                  alpha: 0.3,
-                                ),
-                                inactiveThumbColor: Colors.white38,
-                                inactiveTrackColor: Colors.white10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  Column(
-                    children: [
-                      _buildRoleCounter(
-                        context,
-                        GameRole.mafia,
-                        settings.mafiaCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['mafia']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  mafiaCount: val,
-                                  clearMafia: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      _buildRoleCounter(
-                        context,
-                        GameRole.police,
-                        settings.policeCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['police']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  policeCount: val,
-                                  clearPolice: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      _buildRoleCounter(
-                        context,
-                        GameRole.doctor,
-                        settings.doctorCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['doctor']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  doctorCount: val,
-                                  clearDoctor: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      _buildRoleCounter(
-                        context,
-                        GameRole.madman,
-                        settings.madmanCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['madman']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  madmanCount: val,
-                                  clearMadman: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      _buildRoleCounter(
-                        context,
-                        GameRole.politician,
-                        settings.politicianCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['politician']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  politicianCount: val,
-                                  clearPolitician: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                      SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                      _buildRoleCounter(
-                        context,
-                        GameRole.soldier,
-                        settings.soldierCount,
-                        isHost,
-                        canIncrease,
-                        autoCounts['soldier']!,
-                        isAuto,
-                        (val) {
-                          ref
-                              .read(actionProvider.notifier)
-                              .updateSettings(
-                                settings.copyWith(
-                                  soldierCount: val,
-                                  clearSoldier: val == null,
-                                ),
-                              );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }(),
-          ],
-        ),
+            );
+          }(),
+        ],
       ),
     );
   }
