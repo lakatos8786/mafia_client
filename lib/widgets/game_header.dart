@@ -36,10 +36,15 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
     return RepaintBoundary(
       child: Container(
         padding: EdgeInsets.only(
-          left: AppSpacing.paddingM,
-          right: AppSpacing.paddingM,
-          top: MediaQuery.of(context).padding.top + AppSpacing.paddingS,
-          bottom: AppSpacing.paddingS,
+          left: ResponsiveUtils.horizontalPadding(context, AppSpacing.paddingM),
+          right: ResponsiveUtils.horizontalPadding(
+            context,
+            AppSpacing.paddingM,
+          ),
+          top:
+              MediaQuery.of(context).padding.top +
+              ResponsiveUtils.verticalPadding(context, AppSpacing.paddingS),
+          bottom: ResponsiveUtils.verticalPadding(context, AppSpacing.paddingS),
         ),
         decoration: BoxDecoration(
           color: AppColors.overlayBlack50,
@@ -86,11 +91,13 @@ class _GameHeaderState extends ConsumerState<GameHeader> {
                       splashColor: AppColors.primary.withValues(alpha: 0.2),
                       highlightColor: AppColors.primary.withValues(alpha: 0.1),
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: EdgeInsets.all(
+                          ResponsiveUtils.padding(context, 8),
+                        ),
                         child: Icon(
                           Icons.info_outline,
                           color: AppColors.primary,
-                          size: 24,
+                          size: ResponsiveUtils.iconSize(context, 20),
                         ),
                       ),
                     ),
@@ -114,43 +121,58 @@ class _PhaseIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final accentColor = gamePhase == GamePhase.day
+    final isDayStyle =
+        gamePhase == GamePhase.day ||
+        gamePhase == GamePhase.lastWord ||
+        gamePhase == GamePhase.judgement;
+
+    final accentColor = isDayStyle
         ? Colors.orangeAccent
         : AppColors.nightAccent;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: AppDecorations.glass(
-            opacity: 0.1,
-            borderRadius: 20,
-            border: Border.all(color: accentColor, width: 1.5),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                gamePhase == GamePhase.day
-                    ? Icons.wb_sunny
-                    : Icons.nightlight_round,
-                color: accentColor,
-                size: ResponsiveUtils.iconSize(context, 20),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${gamePhase.label} $dayCount일차',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+        Flexible(
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.padding(context, 10),
+              vertical: ResponsiveUtils.padding(context, 5),
+            ),
+            decoration: AppDecorations.glass(
+              opacity: 0.1,
+              borderRadius: 20,
+              border: Border.all(color: accentColor, width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isDayStyle ? Icons.wb_sunny : Icons.nightlight_round,
+                  color: accentColor,
+                  size: ResponsiveUtils.iconSize(context, 18),
                 ),
-              ),
-            ],
+                SizedBox(width: ResponsiveUtils.spacing(context, 6)),
+                Flexible(
+                  child: Text(
+                    '${gamePhase.label} $dayCount일차',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontSize: ResponsiveUtils.fontSize(context, 14),
+                      fontWeight: FontWeight.bold,
+                      letterSpacing:
+                          ResponsiveUtils.getScaleFactor(context) < 0.9
+                          ? 0.5
+                          : 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: ResponsiveUtils.spacing(context, 8)),
         const PhaseTimer(),
       ],
     );

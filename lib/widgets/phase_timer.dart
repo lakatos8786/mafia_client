@@ -78,8 +78,8 @@ class PhaseTimer extends ConsumerWidget {
               duration: const Duration(milliseconds: 200),
               style: GoogleFonts.ibmPlexSansKr(
                 fontSize: isLowTime
-                    ? ResponsiveUtils.fontSize(context, 17)
-                    : ResponsiveUtils.fontSize(context, 15),
+                    ? ResponsiveUtils.fontSize(context, 16)
+                    : ResponsiveUtils.fontSize(context, 14),
                 fontWeight: FontWeight.bold,
                 color: isLowTime ? AppColors.deadRed : Colors.white,
               ),
@@ -89,7 +89,7 @@ class PhaseTimer extends ConsumerWidget {
               Text(
                 '초',
                 style: GoogleFonts.ibmPlexSansKr(
-                  fontSize: ResponsiveUtils.fontSize(context, 12),
+                  fontSize: ResponsiveUtils.fontSize(context, 11),
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
               ),

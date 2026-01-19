@@ -287,6 +287,41 @@ class GameInfoBottomSheet extends ConsumerWidget {
 
                       const SizedBox(height: 24),
 
+                      if (gameState.myRole == GameRole.mafia) ...[
+                        _buildSection(
+                          context,
+                          '👥 마피아 팀',
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: AppDecorations.glass(
+                              opacity: 0.05,
+                              borderRadius: 12,
+                            ),
+                            child: Column(
+                              children: gameState.players
+                                  .where((p) => p.role == GameRole.mafia)
+                                  .map(
+                                    (p) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: _buildInfoRow(
+                                        context,
+                                        p.nickname,
+                                        p.isAlive ? '생존' : '사망',
+                                        p.isAlive
+                                            ? Colors.greenAccent
+                                            : AppColors.dead,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
                       // 방 번호 섹션 (3순위)
                       _buildSection(
                         context,

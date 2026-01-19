@@ -37,6 +37,9 @@ class ActionButtons extends ConsumerWidget {
             if (gameState.gamePhase == GamePhase.night &&
                 gameState.myRole == GameRole.mafia)
               const _MafiaSkipRow(),
+            if (gameState.gamePhase == GamePhase.night &&
+                gameState.myRole != GameRole.mafia)
+              const _FilterOnlyRow(),
             if (gameState.gamePhase == GamePhase.lastWord) const _LastWordRow(),
           ] else if (showFilterOnly) ...[
             const _FilterOnlyRow(),

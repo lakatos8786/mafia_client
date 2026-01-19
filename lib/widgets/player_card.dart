@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/game_enums.dart';
 import '../models/player.dart';
+import '../providers/game_state_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
@@ -37,6 +38,7 @@ class PlayerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
+    final gameState = ref.watch(gameStateProvider);
     final isSelected = selectionTargets.isNotEmpty || isMyVoteTarget;
     final identityColor = AppColors.getIdentityColor(player.nickname);
 
@@ -107,6 +109,7 @@ class PlayerCard extends ConsumerWidget {
                       identityColor: identityColor,
                       voteCount: voteCount,
                       votersList: votersList,
+                      gamePhase: gameState.gamePhase,
                     ),
                   ),
                   if (!player.isAlive)
@@ -202,6 +205,7 @@ class _PlayerCardContent extends StatelessWidget {
   final Color identityColor;
   final int voteCount;
   final String votersList;
+  final GamePhase gamePhase;
 
   const _PlayerCardContent({
     required this.player,
@@ -209,6 +213,7 @@ class _PlayerCardContent extends StatelessWidget {
     required this.identityColor,
     required this.voteCount,
     required this.votersList,
+    required this.gamePhase,
   });
 
   @override
@@ -250,9 +255,9 @@ class _PlayerCardContent extends StatelessWidget {
               isMe: isMe,
               identityColor: identityColor,
             ),
-            if (player.role != null)
-              if (player.isRevealed || !isMe)
-                _RevealedRoleBadge(role: player.role!),
+            if (player.role != null &&
+                (player.isRevealed || gamePhase == GamePhase.result))
+              _RevealedRoleBadge(role: player.role!),
             if (player.isAlive && voteCount > 0)
               _VoteBadge(voteCount: voteCount, votersList: votersList),
           ],

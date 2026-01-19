@@ -44,9 +44,12 @@ class _ParticleBackgroundState extends State<ParticleBackground>
 
   void _initParticles() {
     _particles.clear();
-    int count = _currentPhase == GamePhase.day
-        ? 20
-        : 50; // More stars at night or waiting
+    bool isDayStyle =
+        _currentPhase == GamePhase.day ||
+        _currentPhase == GamePhase.lastWord ||
+        _currentPhase == GamePhase.judgement;
+
+    int count = isDayStyle ? 20 : 50; // More stars at night or waiting
     for (int i = 0; i < count; i++) {
       _particles.add(Particle(_random, _currentPhase));
     }
@@ -128,9 +131,14 @@ class ParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    bool isDayStyle =
+        phase == GamePhase.day ||
+        phase == GamePhase.lastWord ||
+        phase == GamePhase.judgement;
+
     for (var particle in particles) {
       final paint = Paint()
-        ..color = phase == GamePhase.day
+        ..color = isDayStyle
             ? Colors.white.withValues(alpha: particle.opacity)
             : AppColors.accentYellow.withValues(
                 alpha: particle.opacity,
@@ -140,7 +148,7 @@ class ParticlePainter extends CustomPainter {
       double cy = particle.y * size.height;
 
       // Draw Twinkle for night
-      if (phase == GamePhase.night) {
+      if (!isDayStyle) {
         // Simple twinkle effect
         double twinkle = sin(
           DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,
