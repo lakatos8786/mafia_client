@@ -27,8 +27,10 @@ class JudgementButtons extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.2))),
+        color: Colors.black.withValues(alpha: 0.7),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -93,7 +95,7 @@ class _JudgementButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? color : color.withOpacity(0.2),
+        backgroundColor: isSelected ? color : color.withValues(alpha: 0.2),
         foregroundColor: isSelected ? Colors.black : color,
         side: BorderSide(color: color, width: 2),
         padding: const EdgeInsets.symmetric(vertical: 16),
