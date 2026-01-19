@@ -27,7 +27,9 @@ class PlayerGrid extends ConsumerWidget {
     );
 
     final socketId = ref.watch(connectionProvider.notifier).socketId;
-    final actionState = ref.watch(actionProvider);
+    final judgementTarget = ref.watch(
+      actionProvider.select((s) => s.judgementTarget),
+    );
     final showSurvivorsOnly = ref.watch(showSurvivorsOnlyProvider);
 
     // --- Phase-Aware Filtering Logic ---
@@ -42,10 +44,9 @@ class PlayerGrid extends ConsumerWidget {
         : players;
 
     // --- Spotlight Effect for Last Word ---
-    if (gamePhase == GamePhase.lastWord &&
-        actionState.judgementTarget != null) {
+    if (gamePhase == GamePhase.lastWord && judgementTarget != null) {
       final targetPlayer = players.firstWhere(
-        (p) => p.id == actionState.judgementTarget,
+        (p) => p.id == judgementTarget,
         orElse: () => Player(id: '', nickname: '?', isAlive: true),
       );
 
@@ -113,7 +114,7 @@ class PlayerGrid extends ConsumerWidget {
 
               final isJudgementTarget =
                   gamePhase == GamePhase.judgement &&
-                  actionState.judgementTarget == player.id;
+                  judgementTarget == player.id;
 
               final isMyVoteTarget =
                   voters[socketId] == player.id || isJudgementTarget;

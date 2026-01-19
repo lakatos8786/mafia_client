@@ -21,7 +21,6 @@ class GameResultOverlay extends ConsumerStatefulWidget {
 class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
   bool _showCards = false;
   bool _showGameLog = false;
-  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -30,24 +29,31 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
       if (mounted) setState(() => _showCards = true);
     });
 
-    _refreshTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    // Refresh after 2 seconds to show 'Return to Lobby' button
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final gameState = ref.watch(gameStateProvider);
+    final winner = ref.watch(gameStateProvider.select((s) => s.winner));
+    final endGamePlayers = ref.watch(
+      gameStateProvider.select((s) => s.endGamePlayers),
+    );
+    final canReturnToLobby = ref.watch(
+      gameStateProvider.select((s) => s.canReturnToLobby),
+    );
+    final gameLog = ref.watch(gameStateProvider.select((s) => s.gameLog));
+
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
 
-    final winner = gameState.winner;
     final winnerRole = GameRole.fromString(winner);
     final isMafiaWin = winnerRole == GameRole.mafia;
 
@@ -84,17 +90,17 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                                   SizedBox(height: isCompact ? 10 : 30),
                                   if (_showCards)
                                     _ResultsGrid(
-                                      players: gameState.endGamePlayers,
+                                      players: endGamePlayers,
                                       isMafiaWin: isMafiaWin,
                                       mainColor: mainColor,
                                     ),
-                                  SizedBox(height: isCompact ? 10 : 20),
+                                  const SizedBox(height: 20),
                                 ],
                               ),
                             ),
                           ),
                           _ActionButtonsArea(
-                            canReturn: gameState.canReturnToLobby,
+                            canReturn: canReturnToLobby,
                             mainColor: mainColor,
                             isCompact: isCompact,
                             onReturn: () => ref
@@ -110,7 +116,7 @@ class _GameResultOverlayState extends ConsumerState<GameResultOverlay> {
                 ),
                 if (_showGameLog)
                   GameLogView(
-                    gameLog: gameState.gameLog,
+                    gameLog: gameLog,
                     onClose: () => setState(() => _showGameLog = false),
                   ),
               ],

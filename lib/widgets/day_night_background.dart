@@ -50,32 +50,33 @@ class DayNightBackground extends StatelessWidget {
       );
     }
 
-    return AnimatedContainer(
-      duration: const Duration(seconds: 2),
-      decoration: mainDecoration,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Vignette effect
-          Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 1.2,
-                colors: [
-                  Colors.transparent,
-                  AppColors.overlayBlack50.withValues(alpha: 0.6),
-                ],
-                stops: const [0.6, 1.0],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        RepaintBoundary(
+          child: AnimatedContainer(
+            duration: const Duration(seconds: 2),
+            decoration: mainDecoration,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.2,
+                  colors: [
+                    Colors.transparent,
+                    AppColors.overlayBlack50.withValues(alpha: 0.6),
+                  ],
+                  stops: const [0.6, 1.0],
+                ),
               ),
             ),
           ),
-          // Particle Layer
-          ParticleBackground(phase: phase),
-
-          child,
-        ],
-      ),
+        ),
+        // Particle Layer (already has its own internal RepaintBoundary)
+        ParticleBackground(phase: phase),
+        // The rest of the app
+        child,
+      ],
     );
   }
 }

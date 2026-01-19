@@ -168,45 +168,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Elements
-          Positioned(
-            top: -100,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.mafiaRed.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.mafiaRed.withValues(alpha: 0.5),
-                    blurRadius: 100,
-                    spreadRadius: 50,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -50,
-            right: -50,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.loginButtonSecondary.withValues(alpha: 0.3),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.loginButtonSecondary.withValues(
-                      alpha: 0.5,
+          // Background Elements - Isolated via RepaintBoundary
+          RepaintBoundary(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: -100,
+                  left: -100,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.mafiaRed.withValues(alpha: 0.3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.mafiaRed.withValues(alpha: 0.5),
+                          blurRadius: 100,
+                          spreadRadius: 50,
+                        ),
+                      ],
                     ),
-                    blurRadius: 100,
-                    spreadRadius: 50,
                   ),
-                ],
-              ),
+                ),
+                Positioned(
+                  bottom: -50,
+                  right: -50,
+                  child: Container(
+                    width: 250,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.loginButtonSecondary.withValues(
+                        alpha: 0.3,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.loginButtonSecondary.withValues(
+                            alpha: 0.5,
+                          ),
+                          blurRadius: 100,
+                          spreadRadius: 50,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -279,114 +287,120 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             height: ResponsiveUtils.spacing(context, 40),
                           ),
 
-                          // Glassmorphism Container
+                          // Glassmorphism Container - Isolated via RepaintBoundary
                           FadeInUp(
                             delay: const Duration(milliseconds: 300),
                             duration: const Duration(milliseconds: 800),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(
-                                  sigmaX: 10,
-                                  sigmaY: 10,
-                                ),
-                                child: Container(
-                                  constraints: BoxConstraints(
-                                    maxWidth: 400,
-                                    minWidth: ResponsiveUtils.iconSize(
-                                      context,
-                                      280,
+                            child: RepaintBoundary(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(
+                                    sigmaX: 10,
+                                    sigmaY: 10,
+                                  ),
+                                  child: Container(
+                                    constraints: BoxConstraints(
+                                      maxWidth: 400,
+                                      minWidth: ResponsiveUtils.iconSize(
+                                        context,
+                                        280,
+                                      ),
                                     ),
-                                  ),
-                                  width: constraints.maxWidth * 0.9,
-                                  padding: EdgeInsets.all(
-                                    ResponsiveUtils.padding(context, 24),
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
+                                    width: constraints.maxWidth * 0.9,
+                                    padding: EdgeInsets.all(
+                                      ResponsiveUtils.padding(context, 24),
+                                    ),
+                                    decoration: BoxDecoration(
                                       color: Colors.white.withValues(
-                                        alpha: 0.1,
+                                        alpha: 0.05,
                                       ),
-                                      width: 1,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        width: 1,
+                                      ),
                                     ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      _buildTextField(
-                                        controller: _nameController,
-                                        label: AppStrings.labelNickname,
-                                        icon: Icons.person_outline,
-                                        maxLength: 10,
-                                        maxLengthEnforcement:
-                                            MaxLengthEnforcement.enforced,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                            RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
+                                    child: Column(
+                                      children: [
+                                        _buildTextField(
+                                          controller: _nameController,
+                                          label: AppStrings.labelNickname,
+                                          icon: Icons.person_outline,
+                                          maxLength: 10,
+                                          maxLengthEnforcement:
+                                              MaxLengthEnforcement.enforced,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                              RegExp(r'[가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9 ]'),
+                                            ),
+                                            LengthLimitingTextInputFormatter(
+                                              10,
+                                            ),
+                                          ],
+                                          onChanged: (value) {
+                                            if (value.length > 10) {
+                                              _nameController
+                                                  .value = TextEditingValue(
+                                                text: value.substring(0, 10),
+                                                selection:
+                                                    TextSelection.collapsed(
+                                                      offset: 10,
+                                                    ),
+                                              );
+                                            }
+                                          },
+                                        ),
+                                        SizedBox(
+                                          height: ResponsiveUtils.spacing(
+                                            context,
+                                            16,
                                           ),
-                                          LengthLimitingTextInputFormatter(10),
-                                        ],
-                                        onChanged: (value) {
-                                          if (value.length > 10) {
-                                            _nameController.value =
-                                                TextEditingValue(
-                                                  text: value.substring(0, 10),
-                                                  selection:
-                                                      TextSelection.collapsed(
-                                                        offset: 10,
-                                                      ),
-                                                );
-                                          }
-                                        },
-                                      ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          16,
                                         ),
-                                      ),
-                                      _buildTextField(
-                                        controller: _roomCodeController,
-                                        label: AppStrings.labelRoomCode,
-                                        icon: Icons.vpn_key_outlined,
-                                        isNumber: true,
-                                        maxLength: 6,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                        ],
-                                      ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          24,
+                                        _buildTextField(
+                                          controller: _roomCodeController,
+                                          label: AppStrings.labelRoomCode,
+                                          icon: Icons.vpn_key_outlined,
+                                          isNumber: true,
+                                          maxLength: 6,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
                                         ),
-                                      ),
-                                      _buildButton(
-                                        text: AppStrings.btnCreateRoom,
-                                        onPressed: _isLoading
-                                            ? null
-                                            : _createRoom,
-                                        color: AppColors.mafiaRed,
-                                        isLoading: _isLoading,
-                                      ),
-                                      SizedBox(
-                                        height: ResponsiveUtils.spacing(
-                                          context,
-                                          12,
+                                        SizedBox(
+                                          height: ResponsiveUtils.spacing(
+                                            context,
+                                            24,
+                                          ),
                                         ),
-                                      ),
-                                      _buildButton(
-                                        text: AppStrings.btnJoinRoom,
-                                        onPressed: _isLoading
-                                            ? null
-                                            : _joinRoom,
-                                        color: AppColors.loginButtonSecondary,
-                                        isOutlined: true,
-                                        isLoading: _isLoading,
-                                      ),
-                                    ],
+                                        _buildButton(
+                                          text: AppStrings.btnCreateRoom,
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _createRoom,
+                                          color: AppColors.mafiaRed,
+                                          isLoading: _isLoading,
+                                        ),
+                                        SizedBox(
+                                          height: ResponsiveUtils.spacing(
+                                            context,
+                                            12,
+                                          ),
+                                        ),
+                                        _buildButton(
+                                          text: AppStrings.btnJoinRoom,
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _joinRoom,
+                                          color: AppColors.loginButtonSecondary,
+                                          isOutlined: true,
+                                          isLoading: _isLoading,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

@@ -38,7 +38,7 @@ class PlayerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
-    final gameState = ref.watch(gameStateProvider);
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final isSelected = selectionTargets.isNotEmpty || isMyVoteTarget;
     final identityColor = AppColors.getIdentityColor(player.nickname);
 
@@ -109,7 +109,7 @@ class PlayerCard extends ConsumerWidget {
                       identityColor: identityColor,
                       voteCount: voteCount,
                       votersList: votersList,
-                      gamePhase: gameState.gamePhase,
+                      gamePhase: gamePhase,
                     ),
                   ),
                   if (!player.isAlive)

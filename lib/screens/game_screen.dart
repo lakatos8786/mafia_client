@@ -35,7 +35,9 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
-    final actionState = ref.watch(actionProvider);
+    final judgementResultData = ref.watch(
+      actionProvider.select((s) => s.judgementResultData),
+    );
 
     // Listen for server errors
     ref.listen(gameStateProvider.select((s) => s.lastErrorTime), (
@@ -145,10 +147,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
               ),
 
             // Judgement Result Dramatic Overlay
-            if (actionState.judgementResultData != null)
-              JudgementResultOverlay(
-                resultData: actionState.judgementResultData!,
-              ),
+            if (judgementResultData != null)
+              JudgementResultOverlay(resultData: judgementResultData),
           ],
         ),
       ),

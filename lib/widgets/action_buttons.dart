@@ -16,31 +16,31 @@ class ActionButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameStateProvider);
+    final players = ref.watch(gameStateProvider.select((s) => s.players));
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
-    final isAlive = gameState.players.any((p) => p.id == socketId && p.isAlive);
+    final isAlive = players.any((p) => p.id == socketId && p.isAlive);
 
     // Filter button should be available even for dead players
     // but only in phases where it's not automatically ignored anyway
     final showFilterOnly =
         !isAlive &&
-        (gameState.gamePhase == GamePhase.day ||
-            gameState.gamePhase == GamePhase.night ||
-            gameState.gamePhase == GamePhase.lastWord);
+        (gamePhase == GamePhase.day ||
+            gamePhase == GamePhase.night ||
+            gamePhase == GamePhase.lastWord);
 
     return RepaintBoundary(
       child: Column(
         children: [
           if (isAlive) ...[
-            if (gameState.gamePhase == GamePhase.day) const _SkipVoteRow(),
-            if (gameState.gamePhase == GamePhase.night &&
-                gameState.myRole == GameRole.mafia)
+            if (gamePhase == GamePhase.day) const _SkipVoteRow(),
+            if (gamePhase == GamePhase.night && myRole == GameRole.mafia)
               const _MafiaSkipRow(),
-            if (gameState.gamePhase == GamePhase.night &&
-                gameState.myRole != GameRole.mafia)
+            if (gamePhase == GamePhase.night && myRole != GameRole.mafia)
               const _FilterOnlyRow(),
-            if (gameState.gamePhase == GamePhase.lastWord) const _LastWordRow(),
+            if (gamePhase == GamePhase.lastWord) const _LastWordRow(),
           ] else if (showFilterOnly) ...[
             const _FilterOnlyRow(),
           ],
@@ -116,7 +116,9 @@ class _SkipVoteRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
-    final actionState = ref.watch(actionProvider);
+    final skipVotes = ref.watch(
+      actionProvider.select((s) => s.votes[GameAction.skip] ?? 0),
+    );
     final skipVoterNicknames = ref.watch(skipVoterNicknamesProvider);
     final iVotedSkip = ref.watch(iVotedSkipProvider);
 
@@ -133,13 +135,12 @@ class _SkipVoteRow extends ConsumerWidget {
             highlightColor: gameTheme.policeRef,
             normalColor: AppColors.grey700,
           ),
-          if (actionState.votes[GameAction.skip] != null &&
-              actionState.votes[GameAction.skip]! > 0)
+          if (skipVotes > 0)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Text(
-                  '건너뛰기 투표: ${actionState.votes[GameAction.skip]} (${skipVoterNicknames.join(", ")})',
+                  '건너뛰기 투표: $skipVotes (${skipVoterNicknames.join(", ")})',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.bold,
@@ -167,7 +168,9 @@ class _MafiaSkipRow extends ConsumerWidget {
     final isMafiaSkip = ref.watch(isMafiaSkipProvider);
     final mafiaSkipButtonText = ref.watch(mafiaSkipButtonTextProvider);
     final mafiaSkipActor = ref.watch(mafiaSkipActorNicknameProvider);
-    final actionState = ref.watch(actionProvider);
+    final mafiaSkipVotes = ref.watch(
+      actionProvider.select((s) => s.votes[GameAction.skip] ?? 0),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -183,13 +186,12 @@ class _MafiaSkipRow extends ConsumerWidget {
             highlightColor: gameTheme.mafiaRef,
             normalColor: AppColors.greyDark,
           ),
-          if (actionState.votes[GameAction.skip] != null &&
-              actionState.votes[GameAction.skip]! > 0)
+          if (mafiaSkipVotes > 0)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Text(
-                  '킬 건너뛰기: ${actionState.votes[GameAction.skip]} ($mafiaSkipActor)',
+                  '킬 건너뛰기: $mafiaSkipVotes ($mafiaSkipActor)',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     fontWeight: FontWeight.bold,
