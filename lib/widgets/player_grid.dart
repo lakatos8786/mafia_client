@@ -7,6 +7,7 @@ import '../models/player.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/action_provider.dart';
 import '../providers/connection_provider.dart';
+import '../providers/ui_provider.dart';
 
 import 'player_card.dart';
 
@@ -27,6 +28,18 @@ class PlayerGrid extends ConsumerWidget {
 
     final socketId = ref.watch(connectionProvider.notifier).socketId;
     final actionState = ref.watch(actionProvider);
+    final showSurvivorsOnly = ref.watch(showSurvivorsOnlyProvider);
+
+    // --- Phase-Aware Filtering Logic ---
+    // Ignore filter during Judgment, Last Word, or Result phases
+    final isSpecialPhase =
+        gamePhase == GamePhase.judgement ||
+        gamePhase == GamePhase.lastWord ||
+        gamePhase == GamePhase.result;
+
+    final displayPlayers = (showSurvivorsOnly && !isSpecialPhase)
+        ? players.where((p) => p.isAlive).toList()
+        : players;
 
     // --- Spotlight Effect for Last Word ---
     if (gamePhase == GamePhase.lastWord &&
@@ -86,8 +99,9 @@ class PlayerGrid extends ConsumerWidget {
           return Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: players.map((player) {
-              final index = players.indexOf(player);
+            children: displayPlayers.map((player) {
+              // Note: index for animation delay should be based on filtered list index
+              final filterIndex = displayPlayers.indexOf(player);
               final isMe = player.id == socketId;
               final voteCount = votes[player.id] ?? 0;
 
@@ -130,7 +144,8 @@ class PlayerGrid extends ConsumerWidget {
               return SizedBox(
                 width: cardWidth,
                 child: FadeInUp(
-                  delay: Duration(milliseconds: 50 * index),
+                  key: ValueKey(player.id), // Add key for stable animations
+                  delay: Duration(milliseconds: 50 * filterIndex),
                   child: PlayerCard(
                     player: player,
                     isMe: isMe,
@@ -142,7 +157,7 @@ class PlayerGrid extends ConsumerWidget {
                     votersList: votersList,
                     showMafiaIndicator: showMafiaIndicator,
                     onTap: () {
-                      // Check if *I* am alive first
+                      // Check if *I* am alive using GLOBAL player list
                       final me = players.firstWhere(
                         (p) => p.id == socketId,
                         orElse: () => Player(

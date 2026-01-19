@@ -8,6 +8,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
 import '../utils/responsive_utils.dart';
+import '../providers/ui_provider.dart';
 
 /// 게임 중 액션 버튼(투표 건너뛰기 등)을 관리하는 위젯
 class ActionButtons extends ConsumerWidget {
@@ -18,20 +19,44 @@ class ActionButtons extends ConsumerWidget {
     final gameState = ref.watch(gameStateProvider);
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
-    // 플레이어가 살아있는지 확인
-    if (!gameState.players.any((p) => p.id == socketId && p.isAlive)) {
-      return const SizedBox.shrink();
-    }
+    final isAlive = gameState.players.any((p) => p.id == socketId && p.isAlive);
+
+    // Filter button should be available even for dead players
+    // but only in phases where it's not automatically ignored anyway
+    final showFilterOnly =
+        !isAlive &&
+        (gameState.gamePhase == GamePhase.day ||
+            gameState.gamePhase == GamePhase.night ||
+            gameState.gamePhase == GamePhase.lastWord);
 
     return RepaintBoundary(
       child: Column(
         children: [
-          if (gameState.gamePhase == GamePhase.day) const _SkipVoteRow(),
-          if (gameState.gamePhase == GamePhase.night &&
-              gameState.myRole == GameRole.mafia)
-            const _MafiaSkipRow(),
-          if (gameState.gamePhase == GamePhase.lastWord) const _LastWordRow(),
+          if (isAlive) ...[
+            if (gameState.gamePhase == GamePhase.day) const _SkipVoteRow(),
+            if (gameState.gamePhase == GamePhase.night &&
+                gameState.myRole == GameRole.mafia)
+              const _MafiaSkipRow(),
+            if (gameState.gamePhase == GamePhase.lastWord) const _LastWordRow(),
+          ] else if (showFilterOnly) ...[
+            const _FilterOnlyRow(),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _FilterOnlyRow extends StatelessWidget {
+  const _FilterOnlyRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [_SurvivorFilterToggle()],
       ),
     );
   }
@@ -73,6 +98,8 @@ class _LastWordRow extends ConsumerWidget {
               ),
             ),
           ),
+          const Spacer(),
+          const _SurvivorFilterToggle(),
         ],
       ),
     );
@@ -119,6 +146,8 @@ class _SkipVoteRow extends ConsumerWidget {
                 ),
               ),
             ),
+          const Spacer(),
+          const _SurvivorFilterToggle(),
         ],
       ),
     );
@@ -167,6 +196,8 @@ class _MafiaSkipRow extends ConsumerWidget {
                 ),
               ),
             ),
+          const Spacer(),
+          const _SurvivorFilterToggle(),
         ],
       ),
     );
@@ -235,6 +266,55 @@ class _ActionButton extends StatelessWidget {
           ),
           softWrap: true,
           textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+class _SurvivorFilterToggle extends ConsumerWidget {
+  const _SurvivorFilterToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final showSurvivorsOnly = ref.watch(showSurvivorsOnlyProvider);
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: () {
+        ref.read(showSurvivorsOnlyProvider.notifier).state = !showSurvivorsOnly;
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: showSurvivorsOnly
+              ? AppColors.primary.withValues(alpha: 0.2)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: showSurvivorsOnly
+                ? AppColors.primary
+                : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+          boxShadow: showSurvivorsOnly
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [],
+        ),
+        child: Text(
+          showSurvivorsOnly ? '생존자만' : '모두 보기',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: showSurvivorsOnly ? AppColors.primary : Colors.white70,
+            fontWeight: FontWeight.bold,
+            fontSize: ResponsiveUtils.fontSize(context, 11),
+          ),
         ),
       ),
     );

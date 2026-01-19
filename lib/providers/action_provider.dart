@@ -12,6 +12,7 @@ import '../../models/game_settings.dart';
 
 import 'connection_provider.dart';
 import 'game_state_provider.dart';
+import 'ui_provider.dart';
 import '../../services/socket_service.dart';
 
 part 'action_provider.g.dart';
@@ -136,6 +137,8 @@ class ActionNotifier extends _$ActionNotifier {
     archiveMessages();
     _addSystemMessage(AppStrings.gameStarted);
     state = state.copyWith(clearJudgementResult: true);
+    // Reset survivor filter on game start
+    ref.read(showSurvivorsOnlyProvider.notifier).state = false;
   }
 
   void _onPhaseChange(dynamic data) {
@@ -674,6 +677,7 @@ class ActionNotifier extends _$ActionNotifier {
 
   void resetAllData() {
     state = const ActionState();
+    ref.read(showSurvivorsOnlyProvider.notifier).state = false;
   }
 
   void _addSystemMessage(String msg) {
