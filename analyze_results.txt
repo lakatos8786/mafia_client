@@ -1,0 +1,14 @@
+﻿Analyzing mafia_client...                                       
+
+   info - Don't invoke 'print' in production code - lib\utils\check_hashes.dart:26:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\test_abs.dart:3:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\test_abs.dart:4:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\test_abs.dart:5:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\test_abs.dart:9:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\test_abs.dart:11:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\verify_new_logic.dart:66:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\verify_new_logic.dart:70:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\verify_new_logic.dart:74:3 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\verify_new_logic.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\utils\verify_new_logic.dart:82:3 - avoid_print
+

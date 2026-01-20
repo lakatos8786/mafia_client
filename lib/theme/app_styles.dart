@@ -35,7 +35,7 @@ class AppDecorations {
     return [
       BoxShadow(
         color: color.withValues(alpha: 0.5),
-        blurRadius: 12,
+        blurRadius: 8,
         spreadRadius: 1,
       ),
     ];

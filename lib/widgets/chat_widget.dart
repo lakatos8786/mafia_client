@@ -161,8 +161,9 @@ class _ChatListArea extends StatelessWidget {
       onTap: onToggleExpand,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+        clipBehavior: Clip.hardEdge,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 10),
             padding: const EdgeInsets.symmetric(vertical: 10),

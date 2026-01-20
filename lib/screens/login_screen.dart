@@ -184,8 +184,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.mafiaRed.withValues(alpha: 0.5),
-                          blurRadius: 100,
-                          spreadRadius: 50,
+                          blurRadius: 80,
+                          spreadRadius: 40,
                         ),
                       ],
                     ),
@@ -207,8 +207,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.loginButtonSecondary.withValues(
                             alpha: 0.5,
                           ),
-                          blurRadius: 100,
-                          spreadRadius: 50,
+                          blurRadius: 80,
+                          spreadRadius: 40,
                         ),
                       ],
                     ),
@@ -294,10 +294,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: RepaintBoundary(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
+                                clipBehavior: Clip.hardEdge,
                                 child: BackdropFilter(
                                   filter: ImageFilter.blur(
-                                    sigmaX: 10,
-                                    sigmaY: 10,
+                                    sigmaX: 7,
+                                    sigmaY: 7,
                                   ),
                                   child: Container(
                                     constraints: BoxConstraints(

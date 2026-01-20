@@ -58,7 +58,7 @@ class PlayerCard extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
           child: InkWell(
             onTap: onTap,
             child: AnimatedContainer(
@@ -222,46 +222,27 @@ class _PlayerCardContent extends StatelessWidget {
       colorFilter: player.isConnected
           ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
           : const ColorFilter.matrix(<double>[
-              0.2126,
-              0.7152,
-              0.0722,
-              0,
-              0,
-              0.2126,
-              0.7152,
-              0.0722,
-              0,
-              0,
-              0.2126,
-              0.7152,
-              0.0722,
-              0,
-              0,
-              0,
-              0,
-              0,
-              1,
-              0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0.2126, 0.7152, 0.0722, 0, 0,
+              0, 0, 0, 0.6, 0, // Opacity consolidated here
             ]),
-      child: Opacity(
-        opacity: player.isConnected ? 1.0 : 0.6,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _PlayerAvatar(player: player, identityColor: identityColor),
-            const SizedBox(height: 10),
-            _PlayerNickname(
-              player: player,
-              isMe: isMe,
-              identityColor: identityColor,
-            ),
-            if (player.role != null &&
-                (player.isRevealed || gamePhase == GamePhase.result))
-              _RevealedRoleBadge(role: player.role!),
-            if (player.isAlive && voteCount > 0)
-              _VoteBadge(voteCount: voteCount, votersList: votersList),
-          ],
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _PlayerAvatar(player: player, identityColor: identityColor),
+          const SizedBox(height: 10),
+          _PlayerNickname(
+            player: player,
+            isMe: isMe,
+            identityColor: identityColor,
+          ),
+          if (player.role != null &&
+              (player.isRevealed || gamePhase == GamePhase.result))
+            _RevealedRoleBadge(role: player.role!),
+          if (player.isAlive && voteCount > 0)
+            _VoteBadge(voteCount: voteCount, votersList: votersList),
+        ],
       ),
     );
   }

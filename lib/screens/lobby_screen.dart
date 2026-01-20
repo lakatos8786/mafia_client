@@ -21,7 +21,9 @@ class LobbyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameStateProvider);
+    final roomId = ref.watch(gameStateProvider.select((s) => s.roomId));
+    final isAdmin = ref.watch(gameStateProvider.select((s) => s.isAdmin));
+    final players = ref.watch(gameStateProvider.select((s) => s.players));
     final myId = ref.watch(connectionProvider.notifier).socketId;
 
     // Listen for server errors
@@ -43,16 +45,23 @@ class LobbyScreen extends ConsumerWidget {
       appBar: AppBar(
         title: GestureDetector(
           onTap: () {
-            if (gameState.roomId != null) {
-              Clipboard.setData(ClipboardData(text: gameState.roomId!));
-              NeonToast.show(context, '복사됨: ${gameState.roomId}');
+            if (roomId != null) {
+              Clipboard.setData(ClipboardData(text: roomId));
+              NeonToast.show(context, '복사됨: $roomId');
             }
           },
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const Text(
+                '방 번호: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
+                ),
+              ),
               Text(
-                '방 번호: ${gameState.roomId}',
+                roomId ?? '',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   letterSpacing: 2.0,
@@ -69,8 +78,7 @@ class LobbyScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () =>
-                _showSettingsBottomSheet(context, ref, gameState, myId),
+            onPressed: () => _showSettingsBottomSheet(context, ref, myId),
             tooltip: '방 설정',
           ),
         ],
@@ -95,12 +103,13 @@ class LobbyScreen extends ConsumerWidget {
                     height: 400,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      // Use simpler shadow for better performance
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                          blurRadius: 150,
-                          spreadRadius: 20,
+                          color: AppColors.primary.withValues(alpha: 0.15),
+                          blurRadius: 80,
+                          spreadRadius: 10,
                         ),
                       ],
                     ),
@@ -192,7 +201,7 @@ class LobbyScreen extends ConsumerWidget {
                                   width: ResponsiveUtils.spacing(context, 6),
                                 ),
                                 Text(
-                                  '${gameState.players.length}',
+                                  '${players.length}',
                                   style: GoogleFonts.ibmPlexSansKr(
                                     color: AppColors.primary,
                                     fontSize: ResponsiveUtils.fontSize(
@@ -209,9 +218,9 @@ class LobbyScreen extends ConsumerWidget {
                       ),
                       const SliverToBoxAdapter(child: SizedBox(height: 12)),
                       SliverList.builder(
-                        itemCount: gameState.players.length,
+                        itemCount: players.length,
                         itemBuilder: (context, index) {
-                          final player = gameState.players[index];
+                          final player = players[index];
                           final isMe = player.id == myId;
 
                           final alphaScale = player.atLobby ? 1.0 : 0.5;
@@ -267,12 +276,7 @@ class LobbyScreen extends ConsumerWidget {
                                       foregroundColor: Colors.white.withValues(
                                         alpha: alphaScale,
                                       ),
-                                      child: Icon(
-                                        Icons.person,
-                                        color: Colors.white.withValues(
-                                          alpha: alphaScale,
-                                        ),
-                                      ),
+                                      child: const Icon(Icons.person),
                                     ),
                                     SizedBox(
                                       width: ResponsiveUtils.spacing(
@@ -368,7 +372,7 @@ class LobbyScreen extends ConsumerWidget {
                                           size: 18,
                                         ),
                                       ),
-                                    if (gameState.isAdmin && !isMe)
+                                    if (isAdmin && !isMe)
                                       IconButton(
                                         icon: Icon(
                                           Icons.logout,
@@ -404,7 +408,7 @@ class LobbyScreen extends ConsumerWidget {
                       ResponsiveUtils.padding(context, 24),
                       ResponsiveUtils.padding(context, 32),
                     ),
-                    child: _buildStartButton(context, ref, gameState, myId),
+                    child: _buildStartButton(context, ref, myId),
                   ),
                 ),
               ],
@@ -415,17 +419,15 @@ class LobbyScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStartButton(
-    BuildContext context,
-    WidgetRef ref,
-    GameState gameState,
-    String? myId,
-  ) {
-    if (gameState.roomId == null) return const SizedBox.shrink();
+  Widget _buildStartButton(BuildContext context, WidgetRef ref, String? myId) {
+    if (ref.read(gameStateProvider).roomId == null) {
+      return const SizedBox.shrink();
+    }
 
-    final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
+    final players = ref.watch(gameStateProvider.select((s) => s.players));
+    final isHost = players.any((p) => p.id == myId && p.isHost);
     if (isHost) {
-      final anyoneReviewing = gameState.players.any((p) => !p.atLobby);
+      final anyoneReviewing = players.any((p) => !p.atLobby);
 
       return Column(
         children: [
@@ -495,7 +497,6 @@ class LobbyScreen extends ConsumerWidget {
   void _showSettingsBottomSheet(
     BuildContext context,
     WidgetRef ref,
-    GameState gameState,
     String? myId,
   ) {
     showModalBottomSheet(
@@ -534,12 +535,18 @@ class LobbyScreen extends ConsumerWidget {
                     Expanded(
                       child: Consumer(
                         builder: (context, ref, child) {
-                          final currentGameState = ref.watch(gameStateProvider);
+                          final gameSettings = ref.watch(
+                            gameStateProvider.select((s) => s.gameSettings),
+                          );
+                          final players = ref.watch(
+                            gameStateProvider.select((s) => s.players),
+                          );
                           // Use ListView for performance (lazy loading)
                           return _buildSettingsListView(
                             context,
                             ref,
-                            currentGameState,
+                            gameSettings,
+                            players,
                             myId,
                             scrollController,
                           );
@@ -605,14 +612,14 @@ class LobbyScreen extends ConsumerWidget {
   Widget _buildSettingsListView(
     BuildContext context,
     WidgetRef ref,
-    GameState gameState,
+    GameSettings settings,
+    List<Player> players,
     String? myId,
     ScrollController? scrollController,
   ) {
-    final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
-    final GameSettings settings = gameState.gameSettings;
+    final isHost = players.any((p) => p.id == myId && p.isHost);
 
-    final playerCount = gameState.players.length;
+    final playerCount = players.length;
     final isAuto = settings.mafiaCount == null;
     final autoCounts = _getAutoRoleCounts(playerCount);
 

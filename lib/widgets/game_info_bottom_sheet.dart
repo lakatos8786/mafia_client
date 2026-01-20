@@ -21,17 +21,26 @@ class GameInfoBottomSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 성능 최적화: 필요한 데이터만 선택적으로 구독
-    final gameState = ref.watch(gameStateProvider);
+    final players = ref.watch(gameStateProvider.select((s) => s.players));
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final dayCount = ref.watch(gameStateProvider.select((s) => s.dayCount));
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
+    final roomId = ref.watch(gameStateProvider.select((s) => s.roomId));
+    final gameSettings = ref.watch(
+      gameStateProvider.select((s) => s.gameSettings),
+    );
+    final roleCounts = ref.watch(gameStateProvider.select((s) => s.roleCounts));
+
     final myId = ref.watch(connectionProvider.notifier).socketId;
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
 
     // 내 플레이어 정보 찾기
-    final myPlayer = gameState.players.where((p) => p.id == myId).firstOrNull;
+    final myPlayer = players.where((p) => p.id == myId).firstOrNull;
     final isAlive = myPlayer?.isAlive ?? true;
 
     // 생존자 수 계산
-    final aliveCount = gameState.players.where((p) => p.isAlive).length;
+    final aliveCount = players.where((p) => p.isAlive).length;
 
     // ResponsiveUtils 스케일 팩터 캐싱
     final scaleFactor = ResponsiveUtils.getScaleFactor(context);
@@ -100,7 +109,10 @@ class GameInfoBottomSheet extends ConsumerWidget {
                     children: [
                       // 게임 현황 섹션
                       _GameStatusSection(
-                        gameState: gameState,
+                        gamePhase: gamePhase,
+                        dayCount: dayCount,
+                        players: players,
+                        roleCounts: roleCounts,
                         aliveCount: aliveCount,
                         scaleFactor: scaleFactor,
                         gameTheme: gameTheme,
@@ -111,35 +123,32 @@ class GameInfoBottomSheet extends ConsumerWidget {
                       // 내 정보 섹션
                       _MyInfoSection(
                         myNickname: myPlayer?.nickname ?? '알 수 없음',
-                        myRole: gameState.myRole,
+                        myRole: myRole,
                         isAlive: isAlive,
                         scaleFactor: scaleFactor,
                         gameTheme: gameTheme,
-                        gamePhase: gameState.gamePhase,
+                        gamePhase: gamePhase,
                       ),
 
                       const SizedBox(height: 24),
 
                       // 마피아 팀 섹션
-                      if (gameState.myRole == GameRole.mafia) ...[
+                      if (myRole == GameRole.mafia) ...[
                         _MafiaTeamSection(
-                          players: gameState.players,
+                          players: players,
                           scaleFactor: scaleFactor,
                         ),
                         const SizedBox(height: 24),
                       ],
 
                       // 방 번호 섹션
-                      _RoomIdSection(
-                        roomId: gameState.roomId,
-                        scaleFactor: scaleFactor,
-                      ),
+                      _RoomIdSection(roomId: roomId, scaleFactor: scaleFactor),
 
                       const SizedBox(height: 24),
 
                       // 게임 설정 섹션
                       _GameSettingsSection(
-                        gameSettings: gameState.gameSettings,
+                        gameSettings: gameSettings,
                         scaleFactor: scaleFactor,
                       ),
                     ],
@@ -236,13 +245,19 @@ class _InfoRow extends StatelessWidget {
 
 /// 1. 게임 현황 섹션
 class _GameStatusSection extends StatelessWidget {
-  final GameState gameState;
+  final GamePhase gamePhase;
+  final int dayCount;
+  final List<Player> players;
+  final Map<String, int> roleCounts;
   final int aliveCount;
   final double scaleFactor;
   final GameThemeExtension gameTheme;
 
   const _GameStatusSection({
-    required this.gameState,
+    required this.gamePhase,
+    required this.dayCount,
+    required this.players,
+    required this.roleCounts,
     required this.aliveCount,
     required this.scaleFactor,
     required this.gameTheme,
@@ -264,8 +279,8 @@ class _GameStatusSection extends StatelessWidget {
           children: [
             _InfoRow(
               label: '진행',
-              value: '${gameState.gamePhase.label} ${gameState.dayCount}일차',
-              valueColor: gameState.gamePhase == GamePhase.day
+              value: '${gamePhase.label} $dayCount일차',
+              valueColor: gamePhase == GamePhase.day
                   ? Colors.orangeAccent
                   : AppColors.nightAccent,
               scaleFactor: scaleFactor,
@@ -273,7 +288,7 @@ class _GameStatusSection extends StatelessWidget {
             const SizedBox(height: 12),
             _InfoRow(
               label: '전체 인원',
-              value: '${gameState.players.length}명',
+              value: '${players.length}명',
               valueColor: Colors.white,
               scaleFactor: scaleFactor,
             ),
@@ -287,11 +302,11 @@ class _GameStatusSection extends StatelessWidget {
             const SizedBox(height: 12),
             _InfoRow(
               label: '사망자',
-              value: '${gameState.players.length - aliveCount}명',
+              value: '${players.length - aliveCount}명',
               valueColor: AppColors.dead,
               scaleFactor: scaleFactor,
             ),
-            if (gameState.roleCounts.isNotEmpty) ...[
+            if (roleCounts.isNotEmpty) ...[
               const SizedBox(height: 16),
               const Divider(color: Colors.white12, height: 1),
               const SizedBox(height: 12),
@@ -307,7 +322,7 @@ class _GameStatusSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildRoleCountsGrid(context),
+              _buildRoleCountsGrid(context, roleCounts),
             ],
           ],
         ),
@@ -315,8 +330,10 @@ class _GameStatusSection extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleCountsGrid(BuildContext context) {
-    final Map<String, int> roleCounts = gameState.roleCounts;
+  Widget _buildRoleCountsGrid(
+    BuildContext context,
+    Map<String, int> roleCounts,
+  ) {
     return Wrap(
       spacing: 16,
       runSpacing: 12,

@@ -65,12 +65,14 @@ class ScreenRouter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final socketId = ref.watch(connectionProvider.notifier).socketId;
-    final gameState = ref.watch(gameStateProvider);
+    final isConnected = ref.watch(
+      connectionProvider.select((s) => s.isConnected),
+    );
 
     // Initial connection might take a moment, show spinner?
     // We check socketService initialization in ConnectionNotifier.
     // Assuming socketId is null until connected.
-    if (!ref.watch(connectionProvider).isConnected && socketId == null) {
+    if (!isConnected && socketId == null) {
       // Assuming 'isConnected' or similar state.
       // Or just check socketId.
       // But checking ConnectionState is better.
@@ -108,13 +110,17 @@ class ScreenRouter extends ConsumerWidget {
     }
 
     // Check if joined
-    final isJoined = gameState.players.any((p) => p.id == socketId);
+    final isJoined = ref.watch(
+      gameStateProvider.select((s) => s.players.any((p) => p.id == socketId)),
+    );
 
     if (!isJoined) {
       return const LoginScreen();
     }
 
-    if (gameState.gamePhase == GamePhase.waiting) {
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+
+    if (gamePhase == GamePhase.waiting) {
       return const LobbyScreen();
     } else {
       return const GameScreen();

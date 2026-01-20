@@ -16,12 +16,15 @@ class ActionButtons extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final players = ref.watch(gameStateProvider.select((s) => s.players));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
-    final isAlive = players.any((p) => p.id == socketId && p.isAlive);
+    final isAlive = ref.watch(
+      gameStateProvider.select(
+        (s) => s.players.any((p) => p.id == socketId && p.isAlive),
+      ),
+    );
 
     // Filter button should be available even for dead players
     // but only in phases where it's not automatically ignored anyway
@@ -70,11 +73,13 @@ class _LastWordRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final actionState = ref.watch(actionNotifierProvider);
+    final judgementTarget = ref.watch(
+      actionNotifierProvider.select((s) => s.judgementTarget),
+    );
     final socketId = ref.watch(connectionProvider.notifier).socketId;
 
     // Only show for the suspect who is speaking
-    if (actionState.judgementTarget != socketId) return const SizedBox.shrink();
+    if (judgementTarget != socketId) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
 
