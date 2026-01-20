@@ -276,15 +276,18 @@ class _ChatMessageItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLegacy = message.isLegacy;
+    // Direct alpha scale instead of Opacity widget
+    final double alphaScale = isLegacy ? 0.4 : 1.0;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isLegacy ? 4 : 8),
-      child: Opacity(
-        opacity: isLegacy ? 0.4 : 1.0,
-        child: message.isSystem
-            ? _SystemMessage(text: message.message, isLegacy: isLegacy)
-            : _UserMessage(message: message),
-      ),
+      child: message.isSystem
+          ? _SystemMessage(
+              text: message.message,
+              isLegacy: isLegacy,
+              alphaScale: alphaScale,
+            )
+          : _UserMessage(message: message, alphaScale: alphaScale),
     );
   }
 }
@@ -292,7 +295,13 @@ class _ChatMessageItem extends StatelessWidget {
 class _SystemMessage extends StatelessWidget {
   final String text;
   final bool isLegacy;
-  const _SystemMessage({required this.text, required this.isLegacy});
+  final double alphaScale;
+
+  const _SystemMessage({
+    required this.text,
+    required this.isLegacy,
+    required this.alphaScale,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -301,10 +310,10 @@ class _SystemMessage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.policeBlue.withValues(alpha: 0.1),
+          color: AppColors.policeBlue.withValues(alpha: 0.1 * alphaScale),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.accentYellow.withValues(alpha: 0.3),
+            color: AppColors.accentYellow.withValues(alpha: 0.3 * alphaScale),
           ),
         ),
         child: Row(
@@ -312,7 +321,7 @@ class _SystemMessage extends StatelessWidget {
           children: [
             Icon(
               _getIcon(text),
-              color: AppColors.accentYellow,
+              color: AppColors.accentYellow.withValues(alpha: alphaScale),
               size: isLegacy ? 12 : 16,
             ),
             const SizedBox(width: 8),
@@ -320,7 +329,9 @@ class _SystemMessage extends StatelessWidget {
               child: Text(
                 text,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
+                  color: theme.colorScheme.onSurface.withValues(
+                    alpha: 0.9 * alphaScale,
+                  ),
                   fontSize: ResponsiveUtils.fontSize(
                     context,
                     isLegacy ? 12 : 14,
@@ -351,7 +362,9 @@ class _SystemMessage extends StatelessWidget {
 
 class _UserMessage extends StatelessWidget {
   final ChatMessage message;
-  const _UserMessage({required this.message});
+  final double alphaScale;
+
+  const _UserMessage({required this.message, required this.alphaScale});
 
   @override
   Widget build(BuildContext context) {
@@ -370,7 +383,9 @@ class _UserMessage extends StatelessWidget {
             child: Text(
               message.sender,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.getIdentityColor(message.sender),
+                color: AppColors.getIdentityColor(
+                  message.sender,
+                ).withValues(alpha: alphaScale),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -382,7 +397,9 @@ class _UserMessage extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: message.bubbleColor.withValues(alpha: isMe ? 0.95 : 0.9),
+              color: message.bubbleColor.withValues(
+                alpha: (isMe ? 0.95 : 0.9) * alphaScale,
+              ),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -396,20 +413,20 @@ class _UserMessage extends StatelessWidget {
               border: !isMe
                   ? Border.all(
                       color: theme.colorScheme.onSurface.withValues(
-                        alpha: 0.05,
+                        alpha: 0.05 * alphaScale,
                       ),
                     )
                   : null,
               boxShadow: isMe
                   ? AppDecorations.neonGlow(
-                      message.bubbleColor.withValues(alpha: 0.3),
+                      message.bubbleColor.withValues(alpha: 0.3 * alphaScale),
                     )
                   : [],
             ),
             child: Text(
               message.message,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: message.textColor,
+                color: message.textColor.withValues(alpha: alphaScale),
                 fontSize: ResponsiveUtils.fontSize(context, isLegacy ? 13 : 15),
               ),
             ),

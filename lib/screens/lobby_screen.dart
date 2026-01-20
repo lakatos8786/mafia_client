@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -215,157 +214,179 @@ class LobbyScreen extends ConsumerWidget {
                           final player = gameState.players[index];
                           final isMe = player.id == myId;
 
-                          return RepaintBoundary(
-                            child: FadeInLeft(
-                              delay: Duration(milliseconds: 100 * index),
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  bottom: ResponsiveUtils.spacing(context, 10),
+                          final alphaScale = player.atLobby ? 1.0 : 0.5;
+
+                          return FadeInLeft(
+                            delay: Duration(milliseconds: 100 * index),
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                bottom: ResponsiveUtils.spacing(context, 10),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: ResponsiveUtils.padding(
+                                  context,
+                                  20,
                                 ),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: ResponsiveUtils.padding(
-                                    context,
-                                    20,
+                              ),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 15,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isMe
+                                      ? AppColors.primary.withValues(
+                                          alpha: 0.2 * alphaScale,
+                                        )
+                                      : Colors.white.withValues(
+                                          alpha: 0.08 * alphaScale,
+                                        ),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: isMe
+                                        ? AppColors.primary.withValues(
+                                            alpha: 0.4 * alphaScale,
+                                          )
+                                        : Colors.white.withValues(
+                                            alpha: 0.1 * alphaScale,
+                                          ),
+                                    width: isMe ? 1.5 : 1.0,
                                   ),
                                 ),
-                                child: Opacity(
-                                  opacity: player.atLobby ? 1.0 : 0.5,
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 15,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isMe
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: isMe
                                           ? AppColors.primary.withValues(
-                                              alpha: 0.2,
+                                              alpha: alphaScale,
                                             )
                                           : Colors.white.withValues(
-                                              alpha: 0.08,
+                                              alpha: 0.12 * alphaScale,
                                             ),
-                                      borderRadius: BorderRadius.circular(15),
-                                      border: Border.all(
-                                        color: isMe
-                                            ? AppColors.primary.withValues(
-                                                alpha: 0.4,
-                                              )
-                                            : Colors.white.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                        width: isMe ? 1.5 : 1.0,
+                                      foregroundColor: Colors.white.withValues(
+                                        alpha: alphaScale,
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        color: Colors.white.withValues(
+                                          alpha: alphaScale,
+                                        ),
                                       ),
                                     ),
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          backgroundColor: isMe
-                                              ? AppColors.primary
-                                              : Colors.white12,
-                                          foregroundColor: Colors.white,
-                                          child: const Icon(Icons.person),
-                                        ),
-                                        SizedBox(
-                                          width: ResponsiveUtils.spacing(
-                                            context,
-                                            12,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            player.nickname,
-                                            style: GoogleFonts.ibmPlexSansKr(
-                                              fontSize:
-                                                  ResponsiveUtils.fontSize(
-                                                    context,
-                                                    16,
-                                                  ),
-                                              fontWeight: FontWeight.bold,
-                                              color: player.isAlive
-                                                  ? Colors.white
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                        ),
-                                        if (!player.atLobby)
-                                          Container(
-                                            margin: EdgeInsets.only(
-                                              left: ResponsiveUtils.spacing(
-                                                context,
-                                                8,
-                                              ),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.white10,
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: Colors.white24,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              '결과 확인 중...',
-                                              style: GoogleFonts.ibmPlexSansKr(
-                                                fontSize:
-                                                    ResponsiveUtils.fontSize(
-                                                      context,
-                                                      12,
-                                                    ),
-                                                color: Colors.white54,
-                                              ),
-                                            ),
-                                          ),
-                                        if (player.isHost)
-                                          Tooltip(
-                                            message: '방장',
-                                            child: Text(
-                                              '👑',
-                                              style: TextStyle(
-                                                fontSize:
-                                                    ResponsiveUtils.fontSize(
-                                                      context,
-                                                      20,
-                                                    ),
-                                              ),
-                                            ),
-                                          ),
-                                        if (isMe)
-                                          Padding(
-                                            padding: EdgeInsets.only(
-                                              left: ResponsiveUtils.spacing(
-                                                context,
-                                                8,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.star,
-                                              color: AppColors.accentYellow,
-                                              size: 18,
-                                            ),
-                                          ),
-                                        if (gameState.isAdmin && !isMe)
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.logout,
-                                              color: AppColors.mafiaRed,
-                                              size: 18,
-                                            ),
-                                            onPressed: () {
-                                              _showKickConfirmation(
-                                                context,
-                                                ref,
-                                                player,
-                                              );
-                                            },
-                                            tooltip: '강퇴',
-                                          ),
-                                      ],
+                                    SizedBox(
+                                      width: ResponsiveUtils.spacing(
+                                        context,
+                                        12,
+                                      ),
                                     ),
-                                  ),
+                                    Expanded(
+                                      child: Text(
+                                        player.nickname,
+                                        style: GoogleFonts.ibmPlexSansKr(
+                                          fontSize: ResponsiveUtils.fontSize(
+                                            context,
+                                            16,
+                                          ),
+                                          fontWeight: FontWeight.bold,
+                                          color:
+                                              (player.isAlive
+                                                      ? Colors.white
+                                                      : Colors.grey)
+                                                  .withValues(
+                                                    alpha: alphaScale,
+                                                  ),
+                                        ),
+                                      ),
+                                    ),
+                                    if (!player.atLobby)
+                                      Container(
+                                        margin: EdgeInsets.only(
+                                          left: ResponsiveUtils.spacing(
+                                            context,
+                                            8,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.1 * alphaScale,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.24 * alphaScale,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '결과 확인 중...',
+                                          style: GoogleFonts.ibmPlexSansKr(
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              12,
+                                            ),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.54 * alphaScale,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (player.isHost)
+                                      Tooltip(
+                                        message: '방장',
+                                        child: Text(
+                                          '👑',
+                                          style: TextStyle(
+                                            fontSize: ResponsiveUtils.fontSize(
+                                              context,
+                                              20,
+                                            ),
+                                            color: Colors.white.withValues(
+                                              alpha: alphaScale,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (isMe)
+                                      Padding(
+                                        padding: EdgeInsets.only(
+                                          left: ResponsiveUtils.spacing(
+                                            context,
+                                            8,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.star,
+                                          color: AppColors.accentYellow
+                                              .withValues(alpha: alphaScale),
+                                          size: 18,
+                                        ),
+                                      ),
+                                    if (gameState.isAdmin && !isMe)
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.logout,
+                                          color: AppColors.mafiaRed.withValues(
+                                            alpha: alphaScale,
+                                          ),
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          _showKickConfirmation(
+                                            context,
+                                            ref,
+                                            player,
+                                          );
+                                        },
+                                        tooltip: '강퇴',
+                                      ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -482,43 +503,54 @@ class LobbyScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.8,
-          decoration: BoxDecoration(
-            color: AppColors.backgroundDark,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
+        return DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return RepaintBoundary(
+              child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
+                  color: AppColors.backgroundDark,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(30),
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Expanded(
-                child: Consumer(
-                  builder: (context, ref, child) {
-                    final currentGameState = ref.watch(gameStateProvider);
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.only(bottom: 40),
-                      child: _buildSettingsSection(
-                        context,
-                        ref,
-                        currentGameState,
-                        myId,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final currentGameState = ref.watch(gameStateProvider);
+                          // Use ListView for performance (lazy loading)
+                          return _buildSettingsListView(
+                            context,
+                            ref,
+                            currentGameState,
+                            myId,
+                            scrollController,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -570,28 +602,46 @@ class LobbyScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsSection(
+  Widget _buildSettingsListView(
     BuildContext context,
     WidgetRef ref,
     GameState gameState,
     String? myId,
+    ScrollController? scrollController,
   ) {
     final isHost = gameState.players.any((p) => p.id == myId && p.isHost);
     final GameSettings settings = gameState.gameSettings;
+
+    final playerCount = gameState.players.length;
+    final isAuto = settings.mafiaCount == null;
+    final autoCounts = _getAutoRoleCounts(playerCount);
+
+    final totalManualRoles =
+        (settings.mafiaCount ?? 0) +
+        (settings.policeCount ?? 0) +
+        (settings.doctorCount ?? 0) +
+        (settings.madmanCount ?? 0) +
+        (settings.politicianCount ?? 0) +
+        (settings.soldierCount ?? 0);
+    final canIncrease = totalManualRoles < playerCount;
 
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: ResponsiveUtils.padding(context, 20),
       ),
-      padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
+      // Use effiecient hardEdge clipping for performance
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.all(ResponsiveUtils.padding(context, 16)),
+        physics: const BouncingScrollPhysics(),
         children: [
+          // Header
           Row(
             children: [
               Icon(
@@ -604,16 +654,14 @@ class LobbyScreen extends ConsumerWidget {
                 '방 규칙 설정 ${isHost ? '(관리자)' : ''}',
                 style: GoogleFonts.ibmPlexSansKr(
                   color: Colors.white,
-                  fontSize: ResponsiveUtils.fontSize(
-                    context,
-                    19,
-                  ), // Increased from 18
+                  fontSize: ResponsiveUtils.fontSize(context, 19),
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.spacing(context, 20)),
+
           // Time Section
           _buildSectionHeader(context, '🕒 시간 설정'),
           SizedBox(height: ResponsiveUtils.spacing(context, 20)),
@@ -671,221 +719,191 @@ class LobbyScreen extends ConsumerWidget {
             step: 10,
           ),
           const Divider(color: Colors.white12, height: 40),
+
           // Role Section
           _buildSectionHeader(context, '👥 직업 구성'),
           SizedBox(height: ResponsiveUtils.spacing(context, 20)),
-          () {
-            final playerCount = gameState.players.length;
-            final isAuto = settings.mafiaCount == null;
 
-            // Auto role count prediction (mirroring server index.js)
-            final autoCounts = _getAutoRoleCounts(playerCount);
-
-            final totalManualRoles =
-                (settings.mafiaCount ?? 0) +
-                (settings.policeCount ?? 0) +
-                (settings.doctorCount ?? 0) +
-                (settings.madmanCount ?? 0) +
-                (settings.politicianCount ?? 0) +
-                (settings.soldierCount ?? 0);
-            final canIncrease = totalManualRoles < playerCount;
-
-            return Column(
-              children: [
-                if (isHost)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Row(
-                      children: [
-                        const Text(
-                          '자동 직업 배정',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
+          if (isHost)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20),
+              child: Row(
+                children: [
+                  const Text(
+                    '자동 직업 배정',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 24,
+                    width: 40,
+                    child: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: isAuto,
+                        onChanged: (val) {
+                          if (!val && !canIncrease) {
+                            NeonToast.show(context, '참여 인원수를 초과할 수 없습니다.');
+                            return;
+                          }
+                          ref
+                              .read(actionProvider.notifier)
+                              .updateSettings(
+                                settings.copyWith(
+                                  mafiaCount: val ? null : autoCounts['mafia'],
+                                  policeCount: val
+                                      ? null
+                                      : autoCounts['police'],
+                                  doctorCount: val
+                                      ? null
+                                      : autoCounts['doctor'],
+                                  madmanCount: val
+                                      ? null
+                                      : autoCounts['madman'],
+                                  politicianCount: val
+                                      ? null
+                                      : autoCounts['politician'],
+                                  soldierCount: val
+                                      ? null
+                                      : autoCounts['soldier'],
+                                  clearMafia: val,
+                                  clearPolice: val,
+                                  clearDoctor: val,
+                                  clearMadman: val,
+                                  clearPolitician: val,
+                                  clearSoldier: val,
+                                ),
+                              );
+                        },
+                        activeThumbColor: AppColors.primary,
+                        activeTrackColor: AppColors.primary.withValues(
+                          alpha: 0.3,
                         ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          height: 24,
-                          width: 40,
-                          child: Transform.scale(
-                            scale: 0.7,
-                            child: Switch(
-                              value: isAuto,
-                              onChanged: (val) {
-                                if (!val && !canIncrease) {
-                                  NeonToast.show(
-                                    context,
-                                    '참여 인원수를 초과할 수 없습니다.',
-                                  );
-                                  return;
-                                }
-                                ref
-                                    .read(actionProvider.notifier)
-                                    .updateSettings(
-                                      settings.copyWith(
-                                        mafiaCount: val
-                                            ? null
-                                            : autoCounts['mafia'],
-                                        policeCount: val
-                                            ? null
-                                            : autoCounts['police'],
-                                        doctorCount: val
-                                            ? null
-                                            : autoCounts['doctor'],
-                                        madmanCount: val
-                                            ? null
-                                            : autoCounts['madman'],
-                                        politicianCount: val
-                                            ? null
-                                            : autoCounts['politician'],
-                                        soldierCount: val
-                                            ? null
-                                            : autoCounts['soldier'],
-                                        clearMafia: val,
-                                        clearPolice: val,
-                                        clearDoctor: val,
-                                        clearMadman: val,
-                                        clearPolitician: val,
-                                        clearSoldier: val,
-                                      ),
-                                    );
-                              },
-                              activeThumbColor: AppColors.primary,
-                              activeTrackColor: AppColors.primary.withValues(
-                                alpha: 0.3,
-                              ),
-                              inactiveThumbColor: Colors.white38,
-                              inactiveTrackColor: Colors.white10,
-                            ),
-                          ),
-                        ),
-                      ],
+                        inactiveThumbColor: Colors.white38,
+                        inactiveTrackColor: Colors.white10,
+                      ),
                     ),
                   ),
-                Column(
-                  children: [
-                    _buildRoleCounter(
-                      context,
-                      GameRole.mafia,
-                      settings.mafiaCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['mafia']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                mafiaCount: val,
-                                clearMafia: val == null,
-                              ),
-                            );
-                      },
+                ],
+              ),
+            ),
+
+          _buildRoleCounter(
+            context,
+            GameRole.mafia,
+            settings.mafiaCount,
+            isHost,
+            canIncrease,
+            autoCounts['mafia']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(mafiaCount: val, clearMafia: val == null),
+                  );
+            },
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _buildRoleCounter(
+            context,
+            GameRole.police,
+            settings.policeCount,
+            isHost,
+            canIncrease,
+            autoCounts['police']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(
+                      policeCount: val,
+                      clearPolice: val == null,
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildRoleCounter(
-                      context,
-                      GameRole.police,
-                      settings.policeCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['police']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                policeCount: val,
-                                clearPolice: val == null,
-                              ),
-                            );
-                      },
+                  );
+            },
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _buildRoleCounter(
+            context,
+            GameRole.doctor,
+            settings.doctorCount,
+            isHost,
+            canIncrease,
+            autoCounts['doctor']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(
+                      doctorCount: val,
+                      clearDoctor: val == null,
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildRoleCounter(
-                      context,
-                      GameRole.doctor,
-                      settings.doctorCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['doctor']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                doctorCount: val,
-                                clearDoctor: val == null,
-                              ),
-                            );
-                      },
+                  );
+            },
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _buildRoleCounter(
+            context,
+            GameRole.madman,
+            settings.madmanCount,
+            isHost,
+            canIncrease,
+            autoCounts['madman']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(
+                      madmanCount: val,
+                      clearMadman: val == null,
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildRoleCounter(
-                      context,
-                      GameRole.madman,
-                      settings.madmanCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['madman']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                madmanCount: val,
-                                clearMadman: val == null,
-                              ),
-                            );
-                      },
+                  );
+            },
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _buildRoleCounter(
+            context,
+            GameRole.politician,
+            settings.politicianCount,
+            isHost,
+            canIncrease,
+            autoCounts['politician']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(
+                      politicianCount: val,
+                      clearPolitician: val == null,
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildRoleCounter(
-                      context,
-                      GameRole.politician,
-                      settings.politicianCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['politician']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                politicianCount: val,
-                                clearPolitician: val == null,
-                              ),
-                            );
-                      },
+                  );
+            },
+          ),
+          SizedBox(height: ResponsiveUtils.spacing(context, 12)),
+          _buildRoleCounter(
+            context,
+            GameRole.soldier,
+            settings.soldierCount,
+            isHost,
+            canIncrease,
+            autoCounts['soldier']!,
+            isAuto,
+            (val) {
+              ref
+                  .read(actionProvider.notifier)
+                  .updateSettings(
+                    settings.copyWith(
+                      soldierCount: val,
+                      clearSoldier: val == null,
                     ),
-                    SizedBox(height: ResponsiveUtils.spacing(context, 12)),
-                    _buildRoleCounter(
-                      context,
-                      GameRole.soldier,
-                      settings.soldierCount,
-                      isHost,
-                      canIncrease,
-                      autoCounts['soldier']!,
-                      isAuto,
-                      (val) {
-                        ref
-                            .read(actionProvider.notifier)
-                            .updateSettings(
-                              settings.copyWith(
-                                soldierCount: val,
-                                clearSoldier: val == null,
-                              ),
-                            );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            );
-          }(),
+                  );
+            },
+          ),
         ],
       ),
     );
@@ -1109,26 +1127,24 @@ class LobbyScreen extends ConsumerWidget {
     String label,
     VoidCallback? onPressed,
   ) {
+    final bool isEnabled = onPressed != null;
     return GestureDetector(
       onTap: onPressed,
-      child: Opacity(
-        opacity: onPressed == null ? 0.3 : 1.0,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: ResponsiveUtils.padding(context, 10),
-            vertical: ResponsiveUtils.padding(context, 5),
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: ResponsiveUtils.fontSize(context, 14),
-            ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveUtils.padding(context, 10),
+          vertical: ResponsiveUtils.padding(context, 5),
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: isEnabled ? 0.2 : 0.06),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: isEnabled ? 1.0 : 0.3),
+            fontWeight: FontWeight.bold,
+            fontSize: ResponsiveUtils.fontSize(context, 14),
           ),
         ),
       ),

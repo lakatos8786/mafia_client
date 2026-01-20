@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +8,7 @@ import '../models/game_settings.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/connection_provider.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_styles.dart';
+
 import '../theme/app_theme.dart';
 import '../utils/responsive_utils.dart';
 import 'role_reveal_modal.dart';
@@ -44,108 +43,113 @@ class GameInfoBottomSheet extends ConsumerWidget {
       color: Colors.white,
     );
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
-      decoration: BoxDecoration(
-        color: AppColors.backgroundDark.withValues(
-          alpha: 0.98,
-        ), // 블러 대신 높은 불투명도 사용
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          // 드래그 핸들 (고정)
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.white38,
-              borderRadius: BorderRadius.circular(2),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark.withValues(alpha: 0.98),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
             ),
           ),
-
-          // 헤더 (고정)
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('🎮 게임 정보', style: headerStyle),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white70),
-                  onPressed: () => Navigator.of(context).pop(),
+          child: Column(
+            children: [
+              // 드래그 핸들 (고정)
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white38,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-              ],
-            ),
-          ),
-
-          const Divider(color: Colors.white12, height: 1),
-
-          // 스크롤 가능한 컨텐츠
-          Expanded(
-            child: RepaintBoundary(
-              child: ListView(
-                padding: const EdgeInsets.all(20),
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  // 게임 현황 섹션
-                  _GameStatusSection(
-                    gameState: gameState,
-                    aliveCount: aliveCount,
-                    scaleFactor: scaleFactor,
-                    gameTheme: gameTheme,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 내 정보 섹션
-                  _MyInfoSection(
-                    myNickname: myPlayer?.nickname ?? '알 수 없음',
-                    myRole: gameState.myRole,
-                    isAlive: isAlive,
-                    scaleFactor: scaleFactor,
-                    gameTheme: gameTheme,
-                    gamePhase: gameState.gamePhase,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 마피아 팀 섹션
-                  if (gameState.myRole == GameRole.mafia) ...[
-                    _MafiaTeamSection(
-                      players: gameState.players,
-                      scaleFactor: scaleFactor,
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                  // 방 번호 섹션
-                  _RoomIdSection(
-                    roomId: gameState.roomId,
-                    scaleFactor: scaleFactor,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 게임 설정 섹션
-                  _GameSettingsSection(
-                    gameSettings: gameState.gameSettings,
-                    scaleFactor: scaleFactor,
-                  ),
-                ],
               ),
-            ),
+
+              // 헤더 (고정)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('🎮 게임 정보', style: headerStyle),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(color: Colors.white12, height: 1),
+
+              // 스크롤 가능한 컨텐츠
+              Expanded(
+                child: RepaintBoundary(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(20),
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      // 게임 현황 섹션
+                      _GameStatusSection(
+                        gameState: gameState,
+                        aliveCount: aliveCount,
+                        scaleFactor: scaleFactor,
+                        gameTheme: gameTheme,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // 내 정보 섹션
+                      _MyInfoSection(
+                        myNickname: myPlayer?.nickname ?? '알 수 없음',
+                        myRole: gameState.myRole,
+                        isAlive: isAlive,
+                        scaleFactor: scaleFactor,
+                        gameTheme: gameTheme,
+                        gamePhase: gameState.gamePhase,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // 마피아 팀 섹션
+                      if (gameState.myRole == GameRole.mafia) ...[
+                        _MafiaTeamSection(
+                          players: gameState.players,
+                          scaleFactor: scaleFactor,
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // 방 번호 섹션
+                      _RoomIdSection(
+                        roomId: gameState.roomId,
+                        scaleFactor: scaleFactor,
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // 게임 설정 섹션
+                      _GameSettingsSection(
+                        gameSettings: gameState.gameSettings,
+                        scaleFactor: scaleFactor,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -251,7 +255,11 @@ class _GameStatusSection extends StatelessWidget {
       scaleFactor: scaleFactor,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: AppDecorations.glass(opacity: 0.05, borderRadius: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         child: Column(
           children: [
             _InfoRow(
@@ -403,7 +411,11 @@ class _MyInfoSection extends StatelessWidget {
       scaleFactor: scaleFactor,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: AppDecorations.glass(opacity: 0.05, borderRadius: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         child: Column(
           children: [
             _InfoRow(
@@ -506,7 +518,11 @@ class _MafiaTeamSection extends StatelessWidget {
       scaleFactor: scaleFactor,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: AppDecorations.glass(opacity: 0.05, borderRadius: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         child: Column(
           children: mafiaPlayers
               .map(
@@ -541,9 +557,9 @@ class _RoomIdSection extends StatelessWidget {
       scaleFactor: scaleFactor,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: AppDecorations.glass(
-          opacity: 0.1,
-          borderRadius: 12,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Row(
@@ -595,7 +611,11 @@ class _GameSettingsSection extends StatelessWidget {
       scaleFactor: scaleFactor,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: AppDecorations.glass(opacity: 0.05, borderRadius: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
         child: Column(
           children: [
             _InfoRow(

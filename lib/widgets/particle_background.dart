@@ -61,13 +61,23 @@ class _ParticleBackgroundState extends State<ParticleBackground>
     super.dispose();
   }
 
+  DateTime? _lastTime;
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
+        final now = DateTime.now();
+        final lastTime = _lastTime ?? now;
+        double dt = now.difference(lastTime).inMicroseconds / 1000000.0;
+        _lastTime = now;
+
+        // Prevent huge jumps if frame rate drops or app pauses
+        if (dt > 0.1) dt = 0.016;
+
         for (var particle in _particles) {
-          particle.update();
+          particle.update(dt);
         }
         // RepaintBoundary improves performance by isolating the painting
         return RepaintBoundary(
@@ -100,11 +110,13 @@ class Particle {
         : 1.1; // Start from bottom if respawning
     if (phase == GamePhase.night) {
       // Stars: Static or very slow twinkling
-      speed = random.nextDouble() * 0.0005;
+      // Old: 0.0005 per frame -> New: ~0.03 per second (60fps equiv)
+      speed = random.nextDouble() * 0.03;
       y = random.nextDouble(); // Random Y for stars
     } else {
       // Day/Other: Floating dust/pollen, moving up
-      speed = random.nextDouble() * 0.002 + 0.001;
+      // Old: 0.001~0.003 per frame -> New: 0.06 ~ 0.18 per second
+      speed = random.nextDouble() * 0.12 + 0.06;
     }
 
     theta = random.nextDouble() * 2 * pi;
@@ -112,10 +124,10 @@ class Particle {
     opacity = random.nextDouble() * 0.5 + 0.1;
   }
 
-  void update() {
+  void update(double dt) {
     // Night stars barely move, just twinkle
     // Day particles float up
-    y -= speed;
+    y -= speed * dt;
     if (y < -0.1) {
       y = 1.1;
       x = Random().nextDouble();
@@ -163,6 +175,5 @@ class ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ParticlePainter oldDelegate) =>
-      oldDelegate.phase != phase || oldDelegate.particles != particles;
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true;
 }
