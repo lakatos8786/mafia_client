@@ -78,6 +78,33 @@ class GameSettings {
   }
 
   @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is GameSettings &&
+        other.dayDuration == dayDuration &&
+        other.nightDuration == nightDuration &&
+        other.mafiaCount == mafiaCount &&
+        other.policeCount == policeCount &&
+        other.doctorCount == doctorCount &&
+        other.madmanCount == madmanCount &&
+        other.politicianCount == politicianCount &&
+        other.soldierCount == soldierCount;
+  }
+
+  @override
+  int get hashCode {
+    return dayDuration.hashCode ^
+        nightDuration.hashCode ^
+        mafiaCount.hashCode ^
+        policeCount.hashCode ^
+        doctorCount.hashCode ^
+        madmanCount.hashCode ^
+        politicianCount.hashCode ^
+        soldierCount.hashCode;
+  }
+
+  @override
   String toString() {
     return 'GameSettings(day: $dayDuration, night: $nightDuration, mafia: $mafiaCount, police: $policeCount, doctor: $doctorCount, madman: $madmanCount, politician: $politicianCount, soldier: $soldierCount)';
   }

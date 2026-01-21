@@ -57,4 +57,36 @@ class Player {
       isRevealed: isRevealed ?? this.isRevealed,
     );
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Player &&
+        other.id == id &&
+        other.nickname == nickname &&
+        other.role == role &&
+        other.isAlive == isAlive &&
+        other.isHost == isHost &&
+        other.isConnected == isConnected &&
+        other.atLobby == atLobby &&
+        other.isRevealed == isRevealed;
+  }
+
+  @override
+  int get hashCode {
+    return id.hashCode ^
+        nickname.hashCode ^
+        role.hashCode ^
+        isAlive.hashCode ^
+        isHost.hashCode ^
+        isConnected.hashCode ^
+        atLobby.hashCode ^
+        isRevealed.hashCode;
+  }
+
+  @override
+  String toString() {
+    return 'Player(id: $id, nick: $nickname, role: $role, alive: $isAlive, host: $isHost, conn: $isConnected, lobby: $atLobby)';
+  }
 }
