@@ -162,107 +162,99 @@ class _ChatListArea extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
         clipBehavior: Clip.hardEdge,
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.overlayBlack50.withValues(
-                alpha: isExpanded ? 0.7 : 0.4,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
-              border: Border.all(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-              ),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.overlayBlack50.withValues(
+              alpha: isExpanded ? 0.85 : 0.6,
             ),
-            child: Stack(
-              children: [
-                ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  controller: scrollController,
-                  reverse: true,
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final reversedIndex = messages.length - 1 - index;
-                    return _ChatMessageItem(message: messages[reversedIndex]);
-                  },
-                ),
-                Positioned(
-                  top: 5,
-                  right: 20,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    alignment: Alignment.topRight,
-                    children: [
-                      Icon(
-                        isExpanded
-                            ? Icons.keyboard_arrow_down
-                            : Icons.keyboard_arrow_up,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.2,
-                        ),
-                        size: 20,
-                      ),
-                      if (unreadCount > 0)
-                        Positioned(
-                          top: -6,
-                          right: -6,
-                          child: TweenAnimationBuilder<double>(
-                            duration: const Duration(milliseconds: 400),
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            curve: Curves.elasticOut,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: child,
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.error,
-                                borderRadius: BorderRadius.circular(10),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: theme.colorScheme.error.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
+            borderRadius: BorderRadius.circular(AppSpacing.borderRadius),
+            border: Border.all(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+            ),
+          ),
+          child: Stack(
+            children: [
+              ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                controller: scrollController,
+                reverse: true,
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final reversedIndex = messages.length - 1 - index;
+                  return _ChatMessageItem(message: messages[reversedIndex]);
+                },
+              ),
+              Positioned(
+                top: 5,
+                right: 20,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.topRight,
+                  children: [
+                    Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_up,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
+                      size: 20,
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        top: -6,
+                        right: -6,
+                        child: TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 400),
+                          tween: Tween(begin: 0.0, end: 1.0),
+                          curve: Curves.elasticOut,
+                          builder: (context, value, child) {
+                            return Transform.scale(scale: value, child: child);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.colorScheme.error.withValues(
+                                    alpha: 0.6,
                                   ),
-                                ],
-                              ),
-                              constraints: const BoxConstraints(
-                                minWidth: 18,
-                                minHeight: 18,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  unreadCount > 99 ? '99+' : '$unreadCount',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: Colors.white,
-                                    height: 1.0,
-                                    letterSpacing: -0.5,
-                                  ),
-                                  textAlign: TextAlign.center,
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
                                 ),
+                              ],
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Center(
+                              child: Text(
+                                unreadCount > 99 ? '99+' : '$unreadCount',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                  letterSpacing: -0.5,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

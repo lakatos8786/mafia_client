@@ -79,10 +79,13 @@ class _ParticleBackgroundState extends State<ParticleBackground>
         for (var particle in _particles) {
           particle.update(dt);
         }
+        // Create timeOffset efficiently once per frame
+        final double timeOffset = now.millisecondsSinceEpoch * 0.005;
+
         // RepaintBoundary improves performance by isolating the painting
         return RepaintBoundary(
           child: CustomPaint(
-            painter: ParticlePainter(_particles, _currentPhase),
+            painter: ParticlePainter(_particles, _currentPhase, timeOffset),
             size: Size.infinite,
           ),
         );
@@ -99,11 +102,14 @@ class Particle {
   late double radius;
   late double opacity;
 
-  Particle(Random random, GamePhase phase) {
-    reset(random, phase, firstSpawn: true);
+  // Optim: Store Random instance to prevent creating new one each update/spawn
+  final Random random;
+
+  Particle(this.random, GamePhase phase) {
+    reset(phase, firstSpawn: true);
   }
 
-  void reset(Random random, GamePhase phase, {bool firstSpawn = false}) {
+  void reset(GamePhase phase, {bool firstSpawn = false}) {
     x = random.nextDouble();
     y = firstSpawn
         ? random.nextDouble()
@@ -130,7 +136,8 @@ class Particle {
     y -= speed * dt;
     if (y < -0.1) {
       y = 1.1;
-      x = Random().nextDouble();
+      // Optim: Use stored random
+      x = random.nextDouble();
     }
   }
 }
@@ -138,8 +145,9 @@ class Particle {
 class ParticlePainter extends CustomPainter {
   final List<Particle> particles;
   final GamePhase phase;
+  final double timeOffset;
 
-  ParticlePainter(this.particles, this.phase);
+  ParticlePainter(this.particles, this.phase, this.timeOffset);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -162,9 +170,8 @@ class ParticlePainter extends CustomPainter {
       // Draw Twinkle for night
       if (!isDayStyle) {
         // Simple twinkle effect
-        double twinkle = sin(
-          DateTime.now().millisecondsSinceEpoch * 0.005 + particle.x * 10,
-        );
+        // Optim: Use passed timeOffset instead of DateTime.now()
+        double twinkle = sin(timeOffset + particle.x * 10);
         paint.color = paint.color.withValues(
           alpha: (0.3 + 0.4 * (twinkle + 1) / 2).clamp(0.0, 1.0),
         );
@@ -175,5 +182,5 @@ class ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true;
+  bool shouldRepaint(covariant ParticlePainter oldDelegate) => true; // Still needs to animate
 }

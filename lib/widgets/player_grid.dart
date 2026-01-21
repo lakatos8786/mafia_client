@@ -20,12 +20,6 @@ class PlayerGrid extends ConsumerWidget {
     final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
     final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
 
-    final votes = ref.watch(actionProvider.select((s) => s.votes));
-    final voters = ref.watch(actionProvider.select((s) => s.voters));
-    final nightSelections = ref.watch(
-      actionProvider.select((s) => s.nightSelections),
-    );
-
     final socketId = ref.watch(connectionProvider.notifier).socketId;
     final judgementTarget = ref.watch(
       actionProvider.select((s) => s.judgementTarget),
@@ -72,11 +66,6 @@ class PlayerGrid extends ConsumerWidget {
                 child: PlayerCard(
                   player: targetPlayer,
                   isMe: targetPlayer.id == socketId,
-                  isMyVoteTarget: false,
-                  selectionTargets: const [],
-                  voteCount: 0,
-                  votersList: '',
-                  showMafiaIndicator: false,
                   onTap: () {},
                 ),
               ),
@@ -104,49 +93,10 @@ class PlayerGrid extends ConsumerWidget {
               // Note: index for animation delay should be based on filtered list index
               final filterIndex = displayPlayers.indexOf(player);
               final isMe = player.id == socketId;
-              final voteCount = votes[player.id] ?? 0;
 
-              // Selection logic
-              final selectionTargetForRole = nightSelections.entries
-                  .where((entry) => entry.value == player.id)
-                  .map((entry) => entry.key)
-                  .toList();
-
-              final isJudgementTarget =
-                  gamePhase == GamePhase.judgement &&
-                  judgementTarget == player.id;
-
-              final isMyVoteTarget =
-                  voters[socketId] == player.id || isJudgementTarget;
-
-              final showMafiaIndicator =
-                  gamePhase == GamePhase.night &&
-                  player.isAlive &&
-                  myRole == GameRole.mafia &&
-                  player.role == GameRole.mafia &&
-                  player.id != socketId;
-
-              String votersList = '';
-              final isMafiaNightVote =
-                  gamePhase == GamePhase.night && myRole == GameRole.mafia;
-
-              if ((gamePhase == GamePhase.day || isMafiaNightVote) &&
-                  player.isAlive &&
-                  voteCount > 0) {
-                votersList = voters.entries
-                    .where((e) => e.value == player.id)
-                    .map(
-                      (e) => players
-                          .firstWhere(
-                            (p) => p.id == e.key,
-                            orElse: () =>
-                                Player(id: '', nickname: '?', isAlive: true),
-                          )
-                          .nickname,
-                    )
-                    .toList()
-                    .join(', ');
-              }
+              // Note: All state logic (votes, selection, etc.) is now handled
+              // internally by PlayerCard using ref.watch(select(...))
+              // to prevent grid-wide rebuilds.
 
               return SizedBox(
                 width: cardWidth,
@@ -156,13 +106,6 @@ class PlayerGrid extends ConsumerWidget {
                   child: PlayerCard(
                     player: player,
                     isMe: isMe,
-                    isMyVoteTarget: isMyVoteTarget,
-                    selectionTargets: selectionTargetForRole,
-                    voteCount: (gamePhase == GamePhase.day || isMafiaNightVote)
-                        ? voteCount
-                        : 0,
-                    votersList: votersList,
-                    showMafiaIndicator: showMafiaIndicator,
                     onTap: () {
                       // Check if *I* am alive using GLOBAL player list
                       final me = players.firstWhere(

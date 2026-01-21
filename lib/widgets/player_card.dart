@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/game_enums.dart';
 import '../models/player.dart';
 import '../providers/game_state_provider.dart';
+import '../providers/action_provider.dart'; // Added
+import '../providers/connection_provider.dart'; // Added
 import '../theme/app_colors.dart';
 import '../theme/app_strings.dart';
 import '../theme/app_theme.dart';
@@ -12,47 +14,118 @@ import '../utils/responsive_utils.dart';
 
 /// 플레이어 개별 정보를 표시하는 카드 위젯
 /// 성능 최적화를 위해 RepaintBoundary와 const 서브 위젯을 사용합니다.
+/// 상태 변경(투표 등) 시 해당되는 카드만 리빌드되도록 내부에서 상태를 구독합니다.
 class PlayerCard extends ConsumerWidget {
   final Player player;
   final bool isMe;
-  final bool isMyVoteTarget;
-  final List<String> selectionTargets;
   final VoidCallback onTap;
-  final int voteCount;
-  final String votersList;
-  final bool showMafiaIndicator;
 
   const PlayerCard({
     super.key,
     required this.player,
     required this.isMe,
-    required this.isMyVoteTarget,
-    required this.selectionTargets,
     required this.onTap,
-    this.voteCount = 0,
-    this.votersList = '',
-    this.showMafiaIndicator = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // --- 1. Granular State Selection ---
+    final socketId = ref.watch(connectionProvider.notifier).socketId;
+    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
+    final myRole = ref.watch(gameStateProvider.select((s) => s.myRole));
+
+    // Watch votes only for this player
+    final voteCount = ref.watch(
+      actionProvider.select((s) => s.votes[player.id] ?? 0),
+    );
+
+    // Watch if *I* voted for this player (for border highlight)
+    final isMyVoteTarget = ref.watch(
+      actionProvider.select((s) {
+        final myTarget = s.voters[socketId];
+        final judgementTarget = s.judgementTarget;
+        final isJudgementTarget =
+            gamePhase == GamePhase.judgement && judgementTarget == player.id;
+        return myTarget == player.id || isJudgementTarget;
+      }),
+    );
+
+    // Watch night selections targeting this player
+    final selectionTargets = ref.watch(
+      actionProvider.select((s) {
+        return s.nightSelections.entries
+            .where((entry) => entry.value == player.id)
+            .map((entry) => entry.key)
+            .toList();
+      }),
+    );
+
+    // Voters list logic (only needed if voteCount > 0)
+    String votersList = '';
+    final isMafiaNightVote =
+        gamePhase == GamePhase.night && myRole == GameRole.mafia;
+
+    if ((gamePhase == GamePhase.day || isMafiaNightVote) &&
+        player.isAlive &&
+        voteCount > 0) {
+      // Note: This matches the previous logic. We need the full players list to map IDs to nicknames.
+      // We can read it here or define a specialized selector.
+      // Reading full player list might trigger rebuilds if ANY player changes.
+      // Ideally we only want the nicknames of voters.
+      // For now, let's select just the voters map slightly more carefully or accept the rebuild on voters change.
+      final votersMap = ref.watch(actionProvider.select((s) => s.voters));
+      final allPlayers = ref
+          .read(gameStateProvider)
+          .players; // Read (don't watch) for name lookup?
+      // Actually, if a player disconnects/renames, we might want to update.
+      // But keeping it simple:
+      votersList = votersMap.entries
+          .where((e) => e.value == player.id)
+          .map(
+            (e) => allPlayers
+                .firstWhere(
+                  (p) => p.id == e.key,
+                  orElse: () => Player(id: '', nickname: '?', isAlive: true),
+                )
+                .nickname,
+          )
+          .toList()
+          .join(', ');
+    }
+
+    final showMafiaIndicator =
+        gamePhase == GamePhase.night &&
+        player.isAlive &&
+        myRole == GameRole.mafia &&
+        player.role == GameRole.mafia &&
+        player.id != socketId;
+
+    // --- 2. Existing Rendering Logic ---
     final theme = Theme.of(context);
     final gameTheme = theme.extension<GameThemeExtension>()!;
-    final gamePhase = ref.watch(gameStateProvider.select((s) => s.gamePhase));
     final isSelected = selectionTargets.isNotEmpty || isMyVoteTarget;
     final identityColor = AppColors.getIdentityColor(player.nickname);
 
     // Border 및 Gradient 설정을 위한 헬퍼 변수
-    final borderColor = _getBorderColor(theme, gameTheme, isSelected);
+    final borderColor = _getBorderColor(
+      theme,
+      gameTheme,
+      isSelected,
+      player,
+      isMyVoteTarget,
+      selectionTargets,
+    );
     final gradientColors = _getGradientColors(
       theme,
       gameTheme,
       isSelected,
       identityColor,
+      player,
+      isMyVoteTarget,
+      selectionTargets,
     );
     final isPoliceSelected = selectionTargets.contains(GameRole.police.name);
-    final isMafiaSelected = selectionTargets.contains(GameRole.mafia.name);
-    final isDoctorSelected = selectionTargets.contains(GameRole.doctor.name);
+    // ... rest of the build method follows normal structure ...
 
     return RepaintBoundary(
       child: ClipRRect(
@@ -75,9 +148,11 @@ class PlayerCard extends ConsumerWidget {
                   color: isSelected
                       ? (isPoliceSelected
                             ? AppColors.police
-                            : (isMafiaSelected
+                            : (selectionTargets.contains(GameRole.mafia.name)
                                   ? gameTheme.mafiaRef
-                                  : (isDoctorSelected
+                                  : (selectionTargets.contains(
+                                          GameRole.doctor.name,
+                                        )
                                         ? gameTheme.doctorRef
                                         : borderColor)))
                       : identityColor.withValues(alpha: 0.6),
@@ -129,6 +204,9 @@ class PlayerCard extends ConsumerWidget {
     ThemeData theme,
     GameThemeExtension gameTheme,
     bool isSelected,
+    Player player,
+    bool isMyVoteTarget,
+    List<String> selectionTargets,
   ) {
     if (!player.isAlive) return gameTheme.deadRef.withValues(alpha: 0.3);
     if (!isSelected) return theme.colorScheme.onSurface.withValues(alpha: 0.12);
@@ -152,6 +230,9 @@ class PlayerCard extends ConsumerWidget {
     GameThemeExtension gameTheme,
     bool isSelected,
     Color identityColor,
+    Player player,
+    bool isMyVoteTarget,
+    List<String> selectionTargets,
   ) {
     if (!player.isAlive) {
       return [
